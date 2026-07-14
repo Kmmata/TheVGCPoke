@@ -2,9 +2,7 @@
 
 ## Project Overview
 
-Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG tournament team sheet PDFs** for **Pokémon Champions**. No framework, no bundler.
-
-**Primary target: Web (browser).** The Electron desktop app is secondary and should not drive architectural decisions.
+Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG tournament team sheet PDFs** for **Pokémon Champions**. No framework, no bundler. Web only (browser).
 
 - **Game context:** Pokémon Champions — uses **Stat Points (SP)** instead of EVs (max 32 per stat, 66 total, 225 legal Pokémon)
 - **Runtime dependency:** `pdf-lib` loaded via CDN (not bundled)
@@ -16,25 +14,9 @@ Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG 
 
 ## Running the App
 
-| Command | Mode | URL / Output |
-|---------|------|--------------|
-| `npm run dev` | **Web (browser) — PRIMARY** | http://localhost:8080 |
-| `npm start` | Electron desktop (secondary) | Opens native app |
-| `npm run build` | Create Windows installer | `dist\Pokémon VG Team Sheet Generator Setup 1.0.0.exe` |
-
-**Always use `npm run dev` for web testing.** Electron is secondary — only test it when specifically needed.
-
-### Build instructions
-- **When the user says** "hazme un build", "generame la app", "crea el instalador", "empaqueta la app", or similar → run `npm run build`
-- The build is NOT automatic — only run it when explicitly requested
-- The build takes ~30 seconds and produces the installer in `dist/`
-- After code changes, the build must be regenerated to include the updates
-- **Important:** Build must be run from PowerShell as **Administrator** (or Developer Mode enabled) due to symlink issues with `electron-builder` on Windows. If it fails, manually extract the winCodeSign cache:
-  ```powershell
-  # If build fails with symlink error:
-  $7za = ".\node_modules\7zip-bin\win\x64\7za.exe"
-  & $7za x -bd "C:\Users\cuent\AppData\Local\electron-builder\Cache\winCodeSign\winCodeSign-2.6.0.7z" "-oC:\Users\cuent\AppData\Local\electron-builder\Cache\winCodeSign\winCodeSign-2.6.0" -x!darwin
-  ```
+| Command | URL |
+|---------|-----|
+| `npm run dev` | http://localhost:8080 |
 
 ---
 
@@ -44,10 +26,8 @@ Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG 
 pokemon-team-sheets/
 ├── index.html                    # Main page — Team Sheet Generator (import from Showdown/PokePaste)
 ├── builder.html                  # Team Builder page — create teams from scratch with validation
-├── main.js                       # Electron main process
-├── preload.js                    # Electron preload script (IPC bridge)
 ├── server.js                     # Minimal Node.js static server (port 8080), /builder route
-├── package.json                  # Scripts: dev, start, build
+├── package.json                  # Scripts: dev
 ├── package-lock.json
 ├── node_modules/
 ├── css/
@@ -69,7 +49,7 @@ pokemon-team-sheets/
 │   ├── JUGADOR.png               # Reference image — opponent sheet layout
 │   └── references/
 │       └── detalle_pokemon.png   # Reference image — Pokemon detail modal
-└── dist/                         # Build output (created by `npm run build`)
+└── node_modules/                 # npm dependencies (dev only)
 ```
 
 ---
@@ -577,29 +557,27 @@ All translatable UI elements use dual attributes:
 ## How to Continue Development
 
 1. **Run as web:** `npm run dev` → http://localhost:8080
-2. **Run as desktop app:** `npm start` (Electron window)
-3. **Build installer:** `npm run build` → output in `dist/`
-4. **Test PDF output (main page):** Import a team → click each PDF button → verify in browser PDF viewer
-5. **Test PDF output (builder):** Build a team → click PDF buttons → verify stats use SP formula
-6. **Test detail modal:** Import a team → click any Pokemon card → verify modal shows sprite, stats, moves with type colors
-7. **Test dark mode:** Toggle via header button → verify all elements render correctly (cards, inputs, tabs, buttons, modal)
-8. **Test builder validation:** Create invalid team (duplicate species, illegal moves) → verify error messages
-9. **Test builder save/load:** Save a team → reload page → verify team loads from saved list with sprites and type badges
-10. **Test import/export:** Import Showdown text → verify SP conversion → export back → verify EV values match
-11. **Test stat preview:** Select a Pokémon in builder → adjust SP sliders → verify base stats, final stats, nature indicators update in real-time
-12. **Test import types/stats:** Import a full paste → verify type badges and stat preview load correctly (from RegulationMB data immediately, PokAPI data in background)
-13. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
-14. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
-14. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
-15. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
-16. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
-17. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
-18. **New form fields:** Add HTML in `index.html` or `builder.html`, add to `els` object and `getPlayerData()` in respective JS files, add `_val()` call in `pdf.js`
-19. **New languages:** Add `data-xx` attributes to HTML elements, extend `applyLanguage()` logic, and add PokéAPI language code to `translations.js` (`_langCode()` + local mappings)
-20. **New translations categories:** Add fetch function in `translations.js` (e.g., for items, abilities) and integrate into `translatePokemon()`
-21. **If template PDF changes:** Extract new coordinates with `pdfjs-dist` (text items) or raw PDF stream parsing (shapes/rectangles) and update positions in `pdf.js`
-22. **Regulation updates:** When a new regulation set releases (M-C, M-D, etc.), update `regulation.js` with new legal lists, or create a new `regulation-mc.js` and select in builder UI
-23. **Builder validation changes:** Modify validation functions in `regulation.js` (validateTeam, validatePokemon, etc.)
+2. **Test PDF output (main page):** Import a team → click each PDF button → verify in browser PDF viewer
+3. **Test PDF output (builder):** Build a team → click PDF buttons → verify stats use SP formula
+4. **Test detail modal:** Import a team → click any Pokemon card → verify modal shows sprite, stats, moves with type colors
+5. **Test dark mode:** Toggle via header button → verify all elements render correctly (cards, inputs, tabs, buttons, modal)
+6. **Test builder validation:** Create invalid team (duplicate species, illegal moves) → verify error messages
+7. **Test builder save/load:** Save a team → reload page → verify team loads from saved list with sprites and type badges
+8. **Test import/export:** Import Showdown text → verify SP conversion → export back → verify EV values match
+9. **Test stat preview:** Select a Pokémon in builder → adjust SP sliders → verify base stats, final stats, nature indicators update in real-time
+10. **Test import types/stats:** Import a full paste → verify type badges and stat preview load correctly (from RegulationMB data immediately, PokAPI data in background)
+11. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
+12. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
+13. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
+14. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
+15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
+16. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
+17. **New form fields:** Add HTML in `index.html` or `builder.html`, add to `els` object and `getPlayerData()` in respective JS files, add `_val()` call in `pdf.js`
+18. **New languages:** Add `data-xx` attributes to HTML elements, extend `applyLanguage()` logic, and add PokéAPI language code to `translations.js` (`_langCode()` + local mappings)
+19. **New translations categories:** Add fetch function in `translations.js` (e.g., for items, abilities) and integrate into `translatePokemon()`
+20. **If template PDF changes:** Extract new coordinates with `pdfjs-dist` (text items) or raw PDF stream parsing (shapes/rectangles) and update positions in `pdf.js`
+21. **Regulation updates:** When a new regulation set releases (M-C, M-D, etc.), update `regulation.js` with new legal lists, or create a new `regulation-mc.js` and select in builder UI
+22. **Builder validation changes:** Modify validation functions in `regulation.js` (validateTeam, validatePokemon, etc.)
 
 ---
 
