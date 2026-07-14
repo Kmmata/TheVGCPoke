@@ -1,0 +1,37 @@
+{
+  "name": "pokemon-team-sheet-generator",
+  "version": "1.0.0",
+  "description": "Generador de hojas de equipo para torneos Pokémon VG",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "dev": "node server.js"
+  },
+  "build": {
+    "appId": "com.pokemon.teamsheet",
+    "productName": "Pokémon VG Team Sheet Generator",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "builder.html",
+      "css/**",
+      "js/**",
+      "assets/**",
+      "play-pokemon-vg-team-list.pdf"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^3.11.174"
+  }
+}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon VG Team Sheet Generator — Generador de Hojas de Equipo</title>
+  <meta name="description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet. Los datos se procesan localmente en tu navegador.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://TU-DOMINIO.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pokémon VG Team Sheet Generator">
+  <meta property="og:description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown y genera PDFs listos para torneos.">
+  <meta property="og:url" content="https://TU-DOMINIO.com/">
+  <meta property="og:image" content="https://TU-DOMINIO.com/og-image.png">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Pokémon VG Team Sheet Generator">
+  <meta name="twitter:description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown y genera PDFs listos para torneos.">
+  <meta name="twitter:image" content="https://TU-DOMINIO.com/og-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#c41e3a">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-content">
+      <h1>
+        <span data-es="Generador de Hojas de Equipo Pokémon VG" data-en="Pokémon VG Team Sheet Generator">Generador de Hojas de Equipo Pokémon VG</span>
+      </h1>
+      <div class="header-actions">
+        <a href="builder.html" class="lang-toggle" title="Team Builder" style="text-decoration:none;display:flex;align-items:center;">
+          <span style="font-size:0.85rem;">🧱 Builder</span>
+        </a>
+        <button id="langToggle" class="lang-toggle" title="Switch language">
+          <span class="lang-flag">ES</span>
+        </button>
+        <button id="themeToggle" class="lang-toggle" title="Toggle dark mode">
+          <span class="theme-icon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="import-section card">
+      <h2>
+        <span data-es="Importar Equipo" data-en="Import Team">Importar Equipo</span>
+      </h2>
+      <div class="import-tabs">
+        <button class="tab-btn active" data-tab="url" data-es="URL de PokePaste" data-en="PokePaste URL">URL de PokePaste</button>
+        <button class="tab-btn" data-tab="text" data-es="Texto Showdown" data-en="Showdown Text">Texto Showdown</button>
+      </div>
+      <div id="tabUrl" class="tab-content active">
+        <label for="pokepasteUrl" data-es="Pega la URL de pokepast.es:" data-en="Paste the pokepast.es URL:">Pega la URL de pokepast.es:</label>
+        <div class="input-row">
+          <input type="url" id="pokepasteUrl" placeholder="https://pokepast.es/xxxxxxxxxxxx" />
+          <button id="fetchBtn" class="btn btn-primary" data-es="Obtener" data-en="Fetch">Obtener</button>
+        </div>
+      </div>
+      <div id="tabText" class="tab-content">
+        <label for="showdownText" data-es="Pega el texto del export de Showdown:" data-en="Paste the Showdown export text:">Pega el texto del export de Showdown:</label>
+        <textarea id="showdownText" rows="10" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;EVs: 252 Atk / 4 Def / 252 Spe&#10;Jolly Nature&#10;- Thunder&#10;- Volt Tackle&#10;- Fake Out&#10;- Protect"></textarea>
+        <button id="parseBtn" class="btn btn-primary" data-es="Importar" data-en="Import">Importar</button>
+      </div>
+      <div id="importError" class="error-msg hidden"></div>
+    </section>
+
+    <div class="two-columns">
+      <section class="player-section card">
+        <h2>
+          <span data-es="Datos del Jugador" data-en="Player Information">Datos del Jugador</span>
+        </h2>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="playerName" data-es="Nombre del Jugador" data-en="Player Name">Nombre del Jugador</label>
+            <input type="text" id="playerName" />
+          </div>
+          <div class="form-group full-width">
+            <label for="trainerName" data-es="Nombre de Entrenador en el Juego" data-en="Trainer Name in Game">Nombre de Entrenador en el Juego</label>
+            <input type="text" id="trainerName" />
+          </div>
+          <div class="form-group">
+            <label for="playerId" data-es="ID Jugador" data-en="Player ID">ID Jugador</label>
+            <input type="text" id="playerId" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label data-es="Fecha de Nacimiento" data-en="Date of Birth">Fecha de Nacimiento</label>
+            <div class="dob-row">
+              <input type="text" id="dobMm" placeholder="MM" maxlength="2" />
+              <span>/</span>
+              <input type="text" id="dobDd" placeholder="DD" maxlength="2" />
+              <span>/</span>
+              <input type="text" id="dobYyyy" placeholder="YYYY" maxlength="4" />
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label for="teamNumber" data-es="Número / Nombre de Equipo de Batalla" data-en="Battle Team Number / Name">Número / Nombre de Equipo de Batalla</label>
+            <input type="text" id="teamNumber" />
+          </div>
+          <div class="form-group full-width">
+            <label for="switchProfile" data-es="Nombre de Perfil de Switch" data-en="Switch Profile Name">Nombre de Perfil de Switch</label>
+            <input type="text" id="switchProfile" />
+          </div>
+          <div class="form-group">
+            <label for="supportId" data-es="Support ID" data-en="Support ID">Support ID</label>
+            <input type="text" id="supportId" />
+          </div>
+          <div class="form-group">
+            <label data-es="División de Edad" data-en="Age Division">División de Edad</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="ageDivision" value="Juniors" /> <span data-es="Juniors" data-en="Juniors">Juniors</span></label>
+              <label class="radio-label"><input type="radio" name="ageDivision" value="Seniors" /> <span data-es="Seniors" data-en="Seniors">Seniors</span></label>
+              <label class="radio-label"><input type="radio" name="ageDivision" value="Masters" checked /> <span data-es="Masters" data-en="Masters">Masters</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="team-section card">
+        <h2>
+          <span data-es="Equipo (6 Pokémon)" data-en="Team (6 Pokémon)">Equipo (6 Pokémon)</span>
+        </h2>
+        <div id="teamGrid" class="team-grid">
+        </div>
+      </section>
+    </div>
+
+    <section class="pdf-actions card">
+      <h2>
+        <span data-es="Generar PDF" data-en="Generate PDF">Generar PDF</span>
+      </h2>
+      <div class="action-buttons">
+        <button id="btnOpenSheet" class="btn btn-action" disabled>
+          <span data-es="Open Team Sheet (Oponentes)" data-en="Open Team Sheet (Opponents)">Open Team Sheet (Oponentes)</span>
+        </button>
+        <button id="btnStaffSheet" class="btn btn-action" disabled>
+          <span data-es="Staff Team Sheet (Jueces)" data-en="Staff Team Sheet (Judges)">Staff Team Sheet (Jueces)</span>
+        </button>
+        <button id="btnBothSheets" class="btn btn-action btn-primary" disabled>
+          <span data-es="Ambas Hojas" data-en="Both Sheets">Ambas Hojas</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      <span data-es="Generador de hojas de equipo para torneos Pokémon VG. Los datos se procesan localmente en tu navegador." data-en="Team sheet generator for Pokémon VG tournaments. Data is processed locally in your browser.">Generador de hojas de equipo para torneos Pokémon VG. Los datos se procesan localmente en tu navegador.</span>
+    </p>
+  </footer>
+
+  <!-- Pokemon Detail Modal -->
+  <div id="pokemonModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <button id="modalClose" class="modal-close">&times;</button>
+      <div class="modal-body">
+        <div class="modal-top">
+          <div class="modal-sprite-wrap">
+            <img id="modalSprite" class="modal-sprite" src="" alt="" />
+          </div>
+          <div class="modal-info">
+            <div class="modal-name" id="modalName"></div>
+            <div class="modal-types" id="modalTypes"></div>
+            <div class="modal-item" id="modalItem"></div>
+            <div class="modal-detail-row"><span class="modal-label" data-es="Habilidad" data-en="Ability">Habilidad</span> <span id="modalAbility"></span></div>
+            <div class="modal-detail-row"><span class="modal-label" data-es="Naturaleza" data-en="Nature">Naturaleza</span> <span id="modalNature"></span></div>
+            <div class="modal-detail-row"><span class="modal-label" data-es="Nivel" data-en="Level">Nivel</span> <span id="modalLevel"></span></div>
+            <div class="modal-detail-row" id="modalGenderRow"><span class="modal-label" data-es="Género" data-en="Gender">Género</span> <span id="modalGender"></span></div>
+            <div class="modal-detail-row" id="modalShinyRow"><span class="modal-label">Shiny</span> <span id="modalShiny"></span></div>
+            <div class="modal-detail-row"><span class="modal-label" data-es="Tera Tipo" data-en="Tera Type">Tera Tipo</span> <span id="modalTeraType"></span></div>
+          </div>
+        </div>
+        <div class="modal-stats" id="modalStats"></div>
+        <div class="modal-moves-section">
+          <div class="modal-moves-title" data-es="Movimientos" data-en="Moves">Movimientos</div>
+          <div class="modal-moves" id="modalMoves"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="js/translations.js?v=1"></script>
+  <script src="js/parser.js?v=2"></script>
+  <script src="js/pdf.js?v=2"></script>
+  <script src="js/regulation.js?v=1"></script>
+  <script src="js/app.js?v=2"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Pokémon VG Team Sheet Generator",
+    "description": "Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet.",
+    "url": "https://TU-DOMINIO.com/",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Import teams from PokePaste URLs",
+      "Import teams from Showdown text exports",
+      "Generate Staff Team Sheet PDF",
+      "Generate Open Team Sheet PDF",
+      "Bilingual interface (Spanish / English)",
+      "Stat calculation for Pokémon Champions",
+      "Local processing — no data sent to servers"
+    ]
+  }
+  </script>
+</body>
+</html>
