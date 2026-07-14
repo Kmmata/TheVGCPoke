@@ -132,6 +132,7 @@ body.builder-page {
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .builder-card h2 {
@@ -1102,7 +1103,7 @@ body.builder-page {
   .team-slots {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 12px;
   }
 
   .team-slot {
