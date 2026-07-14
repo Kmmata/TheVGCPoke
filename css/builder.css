@@ -1040,34 +1040,162 @@ body.builder-page {
   margin-top: 8px;
 }
 
-/* === Responsive === */
-@media (max-width: 800px) {
-  .builder-main {
-    flex-direction: column;
+/* === Responsive: Tablets === */
+@media (max-width: 900px) {
+  .builder-main { flex-direction: column; }
+  .builder-left { min-width: 0; flex: 1; }
+  .builder-right { width: 100%; min-width: 0; }
+}
+
+/* === Responsive: Móvil (iPhone SE ~ iPhone 16 Pro+) === */
+@media (max-width: 500px) {
+  .builder-header {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
-  .builder-right {
+
+  .builder-header h1 {
+    font-size: 0.85rem;
+    flex: 1 1 100%;
+    text-align: center;
+    order: -1;
+  }
+
+  .builder-header > div:last-child {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
     width: 100%;
   }
+
+  .builder-header .builder-back-btn,
+  .builder-header .builder-btn-outline,
+  .builder-header .builder-btn-success,
+  .builder-header .theme-toggle {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .builder-header .builder-back-btn {
+    flex: 1 1 100%;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+  }
+
+  .builder-main {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .builder-card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .builder-card h2 {
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+  }
+
+  .team-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
   .team-slot {
-    width: 72px;
-    height: 82px;
+    width: auto;
+    height: auto;
+    aspect-ratio: 1 / 1.1;
+    min-height: 70px;
   }
-  .team-slot .slot-sprite {
-    width: 36px;
-    height: 36px;
-  }
-  .team-slot .slot-name {
-    font-size: 0.58rem;
-  }
+
+  .team-slot .slot-sprite { width: 36px; height: 36px; }
+  .team-slot .slot-name { font-size: 0.55rem; }
+
   .editor-top-row {
     flex-direction: column;
     align-items: stretch;
   }
+
   .editor-sprite {
     width: 72px;
     height: 72px;
     margin: 0 auto;
   }
+
+  .editor-sprite img { width: 60px; height: 60px; }
+
+  .form-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .form-row label {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .form-row input[type="text"],
+  .form-row select {
+    font-size: 0.82rem;
+    padding: 6px 8px;
+  }
+
+  .sp-row {
+    gap: 4px;
+  }
+
+  .sp-row .sp-label { width: 30px; font-size: 0.7rem; }
+  .sp-row .sp-slider { min-width: 0; }
+  .sp-row .sp-value { width: 24px; font-size: 0.75rem; }
+  .sp-row .sp-bar-bg { width: 40px; }
+
+  .stat-preview-row { gap: 4px; }
+  .sp-stat-label { width: 36px; font-size: 0.65rem; }
+  .sp-base { width: 22px; font-size: 0.68rem; }
+  .sp-final { width: 26px; font-size: 0.72rem; }
+  .sp-sp-val { width: 34px; font-size: 0.6rem; }
+
+  .detail-row { flex-wrap: wrap; gap: 4px; }
+  .detail-row label { width: 100%; }
+
+  #pokemonTypes { padding-left: 0 !important; }
+
+  .detail-row .detail-row { margin-left: 0 !important; }
+
+  .builder-actions { flex-direction: column; }
+
+  .builder-actions .builder-btn { width: 100%; }
+
+  .modal-overlay { padding: 8px; }
+
+  .modal-panel {
+    padding: 14px;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 10px;
+  }
+
+  .modal-panel textarea {
+    min-height: 150px;
+    font-size: 0.78rem;
+  }
+
+  .modal-panel .modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-panel .modal-actions .builder-btn { flex: 1; min-width: 0; }
+
+  .saved-team-item {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .saved-team-item .st-actions { width: 100%; justify-content: flex-end; }
 }
 
 /* === Loading Spinner === */
