@@ -459,7 +459,7 @@
         els.supportId.value = draft.player.supportId || '';
         if (draft.player.ageDivision) {
           const radio = document.querySelector(`input[name="ageDivision"][value="${draft.player.ageDivision}"]`);
-          if (radio) radio.checked = true;
+          if (radio) { radio.checked = true; radio.closest('.gender-btn')?.classList.add('active'); }
         }
       }
       if (draft.team && Array.isArray(draft.team)) {
@@ -477,8 +477,19 @@
     el.addEventListener('input', saveDraft);
   });
 
+  function setupAgeDivision() {
+    document.querySelectorAll('[name="ageDivision"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.querySelectorAll('[name="ageDivision"]').forEach(l => {
+          l.closest('.gender-btn')?.classList.toggle('active', l.checked);
+        });
+      });
+    });
+  }
+
   applyLanguage(currentLang);
   loadDraft();
+  setupAgeDivision();
   renderTeamGrid();
   updatePdfButtons();
 })();

@@ -261,6 +261,34 @@ textarea { resize: vertical; }
 
 .radio-label input { width: auto; }
 
+.division-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.gender-btn {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.gender-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.gender-btn:hover:not(.active) {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
 .team-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
