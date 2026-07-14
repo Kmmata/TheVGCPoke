@@ -725,6 +725,13 @@ body.builder-page {
   gap: 4px;
 }
 
+.division-btns {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
 .gender-btn {
   background: var(--input-bg);
   border: 1px solid var(--border);
@@ -1143,6 +1150,10 @@ body.builder-page {
   .form-row select {
     font-size: 0.82rem;
     padding: 6px 8px;
+  }
+
+  .division-btns {
+    flex: 0 0 auto;
   }
 
   .sp-row {

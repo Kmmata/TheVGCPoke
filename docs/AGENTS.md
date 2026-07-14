@@ -507,6 +507,10 @@ User creates team in Builder UI
 **Problem:** `regulation.js` listed Delphox's abilities as `['Blaze','Magic Guard']`. `Magic Guard` is Clefable's ability — Delphox's hidden ability is `Magician`.
 **Fix:** Changed to `['Blaze','Magician']` in `regulation.js`.
 
+### 20. Builder Team Slots Overflow and Row Spacing (FIXED)
+**Problem:** On mobile, the 6 team slots (3-column grid) had two issues: the second row was visually stuck to the first row (insufficient gap), and the grid overflowed the bottom of the `.builder-card` container.
+**Fix:** Increased `.team-slots` grid gap from `8px` to `12px` in the `max-width: 500px` media query in `builder.css`. Added `overflow: hidden` to `.builder-card` to contain visual overflow.
+
 ---
 
 ## Bilingual System
