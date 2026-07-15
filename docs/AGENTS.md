@@ -26,13 +26,15 @@ Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG 
 pokemon-team-sheets/
 ├── index.html                    # Main page — Team Sheet Generator (import from Showdown/PokePaste)
 ├── builder.html                  # Team Builder page — create teams from scratch with validation
-├── server.js                     # Minimal Node.js static server (port 8080), /builder route
+├── calc.html                     # Damage Calculator page — full Champions damage calc matching NCP reference
+├── server.js                     # Minimal Node.js static server (port 8080), /builder and /calc routes
 ├── package.json                  # Scripts: dev
 ├── package-lock.json
 ├── node_modules/
 ├── css/
 │   ├── styles.css                # Main page styles, CSS variables, responsive, modal
-│   └── builder.css               # Team Builder styles (shared CSS variables with main page, light+dark themes, SP sliders, autocomplete, validation)
+│   ├── builder.css               # Team Builder styles (shared CSS variables with main page, light+dark themes, SP sliders, autocomplete, validation)
+│   └── calc.css                  # Damage Calculator styles (light+dark themes, two-panel NCP layout, responsive)
 ├── js/
 │   ├── translations.js           # PokéAPI name translations (ES↔EN) + nature/type maps + move types + type colors
 │   ├── parser.js                 # Showdown/PokePaste text parser
@@ -40,7 +42,11 @@ pokemon-team-sheets/
 │   ├── app.js                    # Main page UI logic, state, localStorage, wiring, Pokemon detail modal
 │   ├── regulation.js             # Regulation M-B data: 226 legal Pokémon, 148 items, 502 moves + validation
 │   ├── builder-champions-api.js  # PokAPI layer for builder: sprites, learnsets, abilities, base stats
-│   └── builder.js                # Team Builder logic: slots, editor, autocomplete, SP, save/load, import/export
+│   ├── builder.js                # Team Builder logic: slots, editor, autocomplete, SP, save/load, import/export
+│   ├── type-chart.js             # Type effectiveness chart (19×19 matrix including Stellar)
+│   ├── calc-move-data.js         # Move metadata for all 502 legal moves (type, category, BP, flags, PokAPI-sourced)
+│   ├── damage.js                 # Damage calculation engine (complete formula, matches NCP VGC reference)
+│   └── calc.js                   # Damage Calculator UI: two panels, autocomplete, stat calc, team preview, bilingual
 ├── assets/                       # Static assets (placeholder)
 ├── play-pokemon-vg-team-list.pdf # Official reference PDF (do not modify)
 ├── docs/
@@ -118,6 +124,8 @@ const ModuleName = (() => {
 Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.js` → `app.js`.
 
 **Builder page load order:** `translations.js` → `parser.js` → `pdf.js` → `regulation.js` → `builder-champions-api.js` → `builder.js`.
+
+**Calculator page load order:** `translations.js` → `parser.js` → `pdf.js` → `regulation.js` → `builder-champions-api.js` → `type-chart.js` → `calc-move-data.js` → `damage.js` → `calc.js`.
 
 ---
 
@@ -278,6 +286,7 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 - Port 8080, serves from `__dirname`
 - MIME types: html, css, js, json, png, jpg, svg, pdf
 - Route: `/builder` → serves `builder.html`
+- Route: `/calc` → serves `calc.html`
 
 ---
 
@@ -425,6 +434,128 @@ User creates team in Builder UI
 
 ---
 
+## Damage Calculator (calc.html)
+
+### Overview
+
+The Damage Calculator (`calc.html`) is a **separate page** that provides full Champions damage calculation matching the [NCP VGC Damage Calculator](https://nerd-of-now.github.io/NCP-VGC-Damage-Calculator/) reference. It features a two-panel NCP-style UI with bilingual support (ES/EN).
+
+**Key characteristics:**
+- Champions format: level 50, fixed 31 IVs, SP (Stat Points 0–32) instead of EVs
+- Complete damage formula: all modifiers, spread, weather, terrain, abilities, items, STAB, type effectiveness
+- Two Pokémon panels (attacker vs defender) with team preview
+- Real-time damage ranges (min% – max%) for all 4 moves
+- Bilingual ES/EN via `data-es` / `data-en` attributes
+- Dark mode support (synced with main page/builder)
+
+### Data Flow
+
+```
+User selects Pokémon on either panel
+  → ChampionsAPI.fetchPokemonFull() fetches data from PokAPI
+  → CalcMoveData.getMoveData() provides move metadata (type, BP, flags)
+  → DamageCalc.calcAllMoves(attacker, defender, field) calculates all 4 moves
+  → Results displayed as damage ranges (min% – max%)
+```
+
+### File Responsibilities
+
+#### `js/type-chart.js` — TypeChart
+
+**Exports:** `{ getTypeEffectiveness, getSingleEffectiveness, TYPES }`
+
+- 19×19 type effectiveness matrix (18 types + Stellar)
+- `getSingleEffectiveness(attackType, defenseType)` → returns 0, 0.5, 1, or 2
+- `getTypeEffectiveness(attackType, defenseTypes)` → combined effectiveness across multiple types
+- Hardcoded from official Pokémon type chart data
+
+#### `js/calc-move-data.js` — CalcMoveData
+
+**Exports:** `{ getMoveData, MOVES }`
+
+- Move metadata for all 502 legal moves in Regulation M-B
+- Each move includes: `name`, `type`, `category`, `bp`, `pp`, `accuracy`, `flags`
+- Flags: `makesContact`, `isSpread`, `hasSecondaryEffect`, `hasRecoil`, `isPunch`, `isSound`, `isPulse`, `isSlice`, `isBullet`, `isSound`, `isBall`
+- Data sourced from PokAPI and cross-referenced with NCP calculator
+
+#### `js/damage.js` — DamageCalc
+
+**Exports:** `{ calcHP, calcStat, getNatureMultForStat, getModifiedStat, getStatWithBoosts, getHPWithBoosts, calcDamage, calcAllMoves, getSTAB, getTypeEffectiveness }`
+
+- Complete damage calculation engine matching NCP VGC formula exactly
+- **Stat formulas (Champions):**
+  - HP: `floor((base * 2 + 31) * 50 / 100) + 50 + 10 + SP`
+  - Other: `floor(((floor((base * 2 + 31) * 50 / 100) + 5) + SP) * natureMult)`
+- **Damage formula steps:**
+  1. Attack stat (with Hustle, ability modifiers)
+  2. Defense stat (with weather boosts, ability modifiers)
+  3. Base power (with item/ability/terrain/field modifiers)
+  4. Base damage: `floor(floor(floor((2*level/5+2) * BP * Atk / Def) / 50 + 2)`
+  5. Spread modifier (before random)
+  6. Weather modifier (before random)
+  7. Glaive Rush modifier (before random)
+  8. Critical hit modifier (before random)
+  9. Random factor loop (85%–100%) with STAB, type effectiveness, burn, final mods
+- **Rounding:** Uses `pokeRound` (round .5 down) and `Math.round` in `chainMods` to match NCP
+- **STAB logic:** Handles Terastal (non-Stellar, Stellar), Adaptability, Protean/Libero
+- **Type effectiveness:** Single-type and dual-type calculations with ability overrides (Levitate)
+
+#### `js/calc.js` — DamageCalcUI
+
+**Exports:** `{ init }`
+
+- Main UI controller for the damage calculator
+- **State:**
+  - `state.left` / `state.right` — Pokémon data for each panel
+  - `state.field` — Field conditions (weather, terrain, screens, format)
+  - `state.selectedMove` — Currently selected move for detailed view
+  - `state.lang` — Language preference (ES/EN)
+- **Features:**
+  - Autocomplete inputs for species, item, ability, moves (uses RegulationMB search functions)
+  - Stat display with SP sliders and nature selection
+  - Team preview (6 slots per side)
+  - Field condition toggles (weather, terrain, screens, format)
+  - Real-time damage calculation on any input change
+  - Bilingual UI labels via `data-es` / `data-en`
+  - Dark mode support (synced with `localStorage.tsTheme`)
+
+### UI Components
+
+1. **Two-panel layout** — Left panel (attacker) vs Right panel (defender), each with Pokémon selection, stats, moves
+2. **Pokémon autocomplete** — Species, item, ability, 4 move inputs with autocomplete
+3. **Stat display** — HP, Atk, Def, Spa, Spd, Spe with SP sliders and nature dropdown
+4. **Team preview** — 6 slots per side, click to select active Pokémon
+5. **Field conditions** — Weather, terrain, screens, format (Singles/Doubles) with toggle buttons
+6. **Result banner** — Shows damage ranges for all 4 moves (min% – max%) with selected move highlighted
+7. **Language toggle** — ES/EN switch for all UI labels
+8. **Dark mode toggle** — Synced with main page/builder preference
+
+### Damage Formula Reference
+
+The damage calculation follows the complete NCP VGC formula:
+
+```
+damage = floor(floor(floor((2×level/5+2) × BP × Atk / Def) / 50 + 2) × modifiers)
+```
+
+Where modifiers are applied in this order:
+1. **Spread** (Doubles): ×0.75
+2. **Weather**: ×1.5 (boosted type) or ×0.5 (reduced type)
+3. **Glaive Rush**: ×2.0
+4. **Critical hit**: ×1.5
+5. **Random**: ×(85+i)/100 for i=0..15
+6. **STAB**: ×1.5 or ×2.0 (with Tera/Adaptability/Protean)
+7. **Type effectiveness**: ×0, ×0.25, ×0.5, ×1, ×2, ×4
+8. **Burn**: ×0.5 (physical only, non-Guts)
+9. **Final mods**: Screens, Life Orb, Expert Belt, Tinted Lens, resist berries, etc.
+
+**Rounding rules:**
+- `pokeRound`: Rounds .5 down (not always up)
+- `chainMods`: Uses `Math.round` (not `Math.floor`)
+- Type effectiveness and burn use `Math.floor`
+
+---
+
 ## Known Issues / Bug History
 
 ### 1. PDF Black Background (FIXED — no longer applicable)
@@ -556,8 +687,9 @@ All translatable UI elements use dual attributes:
 - **Template coordinates** were extracted via `pdfjs-dist` (dev dependency) and raw PDF content stream parsing (for shapes like checkboxes) and hardcoded in `pdf.js`
 - **Form IDs** in HTML must match `els` object keys in `app.js` (main page) or `getElementById` calls in `builder.js` (builder page)
 - **localStorage keys** prefixed with `ts` for main page (e.g., `tsLang`, `tsDraft`, `tsTheme`), `pokemon_champion_teams` for builder
-- **CSS variables** for all colors — shared between main page and builder via `:root` + `.dark` class on `<html>`. Builder defines its own `--builder-*` variables for slot/type colors
+- **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `.dark` class on `<html>`. Builder and calculator define their own component-specific variables for slot/type colors and damage ranges
 - **Builder dark mode** uses same pattern as main page: `setupTheme()` reads `localStorage('tsTheme')`, toggles `.dark` class, persists choice. Syncs with main page preference
+- **Calculator dark mode** uses same pattern: reads `localStorage('tsTheme')`, toggles `.dark` class, persists choice. Syncs with main page and builder preference
 - **Runtime has zero npm dependencies** — `pdf-lib` is loaded via CDN, `pdfjs-dist` and `pdf-lib` are dev-only
 - **Regulation data** is hardcoded in `regulation.js` — update when new regulation sets release
 - **Builder uses SP (Stat Points)** — 66 total, max 32 per stat. Convert to/from EVs for Showdown compatibility
@@ -568,6 +700,7 @@ All translatable UI elements use dual attributes:
   - Move types for colored move badges in detail modal (cached in memory per session)
   - Move short effect descriptions for move tooltips in detail modal (cached in memory per session, falls back to `flavor_text_entries` if `effect_entries` is empty)
   - Learnsets and abilities for builder Pokémon (cached in memory per session)
+  - Move metadata for damage calculator (cached in `calc-move-data.js` at build time)
 
 ---
 
@@ -585,7 +718,14 @@ All translatable UI elements use dual attributes:
 10. **Test import types/stats:** Import a full paste → verify type badges and stat preview load correctly (from RegulationMB data immediately, PokAPI data in background)
 11. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
 12. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
-13. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
+13. **Test damage calculator:** Go to /calc → select Pokémon on both panels → verify damage ranges match NCP reference calculator
+14. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB
+15. **Test calc stat display:** Select a Pokémon → verify HP, Atk, Def, Spa, Spd, Spe match expected values (SP + nature)
+16. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
+17. **Test calc team preview:** Click team preview slots → verify active Pokémon updates damage calculation
+18. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
+19. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
+20. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
 14. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
 15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
 16. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
@@ -595,6 +735,9 @@ All translatable UI elements use dual attributes:
 20. **If template PDF changes:** Extract new coordinates with `pdfjs-dist` (text items) or raw PDF stream parsing (shapes/rectangles) and update positions in `pdf.js`
 21. **Regulation updates:** When a new regulation set releases (M-C, M-D, etc.), update `regulation.js` with new legal lists, or create a new `regulation-mc.js` and select in builder UI
 22. **Builder validation changes:** Modify validation functions in `regulation.js` (validateTeam, validatePokemon, etc.)
+23. **Damage calculator formula:** Modify `damage.js` — must match NCP VGC reference exactly. Test with known matchups (e.g., Garchomp Dragon Claw Hardy nature)
+24. **Damage calculator moves:** Update `calc-move-data.js` when new moves are added to Regulation M-B. Data sourced from PokAPI
+25. **Damage calculator UI:** Modify `calc.js` and `calc.css` for calculator interface changes. Uses same bilingual pattern as main page/builder
 
 ---
 
@@ -614,6 +757,7 @@ All translatable UI elements use dual attributes:
 - **`sitemap.xml`** — Placeholder `TU-DOMINIO.com`
 - **server.js** — MIME types para `.ico`, `.xml`, `.txt`
 - **Builder page** — `builder.html` accessible at `/builder` route
+- **Calculator page** — `calc.html` accessible at `/calc` route
 
 ### Pendiente — Cuando tengas dominio
 Cuando el usuario tenga dominio, preguntar y actualizar:
@@ -625,7 +769,7 @@ Cuando el usuario tenga dominio, preguntar y actualizar:
 3. **Crear `apple-touch-icon.png`** (180x180px) — Icono para dispositivos Apple
 4. **Verificar Google Search Console** — Registrar dominio y enviar sitemap
 5. **Considerar bilingual SEO real** — Si se quiere posicionar en ES y EN, crear rutas `/es/` y `/en/` con hreflang tags (actualmente solo JS language switching, no indexable por buscadores)
-6. **Añadir sitemap para builder** — Incluir `/builder` en `sitemap.xml`
+6. **Añadir sitemap para builder y calculator** — Incluir `/builder` y `/calc` en `sitemap.xml`
 
 ---
 

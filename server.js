@@ -23,6 +23,7 @@ http.createServer((req, res) => {
   let url = req.url.split('?')[0];
   if (url === '/') url = '/index.html';
   if (url === '/builder') url = '/builder.html';
+  if (url === '/calc') url = '/calc.html';
   const filePath = path.join(ROOT, url);
   const ext = path.extname(filePath);
   
