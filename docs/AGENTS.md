@@ -4,7 +4,7 @@
 
 Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG tournament team sheet PDFs** for **Pokémon Champions**. No framework, no bundler. Web only (browser).
 
-- **Game context:** Pokémon Champions — uses **Stat Points (SP)** instead of EVs (max 32 per stat, 66 total, 225 legal Pokémon)
+- **Game context:** Pokémon Champions — uses **Stat Points (SP)** instead of EVs (max 32 per stat, 66 total, 226 legal Pokémon)
 - **Runtime dependency:** `pdf-lib` loaded via CDN (not bundled)
 - **Runtime dependency:** PokéAPI (fetched on demand for base stats + name translations, cached in memory)
 - **Dev dependency:** `pdfjs-dist` (template PDF coordinate extraction)
@@ -38,7 +38,7 @@ pokemon-team-sheets/
 │   ├── parser.js                 # Showdown/PokePaste text parser
 │   ├── pdf.js                    # PDF generation (pdf-lib) + stat calculation (exported)
 │   ├── app.js                    # Main page UI logic, state, localStorage, wiring, Pokemon detail modal
-│   ├── regulation.js             # Regulation M-B data: 225 legal Pokémon, 148 items, 502 moves + validation
+│   ├── regulation.js             # Regulation M-B data: 226 legal Pokémon, 148 items, 502 moves + validation
 │   ├── builder-champions-api.js  # PokAPI layer for builder: sprites, learnsets, abilities, base stats
 │   └── builder.js                # Team Builder logic: slots, editor, autocomplete, SP, save/load, import/export
 ├── assets/                       # Static assets (placeholder)
@@ -145,7 +145,7 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 - Each translated Pokémon includes `_original` property with English names (used for PokéAPI lookups and stat calculations)
 - API normalization: lowercase, remove accents, spaces→hyphens, strip special chars
 - Falls back to English name if API call fails or translation not found
-- `fetchPokemonSprite(species, gender?)` → Returns official artwork URL from PokéAPI (cached in `spriteCache`). Tries base species name first, then falls back to `species-gender` slug if gender param provided (e.g., `basculegion-male`)
+- `fetchPokemonSprite(species, gender?)` → Returns official artwork URL from PokéAPI (cached in `spriteCache`). Uses `POKEAPI_SLUG_MAP` to resolve slug mismatches (e.g., `aegislash` → `aegislash-shield`). Tries base species name first, then falls back to `species-gender` slug if gender param provided (e.g., `basculegion-male`)
 - `fetchPokemonTypes(species, gender?)` → Returns array of type names (cached in `typesCache`). Delegates to `fetchPokemonSprite` for data. Same gender fallback.
 - `fetchMoveType(moveName)` → Returns English type name of a move from PokéAPI (cached in `moveTypeCache`)
 - `fetchMoveDescription(moveName, lang?)` → Returns short effect text of a move from PokéAPI (cached in `moveDescCache`). Tries `effect_entries` first (`short_effect` → `effect`), falls back to `flavor_text_entries` (`flavor_text`) when effect_entries is empty (common for newer Gen IX moves). Cleans `\n`/`\f` characters from flavor text. Used for move tooltips in the detail modal.
@@ -181,7 +181,7 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 - Uses `pdf-lib` (CDN: `unpkg.com/pdf-lib@1.17.1`)
 - Font: Helvetica + HelveticaBold (StandardFonts)
 - Template: `play-pokemon-vg-team-list.pdf` (fetched from server, cached in memory)
-- `fetchBaseStats(species)` → Fetches base stats from PokéAPI (cached in `_statCache`), used by both PDF generation and the detail modal. Tries base species name first, then `slug-male`, then `slug-female` as fallback.
+- `fetchBaseStats(species)` → Fetches base stats from PokéAPI (cached in `_statCache`), used by both PDF generation and the detail modal. Uses `POKEAPI_SLUG_MAP` to resolve slug mismatches. Tries base species name first, then `slug-male`, then `slug-female` as fallback.
 - `getStatValues(pokemon, baseStatsMap)` → Calculates final stat values using Champions formula
 - `NATURE_MAP` — Maps 20 non-neutral natures to `{ plus, minus }` stat keys
 
@@ -289,7 +289,7 @@ The Team Builder (`builder.html`) is a **separate page** from the main Team Shee
 
 **Key differences from the main page:**
 - Teams are built manually (not imported from Showdown)
-- Validation against Regulation M-B (225 legal Pokémon, 148 items, 502 moves)
+- Validation against Regulation M-B (226 legal Pokémon, 148 items, 502 moves)
 - Stat Points (SP) system: 66 total, max 32 per stat
 - Cross-reference validation: Pokémon learnsets vs legal moves
 - Save/load teams to localStorage (manual save, not auto-save)
@@ -314,7 +314,7 @@ User creates team in Builder UI
 
 | Rule | Description |
 |------|-------------|
-| **Pokémon legal** | Only the 225 in `RegulationMB.LEGAL_POKEMON` |
+| **Pokémon legal** | Only the 226 in `RegulationMB.LEGAL_POKEMON` |
 | **Item legal** | Only the 148 in `RegulationMB.LEGAL_ITEMS` |
 | **Move legal** | Only the 502 in `RegulationMB.LEGAL_MOVES` |
 | **Move learnable** | Must be in PokAPI learnset AND in legal moves list |
@@ -332,7 +332,7 @@ User creates team in Builder UI
 **Exports:** `{ LEGAL_POKEMON, LEGAL_ITEMS, LEGAL_MOVES, MEGA_STONES_PER_POKEMON, NATURES, MAX_SP, MAX_SP_PER_STAT, STAT_KEYS, isLegalPokemon, isLegalItem, isLegalMove, getPokemonData, getMegaStones, isMegaStoneLegal, validateSP, validateSpeciesClause, validateItemClause, validatePokemon, validateTeam, convertSPtoEVs, convertEVsToSP, searchPokemon, searchItems, searchMoves, getNatureMultiplier, calculateStat }`
 
 - All data hardcoded from official Regulation M-B sources (Victory Road, MetaVGC, Serebii)
-- `LEGAL_POKEMON` — Array of 225 objects: `{ name, types, baseStats, abilities, mega? }`
+- `LEGAL_POKEMON` — Array of 226 objects: `{ name, types, baseStats, abilities, mega? }`. Includes `Basculegion-F` as separate entry with female stats. Aegislash uses Shield Forme stats as default.
 - `LEGAL_ITEMS` — Array of 148 item names
 - `LEGAL_MOVES` — Array of 502 move names
 - `MEGA_STONES_PER_POKEMON` — Map of Pokémon to their legal Mega Stones
@@ -352,6 +352,7 @@ User creates team in Builder UI
 **Exports:** `{ fetchPokemonSpecies, fetchSprite, fetchAbility, fetchMove, fetchPokemonFull, filterLearnsetByLegalMoves, prefetchPopular }`
 
 - Wraps PokAPI calls for builder-specific needs
+- Uses `POKEAPI_SLUG_MAP` to resolve slug mismatches (e.g., `aegislash` → `aegislash-shield`)
 - `fetchPokemonFull(speciesName)` — Returns species data + filtered learnset (only legal moves) + filtered abilities
 - Types are capitalized from PokéAPI (e.g., `"water"` → `"Water"`) to match CSS class selectors
 - `filterLearnsetByLegalMoves(apiMoves, legalMoves)` — Intersection of PokAPI learnset and legal moves
@@ -416,7 +417,7 @@ User creates team in Builder UI
 - Uses `mousedown` (not `click`) on items to prevent blur race condition
 - Keyboard navigation: ArrowUp/Down to select, Enter to confirm, Escape to close
 - On Pokémon selection: extracts gender `(M)`/`(F)`/`(N)` from raw input query, fetches full data from PokAPI (types, stats, learnsets, abilities)
-- **Pokemon:** `RegulationMB.searchPokemon(q)` — all 225 legal Pokémon on focus, filtered by name as you type
+- **Pokemon:** `RegulationMB.searchPokemon(q)` — all 226 legal Pokémon on focus, filtered by name as you type
 - **Item:** `RegulationMB.searchItems(q)` — all 148 legal items on focus, filtered as you type
 - **Ability:** Filters against Pokémon's `_apiData.legalAbilities` (or `_apiData.abilities` fallback). Empty query shows all abilities for the selected Pokémon. Requires species to be selected first
 - **Moves:** `RegulationMB.searchMoves(q)` filtered by legal moves ∩ Pokémon learnset. Empty query shows all learnable moves
@@ -510,6 +511,18 @@ User creates team in Builder UI
 ### 20. Builder Team Slots Overflow and Row Spacing (FIXED)
 **Problem:** On mobile, the 6 team slots (3-column grid) had two issues: the second row was visually stuck to the first row (insufficient gap), and the grid overflowed the bottom of the `.builder-card` container.
 **Fix:** Increased `.team-slots` grid gap from `8px` to `12px` in the `max-width: 500px` media query in `builder.css`. Added `overflow: hidden` to `.builder-card` to contain visual overflow.
+
+### 21. Aegislash & Froslass Broken BaseStats (FIXED)
+**Problem:** `LEGAL_POKEMON` entries for Aegislash and Froslass had duplicate keys in `baseStats` objects. In JavaScript, duplicate keys resolve to the last value, producing incorrect stats. Aegislash had `{atk:50,atk:140,spa:50,spa:140,spd:50,spd:140,spe:60,spe:60}` which resolved to `{atk:140,spa:140,spd:140,spe:60}` — a mix of Shield and Blade Forme stats.
+**Fix:** Removed duplicate keys. Aegislash now uses Shield Forme stats (`60/50/140/50/140/60`) as the default. Froslass stats were actually correct by coincidence (both duplicate values matched), but cleaned up anyway.
+
+### 22. Basculegion Missing Female Form (FIXED)
+**Problem:** Only one `Basculegion` entry existed with male stats (`120/112/65/80/75/78`). Female Basculegion has different stats (`120/85/65/110/75/88`) and is a distinct competitive form.
+**Fix:** Added `Basculegion-F` as a separate entry in `LEGAL_POKEMON` with correct female stats. Total legal Pokémon is now 226.
+
+### 23. PokéAPI Slug Mismatches for Aegislash, Basculegion, Meowstic, Pyroar (FIXED)
+**Problem:** PokéAPI uses form-specific slugs that don't match the generic normalized names. `aegislash` → 404 (needs `aegislash-shield`), `basculegion` → 404 (needs `basculegion-male`), `basculegion-f` → 404 (needs `basculegion-female`), `meowstic` → 404 (needs `meowstic-male`), `pyroar` → 404 (needs `pyroar-male`). This caused sprites, types, and base stats to fail loading for these Pokémon.
+**Fix:** Added `POKEAPI_SLUG_MAP` constant and `_resolvePokeapiSlug()` helper function in all 3 files that fetch from PokéAPI: `translations.js` (sprite fetching), `builder-champions-api.js` (builder API layer), and `pdf.js` (base stats fetching). The mapping is applied after slug normalization, before the API fetch call.
 
 ---
 

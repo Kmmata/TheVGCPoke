@@ -81,6 +81,18 @@ const PokeTranslations = (() => {
     return slug;
   }
 
+  const POKEAPI_SLUG_MAP = {
+    'aegislash': 'aegislash-shield',
+    'basculegion': 'basculegion-male',
+    'basculegion-f': 'basculegion-female',
+    'meowstic': 'meowstic-male',
+    'pyroar': 'pyroar-male',
+  };
+
+  function _resolvePokeapiSlug(slug) {
+    return POKEAPI_SLUG_MAP[slug] || slug;
+  }
+
   function _cleanSpeciesName(name) {
     if (!name) return name;
     let clean = name.trim();
@@ -157,7 +169,8 @@ const PokeTranslations = (() => {
 
     if (spriteCache[key] !== undefined) return spriteCache[key];
 
-    const slug = _normalizeForApi('species', clean);
+    const rawSlug = _normalizeForApi('species', clean);
+    const slug = _resolvePokeapiSlug(rawSlug);
     let data = null;
 
     try {

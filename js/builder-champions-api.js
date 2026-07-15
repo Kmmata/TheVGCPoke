@@ -18,6 +18,18 @@ const ChampionsAPI = (() => {
     return name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
   }
 
+  const POKEAPI_SLUG_MAP = {
+    'aegislash': 'aegislash-shield',
+    'basculegion': 'basculegion-male',
+    'basculegion-f': 'basculegion-female',
+    'meowstic': 'meowstic-male',
+    'pyroar': 'pyroar-male',
+  };
+
+  function _resolvePokeapiSlug(slug) {
+    return POKEAPI_SLUG_MAP[slug] || slug;
+  }
+
   async function _fetchJSON(url) {
     try {
       const res = await fetch(url);
@@ -27,10 +39,12 @@ const ChampionsAPI = (() => {
   }
 
   async function fetchPokemonSpecies(speciesName) {
-    const key = _slug(speciesName);
+    const rawSlug = _slug(speciesName);
+    const key = rawSlug;
     if (_cache.species[key]) return _cache.species[key];
 
-    const data = await _fetchJSON(`${BASE_URL}/pokemon/${key}`);
+    const slug = _resolvePokeapiSlug(rawSlug);
+    const data = await _fetchJSON(`${BASE_URL}/pokemon/${slug}`);
     if (!data) return null;
 
     const result = {
@@ -65,10 +79,12 @@ const ChampionsAPI = (() => {
   }
 
   async function fetchSprite(speciesName) {
-    const key = _slug(speciesName);
+    const rawSlug = _slug(speciesName);
+    const key = rawSlug;
     if (_cache.sprite[key]) return _cache.sprite[key];
 
-    const data = await _fetchJSON(`${BASE_URL}/pokemon/${key}`);
+    const slug = _resolvePokeapiSlug(rawSlug);
+    const data = await _fetchJSON(`${BASE_URL}/pokemon/${slug}`);
     if (!data) return null;
 
     const sprite = data.sprites.other?.['official-artwork']?.front_default

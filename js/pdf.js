@@ -263,6 +263,18 @@ const TeamSheetPDF = (() => {
     return name;
   }
 
+  const POKEAPI_SLUG_MAP = {
+    'aegislash': 'aegislash-shield',
+    'basculegion': 'basculegion-male',
+    'basculegion-f': 'basculegion-female',
+    'meowstic': 'meowstic-male',
+    'pyroar': 'pyroar-male',
+  };
+
+  function _resolvePokeapiSlug(slug) {
+    return POKEAPI_SLUG_MAP[slug] || slug;
+  }
+
   function _extractGender(name) {
     if (/\(M\)/i.test(name) || /\s+M\s*$/.test(name)) return 'male';
     if (/\(F\)/i.test(name) || /\s+F\s*$/.test(name)) return 'female';
@@ -271,7 +283,8 @@ const TeamSheetPDF = (() => {
 
   async function _fetchBaseStats(species) {
     const clean = species.replace(/\s*\(M\)\s*$/i, '').replace(/\s*\(F\)\s*$/i, '').replace(/\s*\(N\)\s*$/i, '').replace(/\s+M\s*$/, '').replace(/\s+F\s*$/, '').trim();
-    const slug = _normalizeSpeciesName(clean);
+    const rawSlug = _normalizeSpeciesName(clean);
+    const slug = _resolvePokeapiSlug(rawSlug);
 
     if (_statCache[slug]) return _statCache[slug];
 
