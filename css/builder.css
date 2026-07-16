@@ -1077,19 +1077,11 @@ body.builder-page {
     width: 100%;
   }
 
-  .builder-header .builder-back-btn,
   .builder-header .builder-btn-outline,
   .builder-header .builder-btn-success,
   .builder-header .theme-toggle {
     padding: 5px 10px;
     font-size: 0.78rem;
-  }
-
-  .builder-header .builder-back-btn {
-    flex: 1 1 100%;
-    text-align: center;
-    justify-content: center;
-    display: flex;
   }
 
   .builder-main {
@@ -1232,7 +1224,6 @@ body.builder-page {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* === Header buttons — always white text on dark header === */
-.builder-header .builder-back-btn,
 .builder-header .builder-btn-outline,
 .builder-header .builder-btn-success,
 .builder-header .theme-toggle {
@@ -1248,7 +1239,6 @@ body.builder-page {
   transition: all 0.2s;
 }
 
-.builder-header .builder-back-btn:hover,
 .builder-header .builder-btn-outline:hover,
 .builder-header .builder-btn-success:hover,
 .builder-header .theme-toggle:hover {

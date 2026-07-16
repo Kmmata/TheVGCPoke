@@ -86,54 +86,58 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
-  background: var(--card-bg);
-  border-bottom: 2px solid var(--primary);
+  padding: 14px 24px;
+  background: #1a1a1a;
+  color: white;
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.calc-header-left, .calc-header-right {
+.calc-header-right {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
 .calc-nav-link {
-  color: var(--primary);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
   transition: background 0.2s;
 }
-.calc-nav-link:hover { background: var(--hover); }
+.calc-nav-link:hover { background: rgba(255,255,255,0.25); }
 
 .calc-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary);
+  color: white;
 }
 
 .calc-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
   padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  border: 2px solid var(--primary);
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
 .calc-btn-outline {
-  background: transparent;
-  color: var(--primary);
+  background: rgba(255,255,255,0.15);
+  color: white;
 }
 .calc-btn-outline:hover {
-  background: var(--primary);
-  color: #fff;
+  background: rgba(255,255,255,0.25);
 }
 .calc-btn-primary {
   background: var(--primary);
@@ -162,13 +166,14 @@ body {
   background: var(--card-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .calc-panel-header {
   background: var(--primary);
   color: #fff;
   padding: 10px 16px;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .calc-panel-header h2 {
   font-size: 0.95rem;
@@ -239,6 +244,7 @@ body {
 .calc-field {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 .calc-field label {
   display: block;
@@ -267,7 +273,7 @@ body {
 
 .calc-stat-row {
   display: grid;
-  grid-template-columns: 36px 1fr 50px 50px 50px;
+  grid-template-columns: 36px 1fr 56px 50px 50px;
   gap: 4px;
   align-items: center;
   margin-bottom: 3px;
@@ -356,8 +362,8 @@ body {
   font-size: 0.8rem;
   white-space: nowrap;
 }
-.calc-hp-input { width: 60px; text-align: center; }
-.calc-hp-pct-input { width: 45px; text-align: center; }
+.calc-hp-input { width: 70px; text-align: center; }
+.calc-hp-pct-input { width: 65px; text-align: center; }
 
 /* ─── Checkbox ─────────────────────────────────────────────────────── */
 .calc-checkbox-label {
@@ -394,21 +400,21 @@ body {
 }
 
 .calc-move-input {
-  flex: 1;
+  flex: 0 1 140px;
   min-width: 0;
 }
 
 .calc-bp-input {
-  width: 45px;
+  width: 65px;
   text-align: center;
 }
 
 .calc-move-type-select {
-  width: 70px;
+  width: 90px;
 }
 
 .calc-cat-select {
-  width: 55px;
+  width: 65px;
 }
 
 /* ─── Autocomplete ─────────────────────────────────────────────────── */
@@ -565,9 +571,10 @@ body {
 }
 
 .calc-result-move-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 95px;
   gap: 6px;
+  align-items: center;
 }
 
 .calc-move-btn {
@@ -597,7 +604,6 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   color: #a0aec0;
-  min-width: 60px;
   text-align: right;
   white-space: nowrap;
 }
@@ -694,15 +700,19 @@ body {
 
 @media (max-width: 600px) {
   .calc-header {
-    padding: 8px 12px;
+    padding: 10px 12px;
     flex-wrap: wrap;
     gap: 6px;
   }
   .calc-title { font-size: 0.9rem; }
+  .calc-nav-link, .calc-btn {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
   .calc-main { padding: 8px; }
   .calc-panel-body { padding: 10px; }
   .calc-stat-row {
-    grid-template-columns: 30px 1fr 40px 40px 40px;
+    grid-template-columns: 30px 1fr 46px 40px 40px;
   }
   .calc-move-row { flex-wrap: wrap; }
   .calc-move-input { min-width: 100%; }

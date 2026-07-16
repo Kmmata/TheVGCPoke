@@ -431,7 +431,11 @@ const CalcApp = (() => {
 
         if (spInput) {
           spInput.addEventListener('input', () => {
-            state[s].sp[statKeys[i]] = parseInt(spInput.value) || 0;
+            const newVal = parseInt(spInput.value) || 0;
+            const otherTotal = Object.entries(state[s].sp).reduce((sum, [k, v]) => k === statKeys[i] ? sum : sum + v, 0);
+            const clamped = Math.max(0, Math.min(newVal, 66 - otherTotal));
+            if (clamped !== newVal) spInput.value = clamped;
+            state[s].sp[statKeys[i]] = clamped;
             recalcStats(s);
             recalcAll();
           });
