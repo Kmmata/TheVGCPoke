@@ -414,6 +414,85 @@ const RegulationMB = (() => {
     'Manectric': ['Manectricite'],
   };
 
+  const MEGA_DATA = {
+    'Abomasnow':  { types:['Ice','Grass'], ability:'Snow Warning',    baseStats:{hp:90,atk:132,def:105,spa:132,spd:105,spe:30} },
+    'Absol':      { types:['Dark'],         ability:'Magic Bounce',   baseStats:{hp:65,atk:150,def:60,spa:115,spd:60,spe:115} },
+    'Aerodactyl': { types:['Rock','Flying'], ability:'Tough Claws',  baseStats:{hp:80,atk:135,def:85,spa:70,spd:95,spe:150} },
+    'Aggron':     { types:['Steel'],         ability:'Filter',        baseStats:{hp:70,atk:140,def:230,spa:60,spd:80,spe:50} },
+    'Alakazam':   { types:['Psychic'],       ability:'Trace',         baseStats:{hp:55,atk:50,def:65,spa:175,spd:105,spe:150} },
+    'Altaria':    { types:['Dragon','Fairy'], ability:'Pixilate',     baseStats:{hp:75,atk:110,def:110,spa:110,spd:105,spe:80} },
+    'Ampharos':   { types:['Electric','Dragon'], ability:'Mold Breaker', baseStats:{hp:90,atk:95,def:105,spa:165,spd:110,spe:45} },
+    'Audino':     { types:['Normal','Fairy'], ability:'Healer',       baseStats:{hp:103,atk:60,def:126,spa:80,spd:126,spe:50} },
+    'Banette':    { types:['Ghost'],          ability:'Prankster',    baseStats:{hp:64,atk:165,def:75,spa:93,spd:83,spe:75} },
+    'Barbaracle': { types:['Fighting','Rock'], ability:'Tough Claws', baseStats:{hp:72,atk:140,def:130,spa:64,spd:106,spe:88} },
+    'Beedrill':   { types:['Bug','Poison'],  ability:'Adaptability',  baseStats:{hp:65,atk:150,def:40,spa:15,spd:80,spe:145} },
+    'Blastoise':  { types:['Water'],          ability:'Mega Launcher', baseStats:{hp:79,atk:103,def:120,spa:135,spd:115,spe:78} },
+    'Blaziken':   { types:['Fire','Fighting'], ability:'Speed Boost',  baseStats:{hp:80,atk:160,def:80,spa:130,spd:80,spe:100} },
+    'Camerupt':   { types:['Fire','Ground'],  ability:'Sheer Force',  baseStats:{hp:70,atk:120,def:100,spa:145,spd:105,spe:20} },
+    'Charizard': {
+      X: { types:['Fire','Dragon'], ability:'Tough Claws', baseStats:{hp:78,atk:130,def:111,spa:130,spd:85,spe:100} },
+      Y: { types:['Fire','Flying'], ability:'Drought',     baseStats:{hp:78,atk:104,def:78,spa:159,spd:115,spe:100} },
+    },
+    'Chesnaught': { types:['Grass','Fighting'], ability:'Bulletproof', baseStats:{hp:88,atk:137,def:172,spa:74,spd:115,spe:44} },
+    'Chimecho':   { types:['Psychic','Steel'], ability:'Levitate',    baseStats:{hp:75,atk:50,def:110,spa:135,spd:120,spe:65} },
+    'Clefable':   { types:['Fairy','Flying'],  ability:'Magic Bounce', baseStats:{hp:95,atk:80,def:93,spa:135,spd:110,spe:70} },
+    'Crabominable': { types:['Fighting','Ice'], ability:'Iron Fist',  baseStats:{hp:97,atk:157,def:122,spa:62,spd:107,spe:33} },
+    'Delphox':    { types:['Fire','Psychic'],  ability:'Levitate',    baseStats:{hp:75,atk:69,def:72,spa:159,spd:125,spe:134} },
+    'Dragalge':   { types:['Poison','Dragon'], ability:'Regenerator', baseStats:{hp:65,atk:85,def:105,spa:132,spd:163,spe:44} },
+    'Dragonite':  { types:['Dragon','Flying'], ability:'Multiscale',  baseStats:{hp:91,atk:124,def:115,spa:145,spd:125,spe:100} },
+    'Drampa':     { types:['Normal','Dragon'], ability:'Berserk',     baseStats:{hp:78,atk:85,def:110,spa:160,spd:116,spe:36} },
+    'Eelektross': { types:['Electric'],        ability:'Eelevate',    baseStats:{hp:85,atk:145,def:80,spa:135,spd:90,spe:80} },
+    'Emboar':     { types:['Fire','Fighting'], ability:'Mold Breaker', baseStats:{hp:110,atk:148,def:75,spa:110,spd:110,spe:75} },
+    'Excadrill':  { types:['Ground','Steel'],  ability:'Piercing Drill', baseStats:{hp:110,atk:165,def:100,spa:65,spd:65,spe:103} },
+    'Falinks':    { types:['Fighting'],        ability:'Defiant',     baseStats:{hp:65,atk:135,def:135,spa:70,spd:65,spe:100} },
+    'Feraligatr': { types:['Water','Dragon'],  ability:'Dragonize',   baseStats:{hp:85,atk:160,def:125,spa:89,spd:93,spe:78} },
+    'Floette':    { types:['Fairy'],           ability:'Fairy Aura',  baseStats:{hp:74,atk:85,def:87,spa:155,spd:148,spe:102} },
+    'Froslass':   { types:['Ice','Ghost'],     ability:'Snow Warning', baseStats:{hp:70,atk:80,def:70,spa:140,spd:100,spe:120} },
+    'Gallade':    { types:['Psychic','Fighting'], ability:'Inner Focus', baseStats:{hp:68,atk:165,def:95,spa:65,spd:115,spe:110} },
+    'Gardevoir':  { types:['Psychic','Fairy'], ability:'Pixilate',    baseStats:{hp:68,atk:85,def:65,spa:165,spd:135,spe:100} },
+    'Garchomp':   { types:['Dragon','Ground'], ability:'Sand Force',  baseStats:{hp:108,atk:170,def:115,spa:120,spd:95,spe:92} },
+    'Gengar':     { types:['Ghost','Poison'],  ability:'Shadow Tag',  baseStats:{hp:60,atk:65,def:80,spa:170,spd:95,spe:130} },
+    'Glalie':     { types:['Ice'],             ability:'Refrigerate',  baseStats:{hp:80,atk:120,def:80,spa:120,spd:80,spe:100} },
+    'Glimmora':   { types:['Rock','Poison'],   ability:'Adaptability', baseStats:{hp:83,atk:90,def:105,spa:150,spd:96,spe:101} },
+    'Golurk':     { types:['Ground','Ghost'],  ability:'Unseen Fist', baseStats:{hp:89,atk:159,def:105,spa:70,spd:105,spe:55} },
+    'Greninja':   { types:['Water','Dark'],    ability:'Protean',     baseStats:{hp:72,atk:125,def:77,spa:133,spd:81,spe:142} },
+    'Gyarados':   { types:['Water','Dark'],    ability:'Mold Breaker', baseStats:{hp:95,atk:155,def:109,spa:70,spd:130,spe:81} },
+    'Hawlucha':   { types:['Fighting','Flying'], ability:'No Guard',   baseStats:{hp:78,atk:137,def:100,spa:74,spd:93,spe:118} },
+    'Heracross':  { types:['Bug','Fighting'],  ability:'Skill Link',  baseStats:{hp:80,atk:185,def:115,spa:40,spd:105,spe:75} },
+    'Houndoom':   { types:['Fire','Dark'],     ability:'Solar Power', baseStats:{hp:75,atk:90,def:90,spa:140,spd:90,spe:115} },
+    'Kangaskhan': { types:['Normal'],          ability:'Parental Bond', baseStats:{hp:105,atk:125,def:100,spa:60,spd:100,spe:100} },
+    'Lopunny':    { types:['Normal','Fighting'], ability:'Scrappy',    baseStats:{hp:65,atk:136,def:94,spa:54,spd:96,spe:135} },
+    'Lucario':    { types:['Fighting','Steel'], ability:'Adaptability', baseStats:{hp:70,atk:145,def:88,spa:140,spd:70,spe:112} },
+    'Manectric':  { types:['Electric'],        ability:'Intimidate',  baseStats:{hp:70,atk:75,def:80,spa:135,spd:80,spe:135} },
+    'Mawile':     { types:['Steel','Fairy'],   ability:'Huge Power',  baseStats:{hp:50,atk:105,def:125,spa:55,spd:95,spe:50} },
+    'Medicham':   { types:['Fighting','Psychic'], ability:'Pure Power', baseStats:{hp:60,atk:100,def:85,spa:80,spd:85,spe:100} },
+    'Meganium':   { types:['Grass','Fairy'],   ability:'Mega Sol',    baseStats:{hp:80,atk:92,def:115,spa:143,spd:115,spe:80} },
+    'Meowstic':   { types:['Psychic'],         ability:'Trace',       baseStats:{hp:74,atk:48,def:76,spa:143,spd:101,spe:124} },
+    'Metagross':  { types:['Steel','Psychic'], ability:'Tough Claws', baseStats:{hp:80,atk:145,def:150,spa:105,spd:110,spe:110} },
+    'Pidgeot':    { types:['Normal','Flying'],  ability:'No Guard',    baseStats:{hp:83,atk:80,def:80,spa:135,spd:80,spe:121} },
+    'Pinsir':     { types:['Bug','Flying'],    ability:'Aerilate',    baseStats:{hp:65,atk:155,def:120,spa:65,spd:90,spe:105} },
+    'Pyroar':     { types:['Normal','Fire'],   ability:'Fire Mane',   baseStats:{hp:86,atk:88,def:92,spa:129,spd:86,spe:126} },
+    'Raichu': {
+      X: { types:['Electric'], ability:'Electric Surge', baseStats:{hp:60,atk:135,def:95,spa:90,spd:95,spe:110} },
+      Y: { types:['Electric'], ability:'No Guard',       baseStats:{hp:60,atk:100,def:55,spa:160,spd:80,spe:130} },
+    },
+    'Sableye':    { types:['Dark','Ghost'],    ability:'Magic Bounce', baseStats:{hp:50,atk:85,def:125,spa:85,spd:115,spe:20} },
+    'Sceptile':   { types:['Grass','Dragon'],  ability:'Lightning Rod', baseStats:{hp:70,atk:110,def:75,spa:145,spd:85,spe:145} },
+    'Scizor':     { types:['Bug','Steel'],     ability:'Technician',  baseStats:{hp:70,atk:150,def:140,spa:65,spd:100,spe:75} },
+    'Scolipede':  { types:['Poison','Bug'],    ability:'Shell Armor', baseStats:{hp:60,atk:140,def:149,spa:75,spd:99,spe:62} },
+    'Scrafty':    { types:['Fighting','Dark'],  ability:'Intimidate',  baseStats:{hp:65,atk:130,def:135,spa:55,spd:135,spe:68} },
+    'Sharpedo':   { types:['Water','Dark'],    ability:'Strong Jaw',  baseStats:{hp:70,atk:140,def:70,spa:110,spd:65,spe:105} },
+    'Skarmory':   { types:['Steel','Flying'],  ability:'Stalwart',    baseStats:{hp:65,atk:140,def:110,spa:40,spd:100,spe:110} },
+    'Slowbro':    { types:['Water','Psychic'], ability:'Shell Armor',  baseStats:{hp:95,atk:75,def:180,spa:130,spd:80,spe:30} },
+    'Starmie':    { types:['Water','Psychic'], ability:'Huge Power',   baseStats:{hp:60,atk:100,def:105,spa:130,spd:105,spe:120} },
+    'Staraptor':  { types:['Fighting','Flying'], ability:'Contrary',   baseStats:{hp:85,atk:140,def:100,spa:60,spd:90,spe:110} },
+    'Steelix':    { types:['Steel','Ground'],  ability:'Sand Force',  baseStats:{hp:75,atk:125,def:230,spa:55,spd:95,spe:30} },
+    'Swampert':   { types:['Water','Ground'],  ability:'Swift Swim',  baseStats:{hp:100,atk:150,def:110,spa:95,spd:110,spe:70} },
+    'Tyranitar':  { types:['Rock','Dark'],     ability:'Sand Stream', baseStats:{hp:100,atk:164,def:150,spa:95,spd:120,spe:71} },
+    'Venusaur':   { types:['Grass','Poison'],  ability:'Thick Fat',   baseStats:{hp:80,atk:100,def:123,spa:122,spd:120,spe:80} },
+    'Victreebel': { types:['Grass','Poison'],  ability:'Innards Out', baseStats:{hp:80,atk:125,def:85,spa:135,spd:95,spe:70} },
+  };
+
   const NATURES = {
     'Hardy':   { plus: null,    minus: null    },
     'Lonely':  { plus: 'atk',   minus: 'def'   },
@@ -676,6 +755,25 @@ const RegulationMB = (() => {
     return { base, megaStone: stone };
   }
 
+  function hasDualMega(species) {
+    const data = MEGA_DATA[species];
+    return !!(data && data.X && data.Y);
+  }
+
+  function getMegaData(species, form) {
+    const data = MEGA_DATA[species];
+    if (!data) return null;
+    if (hasDualMega(species)) {
+      if (!form) return null;
+      return data[form] || null;
+    }
+    return data;
+  }
+
+  function canMegaEvolve(species) {
+    return !!MEGA_DATA[species];
+  }
+
   return {
     LEGAL_POKEMON,
     LEGAL_ITEMS,
@@ -704,5 +802,9 @@ const RegulationMB = (() => {
     getNatureMultiplier,
     calculateStat,
     normalizeMegaName,
+    MEGA_DATA,
+    hasDualMega,
+    getMegaData,
+    canMegaEvolve,
   };
 })();

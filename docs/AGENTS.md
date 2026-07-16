@@ -1,5 +1,9 @@
 # AGENTS.md — Pokémon Champions Team Sheet Generator
 
+## Language Preference
+
+**IMPORTANT:** All communication in this project MUST be in Spanish (es). Written notes, commit messages, and documentation should be written in English unless they target a Spanish-speaking audience.
+
 ## Project Overview
 
 Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG tournament team sheet PDFs** for **Pokémon Champions**. No framework, no bundler. Web only (browser).
@@ -46,7 +50,7 @@ pokemon-team-sheets/
 │   ├── type-chart.js             # Type effectiveness chart (19×19 matrix including Stellar)
 │   ├── calc-move-data.js         # Move metadata for all 502 legal moves (type, category, BP, flags, PokAPI-sourced)
 │   ├── damage.js                 # Damage calculation engine (complete formula, matches NCP VGC reference)
-│   └── calc.js                   # Damage Calculator UI: two panels, autocomplete, stat calc, team preview, bilingual
+│   └── calc.js                   # Damage Calculator UI: two panels, autocomplete, stat calc, bilingual
 ├── assets/                       # Static assets (placeholder)
 ├── play-pokemon-vg-team-list.pdf # Official reference PDF (do not modify)
 ├── docs/
@@ -443,7 +447,7 @@ The Damage Calculator (`calc.html`) is a **separate page** that provides full Ch
 **Key characteristics:**
 - Champions format: level 50, fixed 31 IVs, SP (Stat Points 0–32) instead of EVs
 - Complete damage formula: all modifiers, spread, weather, terrain, abilities, items, STAB, type effectiveness
-- Two Pokémon panels (attacker vs defender) with team preview
+- Two Pokémon panels (attacker vs defender)
 - Real-time damage ranges (min% – max%) for all 4 moves
 - Bilingual ES/EN via `data-es` / `data-en` attributes
 - Dark mode support (synced with main page/builder)
@@ -513,7 +517,6 @@ User selects Pokémon on either panel
 - **Features:**
   - Autocomplete inputs for species, item, ability, moves (uses RegulationMB search functions)
   - Stat display with SP sliders and nature selection
-  - Team preview (6 slots per side)
   - Field condition toggles (weather, terrain, screens, format)
   - Real-time damage calculation on any input change
   - Bilingual UI labels via `data-es` / `data-en`
@@ -524,11 +527,10 @@ User selects Pokémon on either panel
 1. **Two-panel layout** — Left panel (attacker) vs Right panel (defender), each with Pokémon selection, stats, moves
 2. **Pokémon autocomplete** — Species, item, ability, 4 move inputs with autocomplete
 3. **Stat display** — HP, Atk, Def, Spa, Spd, Spe with SP sliders and nature dropdown
-4. **Team preview** — 6 slots per side, click to select active Pokémon
-5. **Field conditions** — Weather, terrain, screens, format (Singles/Doubles) with toggle buttons
-6. **Result banner** — Shows damage ranges for all 4 moves (min% – max%) with selected move highlighted
-7. **Language toggle** — ES/EN switch for all UI labels
-8. **Dark mode toggle** — Synced with main page/builder preference
+4. **Field conditions** — Weather, terrain, screens, format (Singles/Doubles) with toggle buttons
+5. **Result banner** — Shows damage ranges for all 4 moves (min% – max%) with selected move highlighted
+6. **Language toggle** — ES/EN switch for all UI labels
+7. **Dark mode toggle** — Synced with main page/builder preference
 
 ### Damage Formula Reference
 
@@ -655,6 +657,18 @@ Where modifiers are applied in this order:
 **Problem:** PokéAPI uses form-specific slugs that don't match the generic normalized names. `aegislash` → 404 (needs `aegislash-shield`), `basculegion` → 404 (needs `basculegion-male`), `basculegion-f` → 404 (needs `basculegion-female`), `meowstic` → 404 (needs `meowstic-male`), `pyroar` → 404 (needs `pyroar-male`). This caused sprites, types, and base stats to fail loading for these Pokémon.
 **Fix:** Added `POKEAPI_SLUG_MAP` constant and `_resolvePokeapiSlug()` helper function in all 3 files that fetch from PokéAPI: `translations.js` (sprite fetching), `builder-champions-api.js` (builder API layer), and `pdf.js` (base stats fetching). The mapping is applied after slug normalization, before the API fetch call.
 
+### 24. Calc Autocomplete Dropdowns Positioned Incorrectly (FIXED)
+**Problem:** Ability and Item autocomplete dropdowns in the damage calculator appeared displaced to the bottom-left of the page instead of directly below their input fields. Species autocomplete worked fine because its wrapper (`.calc-species-input-wrap`) had `position: relative`, but `.calc-field` did not.
+**Fix:** Added `position: relative` to `.calc-field` in `calc.css`.
+
+### 25. Calc Autocomplete Dropdowns Clipped by Panel Overflow (FIXED)
+**Problem:** Autocomplete dropdowns for Ability and Item were cut off when the list extended beyond the `.calc-panel` container. The panel had `overflow: hidden` which clipped absolutely-positioned children.
+**Fix:** Changed `.calc-panel` from `overflow: hidden` to `overflow: visible`. Added `border-radius` to `.calc-panel-header` directly since it was previously relying on the parent's overflow clipping for rounded top corners.
+
+### 26. Calc SP Inputs Allow Exceeding Maximum (FIXED)
+**Problem:** In the damage calculator, SP inputs had no validation — users could set values that made the total exceed 66.
+**Fix:** Added clamping logic in the SP input event handler: before applying the new value, the handler calculates the sum of all other stats and limits the current input to `66 - otherTotal`. This prevents the total from ever exceeding 66.
+
 ---
 
 ## Bilingual System
@@ -722,9 +736,8 @@ All translatable UI elements use dual attributes:
 14. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB
 15. **Test calc stat display:** Select a Pokémon → verify HP, Atk, Def, Spa, Spd, Spe match expected values (SP + nature)
 16. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
-17. **Test calc team preview:** Click team preview slots → verify active Pokémon updates damage calculation
-18. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
-19. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
+17. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
+18. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
 20. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
 14. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
 15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes

@@ -77,6 +77,7 @@
       <div class="calc-panel calc-pokemon-panel" id="panelLeft">
         <div class="calc-panel-header">
           <h2 data-es="Pokémon 1 (Atacante)" data-en="Pokémon 1 (Attacker)">Pokémon 1 (Atacante)</h2>
+          <button class="calc-import-btn" data-side="left" data-es="📋 Importar" data-en="📋 Import">📋 Importar</button>
         </div>
         <div class="calc-panel-body">
           <!-- Species & Sprite -->
@@ -113,6 +114,15 @@
               <input type="checkbox" id="teraActiveLeft" class="calc-checkbox">
               <span data-es="Terastalizar" data-en="Terastallize">Terastalizar</span>
             </label>
+          </div>
+
+          <!-- Mega Evolution toggle -->
+          <div class="calc-row calc-row-center">
+            <label class="calc-checkbox-label">
+              <input type="checkbox" id="megaActiveLeft" class="calc-checkbox">
+              <span>Mega Evolution</span>
+            </label>
+            <select id="megaFormLeft" class="calc-select calc-mega-select hidden"></select>
           </div>
 
           <!-- Stats -->
@@ -246,6 +256,9 @@
             / <span id="maxHpLeft">—</span>
             (<input type="number" id="pctHpLeft" class="calc-input calc-hp-pct-input" min="0" max="100" value="100">%)
           </div>
+          <div class="calc-row calc-hp-slider-row">
+            <input type="range" id="sliderHpLeft" class="calc-hp-slider" min="0" max="100" value="100">
+          </div>
 
           <!-- Moves -->
           <div class="calc-moves-section">
@@ -370,6 +383,7 @@
       <div class="calc-panel calc-pokemon-panel" id="panelRight">
         <div class="calc-panel-header">
           <h2 data-es="Pokémon 2 (Defensor)" data-en="Pokémon 2 (Defender)">Pokémon 2 (Defensor)</h2>
+          <button class="calc-import-btn" data-side="right" data-es="📋 Importar" data-en="📋 Import">📋 Importar</button>
         </div>
         <div class="calc-panel-body">
           <!-- Species & Sprite -->
@@ -406,6 +420,15 @@
               <input type="checkbox" id="teraActiveRight" class="calc-checkbox">
               <span data-es="Terastalizar" data-en="Terastallize">Terastalizar</span>
             </label>
+          </div>
+
+          <!-- Mega Evolution toggle -->
+          <div class="calc-row calc-row-center">
+            <label class="calc-checkbox-label">
+              <input type="checkbox" id="megaActiveRight" class="calc-checkbox">
+              <span>Mega Evolution</span>
+            </label>
+            <select id="megaFormRight" class="calc-select calc-mega-select hidden"></select>
           </div>
 
           <!-- Stats -->
@@ -539,6 +562,58 @@
             / <span id="maxHpRight">—</span>
             (<input type="number" id="pctHpRight" class="calc-input calc-hp-pct-input" min="0" max="100" value="100">%)
           </div>
+          <div class="calc-row calc-hp-slider-row">
+            <input type="range" id="sliderHpRight" class="calc-hp-slider" min="0" max="100" value="100">
+          </div>
+
+          <!-- Moves -->
+          <div class="calc-moves-section">
+            <h3 data-es="Movimientos" data-en="Moves">Movimientos</h3>
+            <div class="calc-move-row">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="0" autocomplete="off" placeholder="Move 1">
+              <div class="calc-autocomplete calc-move-autocomplete"></div>
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="0" value="0" min="0" title="Base Power">
+              <select class="calc-select calc-move-type-select" data-moveidx="0"></select>
+              <select class="calc-select calc-cat-select" data-moveidx="0">
+                <option value="Physical">Phys</option>
+                <option value="Special">Spec</option>
+                <option value="Status">Status</option>
+              </select>
+            </div>
+            <div class="calc-move-row">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="1" autocomplete="off" placeholder="Move 2">
+              <div class="calc-autocomplete calc-move-autocomplete"></div>
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="1" value="0" min="0" title="Base Power">
+              <select class="calc-select calc-move-type-select" data-moveidx="1"></select>
+              <select class="calc-select calc-cat-select" data-moveidx="1">
+                <option value="Physical">Phys</option>
+                <option value="Special">Spec</option>
+                <option value="Status">Status</option>
+              </select>
+            </div>
+            <div class="calc-move-row">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="2" autocomplete="off" placeholder="Move 3">
+              <div class="calc-autocomplete calc-move-autocomplete"></div>
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="2" value="0" min="0" title="Base Power">
+              <select class="calc-select calc-move-type-select" data-moveidx="2"></select>
+              <select class="calc-select calc-cat-select" data-moveidx="2">
+                <option value="Physical">Phys</option>
+                <option value="Special">Spec</option>
+                <option value="Status">Status</option>
+              </select>
+            </div>
+            <div class="calc-move-row">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="3" autocomplete="off" placeholder="Move 4">
+              <div class="calc-autocomplete calc-move-autocomplete"></div>
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="3" value="0" min="0" title="Base Power">
+              <select class="calc-select calc-move-type-select" data-moveidx="3"></select>
+              <select class="calc-select calc-cat-select" data-moveidx="3">
+                <option value="Physical">Phys</option>
+                <option value="Special">Spec</option>
+                <option value="Status">Status</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -546,12 +621,44 @@
 
   </main>
 
+  <!-- Import Paste Modal -->
+  <div class="calc-modal-overlay" id="importModal">
+    <div class="calc-modal">
+      <div class="calc-modal-header">
+        <h3 data-es="Importar Paste de Showdown" data-en="Import Showdown Paste">Importar Paste de Showdown</h3>
+        <button class="calc-modal-close" id="importModalClose">&times;</button>
+      </div>
+      <div class="calc-modal-body">
+        <div class="calc-modal-tabs">
+          <button class="calc-modal-tab active" data-tab="text" data-es="Texto" data-en="Text">Texto</button>
+          <button class="calc-modal-tab" data-tab="url" data-es="URL" data-en="URL">URL</button>
+        </div>
+        <div class="calc-modal-tab-content" id="tabText">
+          <textarea id="importPasteText" class="calc-modal-textarea" rows="10" placeholder="Pega aquí el paste de Showdown..."></textarea>
+        </div>
+        <div class="calc-modal-tab-content hidden" id="tabUrl">
+          <input type="text" id="importPasteUrl" class="calc-input" placeholder="https://pokepast.es/abcdef123456">
+        </div>
+        <div class="calc-modal-error hidden" id="importError"></div>
+        <div class="calc-modal-pokemon-list hidden" id="importPokemonList">
+          <label data-es="Selecciona un Pokémon:" data-en="Select a Pokémon:">Selecciona un Pokémon:</label>
+          <div id="importPokemonItems"></div>
+        </div>
+      </div>
+      <div class="calc-modal-footer">
+        <button class="calc-btn calc-btn-outline calc-modal-cancel" id="importCancel" data-es="Cancelar" data-en="Cancel">Cancelar</button>
+        <button class="calc-btn calc-btn-primary" id="importConfirm" data-es="Importar" data-en="Import">Importar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/translations.js"></script>
   <script src="js/regulation.js"></script>
   <script src="js/builder-champions-api.js"></script>
   <script src="js/type-chart.js"></script>
   <script src="js/calc-move-data.js"></script>
+  <script src="js/parser.js"></script>
   <script src="js/damage.js"></script>
   <script src="js/calc.js"></script>
 </body>

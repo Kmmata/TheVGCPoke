@@ -12,6 +12,7 @@ const ChampionsAPI = (() => {
     ability: {},
     move: {},
     sprite: {},
+    weight: {},
   };
 
   function _slug(name) {
@@ -92,7 +93,20 @@ const ChampionsAPI = (() => {
       || null;
 
     _cache.sprite[key] = sprite;
+    _cache.weight[key] = data.weight || 0;
     return sprite;
+  }
+
+  async function fetchWeight(speciesName) {
+    const key = _slug(speciesName);
+    if (_cache.weight[key] !== undefined) return _cache.weight[key];
+
+    const slug = _resolvePokeapiSlug(key);
+    const data = await _fetchJSON(`${BASE_URL}/pokemon/${slug}`);
+    if (!data) return 0;
+
+    _cache.weight[key] = data.weight || 0;
+    return _cache.weight[key];
   }
 
   async function fetchAbility(abilityName) {
@@ -188,6 +202,7 @@ const ChampionsAPI = (() => {
     fetchMove,
     fetchPokemonFull,
     filterLearnsetByLegalMoves,
+    fetchWeight,
     prefetchPopular,
   };
 })();

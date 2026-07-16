@@ -174,11 +174,30 @@ body {
   color: #fff;
   padding: 10px 16px;
   border-radius: var(--radius) var(--radius) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .calc-panel-header h2 {
   font-size: 0.95rem;
   font-weight: 700;
   margin: 0;
+}
+
+.calc-import-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.calc-import-btn:hover {
+  background: rgba(255,255,255,0.3);
 }
 
 .calc-panel-body {
@@ -364,6 +383,44 @@ body {
 }
 .calc-hp-input { width: 70px; text-align: center; }
 .calc-hp-pct-input { width: 65px; text-align: center; }
+
+/* ─── HP slider ──────────────────────────────────────────────────── */
+.calc-hp-slider-row {
+  display: flex;
+  align-items: center;
+  margin: -4px 0 8px;
+  padding-left: 2px;
+}
+.calc-hp-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--hp-low) 0%, var(--hp-mid) 40%, var(--hp-bar) 70%, var(--hp-bar) 100%);
+  outline: none;
+  cursor: pointer;
+}
+.calc-hp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--hp-bar);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  cursor: pointer;
+}
+.calc-hp-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--hp-bar);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  cursor: pointer;
+}
 
 /* ─── Checkbox ─────────────────────────────────────────────────────── */
 .calc-checkbox-label {
@@ -724,3 +781,192 @@ body {
 .calc-autocomplete::-webkit-scrollbar { width: 6px; }
 .calc-autocomplete::-webkit-scrollbar-track { background: var(--card-bg); }
 .calc-autocomplete::-webkit-scrollbar-thumb { background: var(--input-border); border-radius: 3px; }
+
+/* ─── Import Modal ─────────────────────────────────────────────────── */
+.calc-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.calc-modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hidden { display: none !important; }
+
+/* ─── Mega Evolution Select ───────────────────────────────────────── */
+.calc-mega-select {
+  width: auto;
+  min-width: 70px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  margin-left: 8px;
+}
+
+.calc-modal {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.calc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.calc-modal-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+.calc-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  line-height: 1;
+}
+.calc-modal-close:hover { color: var(--text); }
+
+.calc-modal-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.calc-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.calc-modal-cancel {
+  color: var(--text);
+  border-color: var(--input-border);
+}
+
+/* Tabs */
+.calc-modal-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.calc-modal-tab {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+.calc-modal-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.calc-modal-tab:hover:not(.active) {
+  color: var(--text);
+}
+
+.calc-modal-tab-content.hidden {
+  display: none;
+}
+
+.calc-modal-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: monospace;
+  font-size: 0.82rem;
+  resize: vertical;
+  min-height: 120px;
+}
+.calc-modal-textarea:focus {
+  outline: none;
+  border-color: var(--input-focus);
+}
+
+.calc-modal-error {
+  background: #fed7d7;
+  color: #9b2c2c;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+.dark .calc-modal-error {
+  background: #3b1a1a;
+  color: #fc8181;
+}
+
+.calc-modal-pokemon-list {
+  margin-top: 12px;
+}
+.calc-modal-pokemon-list.hidden { display: none; }
+.calc-modal-pokemon-list > label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.calc-pokemon-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.calc-pokemon-pick:hover {
+  border-color: var(--primary);
+  background: var(--hover);
+}
+.calc-pokemon-pick.selected {
+  border-color: var(--primary);
+  background: rgba(196,30,58,0.08);
+}
+.dark .calc-pokemon-pick.selected {
+  background: rgba(232,66,90,0.15);
+}
+.calc-pokemon-pick-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.calc-pokemon-pick-info {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

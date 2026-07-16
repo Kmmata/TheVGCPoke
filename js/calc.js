@@ -15,21 +15,27 @@ const CalcApp = (() => {
       species: '', types: ['Normal','Normal'], baseStats: { hp:100,atk:100,def:100,spa:100,spd:100,spe:100 },
       nature: 'Hardy', ability: '', item: '', status: 'Healthy',
       teraType: 'Normal', isTerastalized: false,
+      mega: false, megaForm: '',
+      origBaseStats: null, origTypes: null, origAbility: null, origWeight: 0,
       sp: { hp:0,atk:0,def:0,spa:0,spd:0,spe:0 },
       boosts: { hp:0,atk:0,def:0,spa:0,spd:0,spe:0 },
       moves: ['','','',''],
       moveData: [null,null,null,null],
       curHP: 341, maxHP: 341,
+      weight: 0,
     },
     right: {
       species: '', types: ['Normal','Normal'], baseStats: { hp:100,atk:100,def:100,spa:100,spd:100,spe:100 },
       nature: 'Hardy', ability: '', item: '', status: 'Healthy',
       teraType: 'Normal', isTerastalized: false,
+      mega: false, megaForm: '',
+      origBaseStats: null, origTypes: null, origAbility: null, origWeight: 0,
       sp: { hp:0,atk:0,def:0,spa:0,spd:0,spe:0 },
       boosts: { hp:0,atk:0,def:0,spa:0,spd:0,spe:0 },
       moves: ['','','',''],
       moveData: [null,null,null,null],
       curHP: 341, maxHP: 341,
+      weight: 0,
     },
     field: {
       format: 'Singles',
@@ -70,6 +76,8 @@ const CalcApp = (() => {
     bindMoveButtons();
     bindSwapButton();
     bindTeamPreview();
+    bindImportButtons();
+    bindMegaInputs();
     recalcAll();
   }
 
@@ -299,6 +307,9 @@ const CalcApp = (() => {
     s.baseStats = { ...data.baseStats };
     s.ability = data.abilities[0] || '';
 
+    // Update mega UI
+    updateMegaUI(side);
+
     // Update UI
     $(`#type1${capitalize(side)}`).value = s.types[0];
     $(`#type2${capitalize(side)}`).value = s.types[1] || '';
@@ -319,6 +330,9 @@ const CalcApp = (() => {
     // Load sprite
     loadSprite(side, name);
 
+    // Load weight for variable-power moves
+    loadWeight(side, name);
+
     // Auto-fill moves if empty
     autoFillMoves(side, name);
 
@@ -326,11 +340,20 @@ const CalcApp = (() => {
     recalcAll();
   }
 
-  async function loadSprite(side, name) {
-    const sprite = await ChampionsAPI.fetchSprite(name);
+  async function loadSprite(side, name, megaForm) {
+    let spriteName = name;
+    if (megaForm !== undefined) {
+      spriteName = name + '-mega' + (megaForm ? '-' + megaForm.toLowerCase() : '');
+    }
+    const sprite = await ChampionsAPI.fetchSprite(spriteName);
     if (sprite) {
       $(`#sprite${capitalize(side)}`).src = sprite;
     }
+  }
+
+  async function loadWeight(side, name) {
+    const weight = await ChampionsAPI.fetchWeight(name);
+    if (weight) state[side].weight = weight;
   }
 
   function autoFillMoves(side, name) {
@@ -460,13 +483,20 @@ const CalcApp = (() => {
       // Current HP
       const curHpInput = $(`#curHp${side}`);
       const pctHpInput = $(`#pctHp${side}`);
+      const sliderHp = $(`#sliderHp${side}`);
 
       if (curHpInput) {
         curHpInput.addEventListener('input', () => {
-          state[s].curHP = parseInt(curHpInput.value) || 0;
           const max = state[s].maxHP;
+          let val = parseInt(curHpInput.value) || 0;
+          if (val > max) val = max;
+          if (val < 0) val = 0;
+          curHpInput.value = val;
+          state[s].curHP = val;
           if (max > 0) {
-            pctHpInput.value = Math.round(state[s].curHP / max * 100);
+            const pct = Math.round(val / max * 100);
+            pctHpInput.value = pct;
+            if (sliderHp) sliderHp.value = pct;
           }
           recalcAll();
         });
@@ -474,9 +504,24 @@ const CalcApp = (() => {
 
       if (pctHpInput) {
         pctHpInput.addEventListener('input', () => {
-          const pct = parseInt(pctHpInput.value) || 0;
+          let pct = parseInt(pctHpInput.value) || 0;
+          if (pct > 100) pct = 100;
+          if (pct < 0) pct = 0;
+          pctHpInput.value = pct;
           state[s].curHP = Math.round(state[s].maxHP * pct / 100);
           curHpInput.value = state[s].curHP;
+          if (sliderHp) sliderHp.value = pct;
+          recalcAll();
+        });
+      }
+
+      if (sliderHp) {
+        sliderHp.addEventListener('input', () => {
+          let pct = parseInt(sliderHp.value) || 0;
+          if (pct > 100) pct = 100;
+          state[s].curHP = Math.round(state[s].maxHP * pct / 100);
+          curHpInput.value = state[s].curHP;
+          pctHpInput.value = pct;
           recalcAll();
         });
       }
@@ -638,6 +683,114 @@ const CalcApp = (() => {
     });
   }
 
+  // ─── Mega Evolution ─────────────────────────────────────────────────
+
+  function bindMegaInputs() {
+    ['left','right'].forEach(side => {
+      const cap = capitalize(side);
+      const checkbox = $(`#megaActive${cap}`);
+      const formSelect = $(`#megaForm${cap}`);
+
+      checkbox.addEventListener('change', () => {
+        toggleMega(side);
+      });
+
+      formSelect.addEventListener('change', () => {
+        const s = state[side];
+        s.megaForm = formSelect.value;
+        if (s.mega) {
+          const megaData = RegulationMB.getMegaData(s.species, s.megaForm);
+          if (megaData) {
+            s.baseStats = { ...megaData.baseStats };
+            s.types = [...megaData.types];
+            s.ability = megaData.ability;
+            const megaName = s.species + '-mega-' + s.megaForm.toLowerCase();
+            ChampionsAPI.fetchWeight(megaName).then(w => { if (w) s.weight = w; });
+            syncUIToState(side);
+            recalcAll();
+            loadSprite(side, s.species, s.megaForm);
+          }
+        }
+      });
+    });
+  }
+
+  function toggleMega(side) {
+    const s = state[side];
+    const cap = capitalize(side);
+    const checkbox = $(`#megaActive${cap}`);
+    const formSelect = $(`#megaForm${cap}`);
+
+    if (checkbox.checked) {
+      const megaData = RegulationMB.getMegaData(s.species, s.megaForm);
+      if (!megaData) { checkbox.checked = false; return; }
+
+      s.origBaseStats = { ...s.baseStats };
+      s.origTypes = [...s.types];
+      s.origAbility = s.ability;
+      s.origWeight = s.weight;
+      s.baseStats = { ...megaData.baseStats };
+      s.types = [...megaData.types];
+      s.ability = megaData.ability;
+      s.mega = true;
+      // Fetch mega weight asynchronously
+      const megaName = s.species + '-mega' + (s.megaForm ? '-' + s.megaForm.toLowerCase() : '');
+      ChampionsAPI.fetchWeight(megaName).then(w => { if (w) s.weight = w; });
+    } else {
+      if (s.origBaseStats) {
+        s.baseStats = { ...s.origBaseStats };
+        s.types = [...s.origTypes];
+        s.ability = s.origAbility;
+      }
+      s.weight = s.origWeight;
+      s.mega = false;
+      s.origBaseStats = null;
+      s.origTypes = null;
+      s.origAbility = null;
+      s.origWeight = 0;
+    }
+
+    syncUIToState(side);
+    recalcAll();
+
+    if (s.mega) {
+      loadSprite(side, s.species, s.megaForm || '');
+    } else {
+      loadSprite(side, s.species);
+    }
+  }
+
+  function updateMegaUI(side) {
+    const s = state[side];
+    const cap = capitalize(side);
+    const checkbox = $(`#megaActive${cap}`);
+    const formSelect = $(`#megaForm${cap}`);
+
+    // Reset mega state when species changes
+    s.mega = false;
+    s.megaForm = '';
+    s.origBaseStats = null;
+    s.origTypes = null;
+    s.origAbility = null;
+    checkbox.checked = false;
+
+    const canMega = RegulationMB.canMegaEvolve(s.species);
+    const isDual = RegulationMB.hasDualMega(s.species);
+
+    if (canMega && isDual) {
+      formSelect.innerHTML = '<option value="">Select Form</option><option value="X">X</option><option value="Y">Y</option>';
+      formSelect.classList.remove('hidden');
+      formSelect.value = 'X';
+      s.megaForm = 'X';
+    } else if (canMega) {
+      formSelect.classList.add('hidden');
+      formSelect.innerHTML = '';
+    } else {
+      formSelect.classList.add('hidden');
+      formSelect.innerHTML = '';
+    }
+  }
+
   function syncUIToState(side) {
     const s = state[side];
     const cap = capitalize(side);
@@ -647,6 +800,22 @@ const CalcApp = (() => {
     $(`#type2${cap}`).value = s.types[1] || '';
     $(`#tera${cap}`).value = s.teraType;
     $(`#teraActive${cap}`).checked = s.isTerastalized;
+    $(`#megaActive${cap}`).checked = s.mega;
+    // Populate mega form select
+    const canMega = RegulationMB.canMegaEvolve(s.species);
+    const isDual = RegulationMB.hasDualMega(s.species);
+    const formSelect = $(`#megaForm${cap}`);
+    if (canMega && isDual) {
+      formSelect.innerHTML = '<option value="">Select Form</option><option value="X">X</option><option value="Y">Y</option>';
+      formSelect.classList.remove('hidden');
+      formSelect.value = s.megaForm || 'X';
+    } else {
+      formSelect.classList.add('hidden');
+      formSelect.innerHTML = '';
+    }
+    if (s.mega && s.megaForm) {
+      $(`#megaForm${cap}`).value = s.megaForm;
+    }
     $(`#nature${cap}`).value = s.nature;
     $(`#ability${cap}`).value = s.ability;
     $(`#item${cap}`).value = s.item;
@@ -762,6 +931,8 @@ const CalcApp = (() => {
     $(`#curHp${cap}`).value = hp;
     $(`#maxHp${cap}`).textContent = hp;
     $(`#pctHp${cap}`).value = 100;
+    const sliderEl = $(`#sliderHp${cap}`);
+    if (sliderEl) sliderEl.value = 100;
 
     // SP total
     const spTotal = Object.values(s.sp).reduce((a, b) => a + b, 0);
@@ -819,6 +990,7 @@ const CalcApp = (() => {
       moves: s.moves.filter(m => m),
       curHP: s.curHP,
       maxHP: s.maxHP,
+      weight: s.weight || 0,
     };
   }
 
@@ -891,6 +1063,246 @@ const CalcApp = (() => {
 
     $('#mainResultText').textContent = `${min}% – ${max}%${koText}`;
     $('#mainResultDesc').textContent = result.desc;
+  }
+
+  // ─── Import from Showdown Paste ─────────────────────────────────
+
+  let importSide = 'left';
+  let importParsedList = [];
+  let importSelectedIdx = 0;
+
+  function bindImportButtons() {
+    $$('.calc-import-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openImportModal(btn.dataset.side);
+      });
+    });
+
+    // Modal tabs
+    $$('.calc-modal-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        $$('.calc-modal-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        $('#tabText').classList.toggle('hidden', target !== 'text');
+        $('#tabUrl').classList.toggle('hidden', target !== 'url');
+      });
+    });
+
+    // Close modal
+    $('#importModalClose').addEventListener('click', closeImportModal);
+    $('#importCancel').addEventListener('click', closeImportModal);
+    $('#importModal').addEventListener('click', (e) => {
+      if (e.target === $('#importModal')) closeImportModal();
+    });
+
+    // Confirm import
+    $('#importConfirm').onclick = () => importFromPaste();
+  }
+
+  function openImportModal(side) {
+    importSide = side;
+    importParsedList = [];
+    importSelectedIdx = 0;
+    $('#importPasteText').value = '';
+    $('#importPasteUrl').value = '';
+    $('#importError').classList.add('hidden');
+    $('#importPokemonList').classList.add('hidden');
+    $('#importPokemonItems').innerHTML = '';
+    // Reset to text tab
+    $$('.calc-modal-tab').forEach(t => t.classList.remove('active'));
+    $$('.calc-modal-tab')[0].classList.add('active');
+    $('#tabText').classList.remove('hidden');
+    $('#tabUrl').classList.add('hidden');
+    $('#importConfirm').onclick = () => importFromPaste();
+    $('#importModal').classList.add('visible');
+  }
+
+  function closeImportModal() {
+    $('#importModal').classList.remove('visible');
+  }
+
+  function showImportError(msg) {
+    const el = $('#importError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  async function importFromPaste() {
+    const activeTab = $('.calc-modal-tab.active').dataset.tab;
+    let text = '';
+
+    if (activeTab === 'url') {
+      const url = $('#importPasteUrl').value.trim();
+      if (!url) { showImportError('Introduce una URL de pokepast.es'); return; }
+      if (!ShowdownParser.isPokepasteUrl(url)) {
+        showImportError('URL no válida. Debe ser de pokepast.es');
+        return;
+      }
+      try {
+        $('#importConfirm').disabled = true;
+        $('#importConfirm').textContent = '...';
+        text = await ShowdownParser.fetchPokepaste(url);
+      } catch (e) {
+        showImportError('Error al obtener el paste: ' + e.message);
+        $('#importConfirm').disabled = false;
+        $('#importConfirm').textContent = state.lang === 'es' ? 'Importar' : 'Import';
+        return;
+      }
+      $('#importConfirm').disabled = false;
+      $('#importConfirm').textContent = state.lang === 'es' ? 'Importar' : 'Import';
+    } else {
+      text = $('#importPasteText').value.trim();
+    }
+
+    if (!text) {
+      showImportError('Pega un paste de Showdown');
+      return;
+    }
+
+    try {
+      importParsedList = ShowdownParser.parse(text);
+    } catch (e) {
+      showImportError('Error al parsear: ' + e.message);
+      return;
+    }
+
+    if (!importParsedList || importParsedList.length === 0) {
+      showImportError('No se pudo parsear ningún Pokémon');
+      return;
+    }
+
+    // Handle mega normalization
+    for (const p of importParsedList) {
+      if (p._megaSuffix !== undefined) {
+        const stones = RegulationMB.getMegaStones(p.species);
+        if (stones.length > 0 && !p.item) {
+          p.item = p._megaSuffix === 'Y' && stones.length > 1 ? stones[1] : stones[0];
+        }
+        const regData = RegulationMB.getPokemonData(p.species);
+        if (regData && regData.abilities && regData.abilities.length > 0) {
+          p.ability = regData.abilities[0];
+        }
+      }
+      delete p._megaSuffix;
+    }
+
+    if (importParsedList.length === 1) {
+      loadParsedPokemon(importSide, importParsedList[0]);
+      closeImportModal();
+    } else {
+      // Show picker
+      importSelectedIdx = 0;
+      renderImportPicker();
+    }
+  }
+
+  function renderImportPicker() {
+    const list = $('#importPokemonItems');
+    const err = $('#importError');
+    err.classList.add('hidden');
+    const picker = $('#importPokemonList');
+    picker.classList.remove('hidden');
+
+    list.innerHTML = importParsedList.map((p, i) => {
+      const regData = RegulationMB.getPokemonData(p.species);
+      const types = regData ? regData.types.join(' / ') : '';
+      const moves = (p.moves || []).slice(0, 4).join(', ');
+      return `
+        <div class="calc-pokemon-pick ${i === importSelectedIdx ? 'selected' : ''}" data-idx="${i}">
+          <span class="calc-pokemon-pick-name">${p.species}</span>
+          <span class="calc-pokemon-pick-info">${types}${moves ? ' — ' + moves : ''}</span>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.calc-pokemon-pick').forEach(el => {
+      el.addEventListener('click', () => {
+        importSelectedIdx = parseInt(el.dataset.idx);
+        list.querySelectorAll('.calc-pokemon-pick').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+      });
+    });
+
+    // Update confirm button
+    $('#importConfirm').onclick = () => {
+      loadParsedPokemon(importSide, importParsedList[importSelectedIdx]);
+      closeImportModal();
+      // Re-bind for next time
+      $('#importConfirm').onclick = () => importFromPaste();
+    };
+  }
+
+  function loadParsedPokemon(side, p) {
+    const s = state[side];
+    const cap = capitalize(side);
+
+    // Set species and base data
+    selectPokemon(side, p.species);
+
+    // Nature
+    if (p.nature && RegulationMB.NATURES[p.nature]) {
+      s.nature = p.nature;
+      $(`#nature${cap}`).value = p.nature;
+    }
+
+    // SP from EVs (Champions format)
+    const sp = p.evs ? RegulationMB.convertEVsToSP(p.evs) : { hp:0, atk:0, def:0, spa:0, spd:0, spe:0 };
+    s.sp = { ...sp };
+
+    // Ability
+    if (p.ability) {
+      s.ability = p.ability;
+      $(`#ability${cap}`).value = p.ability;
+    }
+
+    // Item
+    if (p.item) {
+      s.item = p.item;
+      $(`#item${cap}`).value = p.item;
+    }
+
+    // Auto-detect mega from item
+    const formSelect = $(`#megaForm${cap}`);
+    if (p.item && RegulationMB.isMegaStoneLegal(s.species, p.item)) {
+      const stones = RegulationMB.getMegaStones(s.species);
+      const stoneIdx = stones.indexOf(p.item);
+      if (RegulationMB.hasDualMega(s.species) && stoneIdx >= 0) {
+        s.megaForm = stoneIdx === 0 ? 'X' : 'Y';
+        formSelect.value = s.megaForm;
+      }
+      const megaData = RegulationMB.getMegaData(s.species, s.megaForm);
+      if (megaData) {
+        s.origBaseStats = { ...s.baseStats };
+        s.origTypes = [...s.types];
+        s.origAbility = s.ability;
+        s.origWeight = s.weight;
+        s.baseStats = { ...megaData.baseStats };
+        s.types = [...megaData.types];
+        s.ability = megaData.ability;
+        s.mega = true;
+        $(`#megaActive${cap}`).checked = true;
+        loadSprite(side, s.species, s.megaForm || '');
+        const megaName = s.species + '-mega' + (s.megaForm ? '-' + s.megaForm.toLowerCase() : '');
+        ChampionsAPI.fetchWeight(megaName).then(w => { if (w) s.weight = w; });
+      }
+    }
+
+    // Tera Type
+    if (p.teraType) {
+      s.teraType = p.teraType;
+      $(`#tera${cap}`).value = p.teraType;
+    }
+
+    // Moves
+    const moves = (p.moves || []).slice(0, 4);
+    for (let i = 0; i < 4; i++) {
+      s.moves[i] = moves[i] || '';
+      s.moveData[i] = moves[i] ? CalcMoveData.getMoveData(moves[i]) : null;
+    }
+
+    // Sync all UI
+    syncUIToState(side);
+    recalcAll();
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────

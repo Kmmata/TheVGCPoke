@@ -508,7 +508,9 @@ const CalcMoveData = (() => {
 
   function getMoveData(name) {
     const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return MOVES[key] || null;
+    const data = MOVES[key];
+    if (!data) return null;
+    return { ...data, name };
   }
 
   return { MOVES, getMoveData };

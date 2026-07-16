@@ -85,7 +85,7 @@ const DamageCalc = (() => {
 
   // ─── Base power modifiers ───────────────────────────────────────────
 
-  function calcBPMods(moveData, attacker, defender, field) {
+  function calcBPMods(moveData, attacker, defender, field, computedBP) {
     const mods = [];
     const atkAb = attacker.ability;
     const atkItem = attacker.item;
@@ -111,25 +111,29 @@ const DamageCalc = (() => {
       mods.push(0x800);
     }
 
-    // Ability BP boosts
-    if (atkAb === 'Reckless' && moveData.hasRecoil) mods.push(0x14CD);
-    if (atkAb === 'Iron Fist' && moveData.isPunch) mods.push(0x14CD);
-    if (atkAb === 'Sheer Force' && moveData.hasSecondaryEffect) mods.push(0x1800);
-    if (atkAb === 'Tough Claws' && moveData.makesContact) mods.push(0x14CD);
-    if (atkAb === 'Technician' && moveData.bp > 0 && moveData.bp <= 60) mods.push(0x1800);
-    if (atkAb === 'Flare Boost' && moveType === 'Fire' && attacker.status === 'Burned') mods.push(0x1800);
-    if (atkAb === 'Toxic Boost' && moveType === 'Poison' && (attacker.status === 'Poisoned' || attacker.status === 'Badly Poisoned')) mods.push(0x1800);
-    if (atkAb === 'Analytic' && !moveData.isSpread) mods.push(0x14CD);
+    // 1.2x Abilities (Reckless, Iron Fist)
+    if (atkAb === 'Reckless' && (moveData.hasRecoil || moveData.hasCrash)) mods.push(0x1333);
+    if (atkAb === 'Iron Fist' && moveData.isPunch) mods.push(0x1333);
+
+    // 1.3x Abilities (Sheer Force, Sand Force, Analytic, Tough Claws, Punk Rock)
+    if (atkAb === 'Sheer Force' && moveData.hasSecondaryEffect) mods.push(0x14CD);
     if (atkAb === 'Sand Force' && weather === 'Sand' && ['Rock', 'Ground', 'Steel'].includes(moveType)) mods.push(0x14CD);
-    if (atkAb === 'Mega Launcher' && moveData.isPulse) mods.push(0x1800);
-    if (atkAb === 'Sharpness' && moveData.isSlice) mods.push(0x1800);
+    if (atkAb === 'Analytic' && !moveData.isSpread) mods.push(0x14CD);
+    if (atkAb === 'Tough Claws' && moveData.makesContact) mods.push(0x14CD);
     if (atkAb === 'Punk Rock' && moveData.isSound) mods.push(0x14CD);
-    if (atkAb === 'Solar Power' && weather === 'Sun') mods.push(0x1800);
+
+    // 1.5x Abilities (Technician, Flare Boost, Toxic Boost, Strong Jaw, Mega Launcher, Steely Spirit)
+    if (atkAb === 'Technician' && computedBP > 0 && computedBP <= 60) mods.push(0x1800);
+    if (atkAb === 'Flare Boost' && attacker.status === 'Burned' && moveData.category === 'Special') mods.push(0x1800);
+    if (atkAb === 'Toxic Boost' && (attacker.status === 'Poisoned' || attacker.status === 'Badly Poisoned') && moveData.category === 'Physical') mods.push(0x1800);
+    if (atkAb === 'Mega Launcher' && moveData.isPulse) mods.push(0x1800);
+    if (atkAb === 'Strong Jaw' && moveData.isBite) mods.push(0x1800);
+    if (atkAb === 'Steely Spirit' && moveType === 'Steel') mods.push(0x1800);
 
     // Item BP boosts
     if (atkItem === 'Muscle Band' && moveData.category === 'Physical') mods.push(0x1199);
     if (atkItem === 'Wise Glasses' && moveData.category === 'Special') mods.push(0x1199);
-    if (atkItem === 'Punching Glove' && moveData.isPunch) mods.push(0x1199);
+    if (atkItem === 'Punching Glove' && moveData.isPunch) mods.push(0x119A);
 
     // Type-boosting items
     const typeBoostItems = {
@@ -147,7 +151,7 @@ const DamageCalc = (() => {
     // Gems
     if (atkItem && atkItem.endsWith(' Gem')) {
       const gemType = atkItem.replace(' Gem', '');
-      if (gemType === moveType) mods.push(0x1999);
+      if (gemType === moveType) mods.push(0x14CD);
     }
 
     // Field modifiers
@@ -186,32 +190,12 @@ const DamageCalc = (() => {
       mods.push(0x800);
     }
 
-    // Flail / Reversal
-    if (moveData.name === 'Flail' || moveData.name === 'Reversal') {
-      if (attacker.curHP && attacker.maxHP) {
-        const hpRatio = attacker.curHP / attacker.maxHP;
-        if (hpRatio <= 0.04) mods.push(0x1800);
-        else if (hpRatio <= 0.10) mods.push(0x14CD);
-        else if (hpRatio <= 0.21) mods.push(0x1199);
-        else if (hpRatio <= 0.52) mods.push(0xCCD);
-        else if (hpRatio <= 0.68) mods.push(0xAAB);
-        else mods.push(0x800);
-      }
-    }
+    // Flail / Reversal — handled by computeVariableBP, no multiplier needed here
 
-    // Supreme Overlord
-    if (atkAb === 'Supreme Overlord') {
-      mods.push(0x1999);
-    }
-
-    // Protosynthesis / Quark Drive
-    if (atkAb === 'Protosynthesis' || atkAb === 'Quark Drive') {
-      const stats = attacker.stats;
-      const maxStat = Math.max(stats.atk, stats.def, stats.spa, stats.spd, stats.spe);
-      const atkStat = moveData.category === 'Physical' ? stats.atk : stats.spa;
-      if (atkStat === maxStat) {
-        mods.push(0x14CD);
-      }
+    // Supreme Overlord (graduated boost based on allies fainted)
+    if (atkAb === 'Supreme Overlord' && attacker.supremeOverlord > 0) {
+      const overlordBoosts = [0x119A, 0x1333, 0x14CD, 0x1666, 0x1800];
+      mods.push(overlordBoosts[Math.min(attacker.supremeOverlord, 5) - 1]);
     }
 
     return mods;
@@ -219,12 +203,67 @@ const DamageCalc = (() => {
 
   // ─── Attack modifiers ───────────────────────────────────────────────
 
-  function calcAtkMods(attacker, moveData) {
+  function calcAtkMods(attacker, moveData, field, defAbility) {
     const mods = [];
     const ab = attacker.ability;
+    const item = attacker.item;
+    const weather = field.weather || '';
 
-    if (ab === 'Tablets of Ruin' || ab === 'Vessel of Ruin') {
+    // Tablets of Ruin / Vessel of Ruin
+    if (ab === 'Tablets of Ruin' && moveData.category === 'Physical') {
       mods.push(0xC00);
+    }
+    if (ab === 'Vessel of Ruin' && moveData.category === 'Special') {
+      mods.push(0xC00);
+    }
+
+    // 0.5x Abilities
+    if ((ab === 'SlowStart' || ab === 'Slow Start') && moveData.category === 'Physical') mods.push(0x800);
+    if (ab === 'Defeatist' && attacker.curHP <= attacker.maxHP / 2) mods.push(0x800);
+
+    // 1.5x Offensive Abilities
+    if (ab === 'Guts' && attacker.status !== 'Healthy' && moveData.category === 'Physical') mods.push(0x1800);
+    if (ab === 'Overgrow' && attacker.curHP <= attacker.maxHP / 3 && moveData.type === 'Grass') mods.push(0x1800);
+    if (ab === 'Blaze' && attacker.curHP <= attacker.maxHP / 3 && moveData.type === 'Fire') mods.push(0x1800);
+    if (ab === 'Torrent' && attacker.curHP <= attacker.maxHP / 3 && moveData.type === 'Water') mods.push(0x1800);
+    if (ab === 'Swarm' && attacker.curHP <= attacker.maxHP / 3 && moveData.type === 'Bug') mods.push(0x1800);
+    if (ab === "Dragon's Maw" && moveData.type === 'Dragon') mods.push(0x1800);
+    if (ab === 'Flash Fire' && attacker.abilityOn && moveData.type === 'Fire') mods.push(0x1800);
+    if (ab === 'Steelworker' && moveData.type === 'Steel') mods.push(0x1800);
+    if (ab === 'Gorilla Tactics' && moveData.category === 'Physical' && !attacker.isDynamax) mods.push(0x1800);
+    if ((ab === 'Plus' || ab === 'Minus') && attacker.abilityOn) mods.push(0x1800);
+    if (ab === 'Sharpness' && moveData.isSlice) mods.push(0x1800);
+    if (ab === 'Rocky Payload' && moveData.type === 'Rock') mods.push(0x1800);
+    if (ab === 'Solar Power' && weather.indexOf('Sun') > -1 && moveData.category === 'Special') mods.push(0x1800);
+    if (ab === 'Flower Gift' && weather.indexOf('Sun') > -1 && moveData.category === 'Physical') mods.push(0x1800);
+
+    // 1.3x Abilities (Protosynthesis / Quark Drive on highest stat)
+    if (attacker.paradoxAbilityBoost && ((attacker.highestStat === 'at' && moveData.category === 'Physical') || (attacker.highestStat === 'sa' && moveData.category === 'Special'))) {
+      mods.push(0x14CD);
+    }
+
+    // 2.0x Abilities
+    if (ab === 'Huge Power' && moveData.category === 'Physical') mods.push(0x2000);
+    if (ab === 'Pure Power' && moveData.category === 'Physical') mods.push(0x2000);
+    if (ab === 'Stakeout' && attacker.abilityOn) mods.push(0x2000);
+
+    // 0.5x Defensive Abilities (from defender)
+    if (defAbility === 'Thick Fat' && (moveData.type === 'Fire' || moveData.type === 'Ice')) mods.push(0x800);
+    if (defAbility === 'Water Bubble' && moveData.type === 'Fire') mods.push(0x800);
+    if (defAbility === 'Purifying Salt' && moveData.type === 'Ghost') mods.push(0x800);
+    if (defAbility === 'Heatproof' && moveData.type === 'Fire') mods.push(0x800);
+
+    // 2.0x Items
+    if ((item === 'Thick Club' && (attacker.name === 'Cubone' || attacker.name === 'Marowak' || attacker.name === 'Marowak-Alola') && moveData.category === 'Physical') ||
+        (item === 'Deep Sea Tooth' && attacker.name === 'Clamperl' && moveData.category === 'Special') ||
+        (item === 'Light Ball' && attacker.name === 'Pikachu')) {
+      mods.push(0x2000);
+    }
+
+    // 1.5x Items
+    if ((item === 'Choice Band' && moveData.category === 'Physical' && !attacker.isDynamax) ||
+        (item === 'Choice Specs' && moveData.category === 'Special' && !attacker.isDynamax)) {
+      mods.push(0x1800);
     }
 
     return mods;
@@ -237,49 +276,36 @@ const DamageCalc = (() => {
     const ab = defender.ability;
     const item = defender.item;
 
-    if (ab === 'Sword of Ruin' || ab === 'Beads of Ruin') {
+    // Sword of Ruin / Beads of Ruin
+    if (ab === 'Sword of Ruin' && hitsPhysical) {
+      mods.push(0xC00);
+    }
+    if (ab === 'Beads of Ruin' && !hitsPhysical) {
       mods.push(0xC00);
     }
 
+    // 1.5x Abilities
     if (ab === 'Marvel Scale' && hitsPhysical && defender.status && defender.status !== 'Healthy') {
       mods.push(0x1800);
     }
 
+    // 2x Abilities
     if (ab === 'Fur Coat' && hitsPhysical) {
       mods.push(0x2000);
     }
 
+    // 1.5x Items
     if (item === 'Assault Vest' && !hitsPhysical) {
       mods.push(0x1800);
     }
-
     if (item === 'Eviolite' && canEvolve(defender.name)) {
       mods.push(0x1800);
     }
 
-    if (ab === 'Ice Face' && hitsPhysical) {
-      mods.push(0);
-    }
-
-    if (ab === 'Water Bubble' && moveData.type === 'Fire') {
-      mods.push(0x800);
-    }
-
-    if (ab === 'Purifying Salt') {
-      mods.push(0x800);
-    }
-
-    if (ab === 'Fluffy') {
-      if (moveData.makesContact) mods.push(0x800);
-      if (moveData.type === 'Fire') mods.push(0x2000);
-    }
-
-    if ((ab === 'Multiscale' || ab === 'Shadow Shield') && defender.curHP === defender.maxHP) {
-      mods.push(0x800);
-    }
-
-    if (defender.allyHasFriendGuard) {
-      mods.push(0xC00);
+    // 2x Items
+    if ((item === 'Deep Sea Scale' && defender.name === 'Clamperl' && !hitsPhysical) ||
+        (item === 'Metal Powder' && defender.name === 'Ditto' && hitsPhysical)) {
+      mods.push(0x2000);
     }
 
     return mods;
@@ -292,32 +318,15 @@ const DamageCalc = (() => {
     const mods = [];
     const atkItem = attacker.item;
 
-    // Reflect / Light Screen (ignored on crits)
+    // Reflect / Light Screen / Aurora Veil (ignored on crits)
     if (!isCritical) {
-      if (moveData.category === 'Physical' && field.isReflect) {
-        mods.push(field.isDoubles ? 0xAAC : 0x800);
-      }
-      if (moveData.category === 'Special' && field.isLightScreen) {
-        mods.push(field.isDoubles ? 0xAAC : 0x800);
-      }
       if (field.isAuroraVeil) {
         mods.push(field.isDoubles ? 0xAAC : 0x800);
+      } else if (moveData.category === 'Physical' && field.isReflect) {
+        mods.push(field.isDoubles ? 0xAAC : 0x800);
+      } else if (moveData.category === 'Special' && field.isLightScreen) {
+        mods.push(field.isDoubles ? 0xAAC : 0x800);
       }
-    }
-
-    // Expert Belt (SE)
-    if (atkItem === 'Expert Belt' && typeEff > 1) {
-      mods.push(0x1333);
-    }
-
-    // Life Orb
-    if (atkItem === 'Life Orb') {
-      mods.push(0x14CC);
-    }
-
-    // Tinted Lens (NVE)
-    if (attacker.ability === 'Tinted Lens' && typeEff < 1) {
-      mods.push(0x2000);
     }
 
     // Neuroforce (SE)
@@ -333,6 +342,61 @@ const DamageCalc = (() => {
     // Sniper (crit)
     if (attacker.ability === 'Sniper' && isCritical) {
       mods.push(0x1800);
+    }
+
+    // Tinted Lens (NVE)
+    if (attacker.ability === 'Tinted Lens' && typeEff < 1) {
+      mods.push(0x2000);
+    }
+
+    // Dynamax Cannon / Behemoth Blade / Behemoth Bash (2x vs Dynamax)
+    if ((moveData.name === 'Dynamax Cannon' || moveData.name === 'Behemoth Blade' || moveData.name === 'Behemoth Bash') && defender.isDynamax) {
+      mods.push(0x2000);
+    }
+
+    // Multiscale / Shadow Shield (0.5x at full HP)
+    if ((defender.ability === 'Multiscale' || defender.ability === 'Shadow Shield') && defender.curHP === defender.maxHP) {
+      mods.push(0x800);
+    }
+
+    // Fluffy (0.5x contact)
+    if (defender.ability === 'Fluffy' && moveData.makesContact) {
+      mods.push(0x800);
+    }
+
+    // Punk Rock defender (0.5x sound)
+    if (defender.ability === 'Punk Rock' && moveData.isSound) {
+      mods.push(0x800);
+    }
+
+    // Ice Scales (0.5x special)
+    if (defender.ability === 'Ice Scales' && moveData.category === 'Special') {
+      mods.push(0x800);
+    }
+
+    // Friend Guard
+    if (defender.allyHasFriendGuard) {
+      mods.push(0xC00);
+    }
+
+    // Solid Rock / Filter / Prism Armor (0.75x SE)
+    if ((defender.ability === 'Solid Rock' || defender.ability === 'Filter' || defender.ability === 'Prism Armor') && typeEff > 1) {
+      mods.push(0xC00);
+    }
+
+    // Fluffy (2x Fire)
+    if (defender.ability === 'Fluffy' && moveData.type === 'Fire') {
+      mods.push(0x2000);
+    }
+
+    // Expert Belt (SE)
+    if (atkItem === 'Expert Belt' && typeEff > 1) {
+      mods.push(0x1333);
+    }
+
+    // Life Orb
+    if (atkItem === 'Life Orb') {
+      mods.push(0x14CC);
     }
 
     // Tera Shell (defender)
@@ -460,6 +524,82 @@ const DamageCalc = (() => {
     return !noEvolve.has(name);
   }
 
+  // ─── Variable-power move BP computation ─────────────────────────────
+
+  function computeVariableBP(moveData, attacker, defender) {
+    const name = moveData.name;
+
+    // HP-ratio moves (defender current HP / max HP)
+    if (name === 'Hard Press') {
+      const hp = defender.curHP || 0;
+      const max = defender.maxHP || 1;
+      return Math.floor(hp / max * 100) + 1;
+    }
+    if (name === 'Flail' || name === 'Reversal') {
+      const hp = attacker.curHP || 0;
+      const max = attacker.maxHP || 1;
+      const ratio = hp / max;
+      if (ratio > 0.5)  return 20;
+      if (ratio > 0.4)  return 40;
+      if (ratio > 0.3)  return 60;
+      if (ratio > 0.2)  return 80;
+      if (ratio > 0.1)  return 100;
+      if (ratio > 0.04) return 150;
+      return 200;
+    }
+    if (name === 'Endeavor') {
+      return 1;
+    }
+
+    // Speed-ratio moves
+    if (name === 'Gyro Ball') {
+      const atkSpe = attacker.stats.spe || 1;
+      const defSpe = defender.stats.spe || 0;
+      return Math.max(1, Math.min(150, Math.floor(25 * defSpe / atkSpe) + 15));
+    }
+    if (name === 'Electro Ball') {
+      const atkSpe = attacker.stats.spe || 1;
+      const defSpe = defender.stats.spe || 0;
+      const ratio = defSpe / atkSpe;
+      if (ratio >= 4) return 150;
+      if (ratio >= 3) return 120;
+      if (ratio >= 2) return 80;
+      return 60;
+    }
+
+    // Weight-based moves (weight in hectograms from PokéAPI)
+    if (name === 'Grass Knot' || name === 'Low Kick') {
+      const w = defender.weight || 0;
+      if (name === 'Grass Knot') {
+        if (w <= 100)  return 20;
+        if (w <= 250)  return 30;
+        if (w <= 500)  return 40;
+        if (w <= 1000) return 60;
+        if (w <= 2000) return 80;
+        if (w <= 10000) return 100;
+        return 120;
+      } else {
+        if (w <= 100)  return 40;
+        if (w <= 250)  return 60;
+        if (w <= 500)  return 80;
+        if (w <= 1000) return 100;
+        return 120;
+      }
+    }
+    if (name === 'Heavy Slam' || name === 'Heat Crash') {
+      const atkW = attacker.weight || 1;
+      const defW = defender.weight || 1;
+      const ratio = atkW / defW;
+      if (ratio >= 1.2) return 120;
+      if (ratio >= 1.0) return 100;
+      if (ratio >= 0.8) return 80;
+      if (ratio >= 0.6) return 60;
+      return 40;
+    }
+
+    return moveData.bp;
+  }
+
   // ─── Main damage calculation ────────────────────────────────────────
 
   function calcDamage(attacker, defender, moveData, field) {
@@ -471,6 +611,11 @@ const DamageCalc = (() => {
     const isDoubles = field.isDoubles || false;
     const isCritical = field.forceCrit || false;
     const hitsPhysical = moveData.category === 'Physical';
+
+    // Ice Face immunity (physical moves deal 0)
+    if (defender.ability === 'Ice Face' && hitsPhysical) {
+      return { damage: [0], desc: `${moveData.name} — Ice Face`, typeEff: 0 };
+    }
 
     // ── Step 1: Attack stat ──
     let attack;
@@ -486,7 +631,7 @@ const DamageCalc = (() => {
     }
 
     // Attack modifiers
-    const atkModChain = chainMods(calcAtkMods(attacker, moveData));
+    const atkModChain = chainMods(calcAtkMods(attacker, moveData, field, defender.ability));
     attack = Math.max(1, pokeRound(attack * atkModChain / 0x1000));
 
     // ── Step 2: Defense stat ──
@@ -512,8 +657,8 @@ const DamageCalc = (() => {
     defense = Math.max(1, pokeRound(defense * defModChain / 0x1000));
 
     // ── Step 3: Base power ──
-    let basePower = moveData.bp;
-    const bpModChain = chainMods(calcBPMods(moveData, attacker, defender, field));
+    let basePower = computeVariableBP(moveData, attacker, defender);
+    const bpModChain = chainMods(calcBPMods(moveData, attacker, defender, field, basePower));
     basePower = Math.max(1, pokeRound(basePower * bpModChain / 0x1000));
 
     // ── Step 4: Base damage ──
@@ -564,7 +709,7 @@ const DamageCalc = (() => {
       dmg = Math.floor(dmg * typeEff);
 
       // d. Burn
-      if (attacker.status === 'Burned' && hitsPhysical && attacker.ability !== 'Guts') {
+      if (attacker.status === 'Burned' && hitsPhysical && attacker.ability !== 'Guts' && !moveData.ignoresBurn) {
         dmg = Math.floor(dmg / 2);
       }
 
