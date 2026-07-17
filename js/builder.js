@@ -63,18 +63,18 @@ const TeamBuilder = (() => {
     loadDraft();
   }
 
-  // ─── Dark Mode Theme ───
+  // ─── Theme Toggle ───
   function setupTheme() {
     const btn = document.getElementById('builderThemeToggle');
     function apply(dark) {
-      document.documentElement.classList.toggle('dark', dark);
-      btn.querySelector('.theme-icon').textContent = dark ? '🌙' : '☀️';
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      btn.querySelector('.theme-icon').textContent = dark ? '☀' : '☾';
       localStorage.setItem('tsTheme', dark ? 'dark' : 'light');
     }
     const saved = localStorage.getItem('tsTheme');
     const prefersDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
     apply(prefersDark);
-    btn.addEventListener('click', () => apply(!document.documentElement.classList.contains('dark')));
+    btn.addEventListener('click', () => apply(document.documentElement.getAttribute('data-theme') !== 'dark'));
   }
 
   // ─── Age Division Radio ───
@@ -82,7 +82,7 @@ const TeamBuilder = (() => {
     document.querySelectorAll('[name="ageDivision"]').forEach(r => {
       r.addEventListener('change', () => {
         document.querySelectorAll('[name="ageDivision"]').forEach(l => {
-          l.closest('.gender-btn')?.classList.toggle('active', l.checked);
+          l.closest('.chip-btn')?.classList.toggle('active', l.checked);
         });
       });
     });
@@ -719,7 +719,7 @@ const TeamBuilder = (() => {
     if (pd.switchProfile) document.getElementById('switchProfile').value = pd.switchProfile;
     if (pd.ageDivision) {
       const radio = document.querySelector(`[name="ageDivision"][value="${pd.ageDivision}"]`);
-      if (radio) { radio.checked = true; radio.closest('.gender-btn')?.classList.add('active'); }
+      if (radio) { radio.checked = true; radio.closest('.chip-btn')?.classList.add('active'); }
     }
   }
 

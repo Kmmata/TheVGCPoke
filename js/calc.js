@@ -85,18 +85,20 @@ const CalcApp = (() => {
 
   function initTheme() {
     const saved = localStorage.getItem('tsTheme');
-    if (saved === 'dark') document.documentElement.classList.add('dark');
+    const prefersDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
     updateThemeBtn();
     $('#themeToggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('tsTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      localStorage.setItem('tsTheme', isDark ? 'light' : 'dark');
       updateThemeBtn();
     });
   }
 
   function updateThemeBtn() {
-    const isDark = document.documentElement.classList.contains('dark');
-    $('#themeToggle').textContent = isDark ? '☀️' : '🌙';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    $('#themeToggle').textContent = isDark ? '☀' : '☾';
   }
 
   // ─── Language ───────────────────────────────────────────────────────

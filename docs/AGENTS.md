@@ -259,9 +259,10 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 
 **Dark mode:**
 - Toggle button in header (`#themeToggle`) next to language toggle
-- `applyTheme(dark)` → toggles `.dark` class on `<html>`, updates icon (☀️/🌙), persists to `localStorage.tsTheme`
+- `applyTheme(dark)` → toggles `data-theme` attribute on `<html>` (`'dark'` or `'light'`), updates icon (☀/☾), persists to `localStorage.tsTheme`
 - On load: respects `prefers-color-scheme: dark` if no saved preference
-- CSS uses `.dark` class on `<html>` to override all CSS custom properties and hardcoded colors
+- CSS uses `[data-theme="dark"]` / `[data-theme="light"]` attribute selectors on `<html>` to override CSS custom properties
+- All three pages (index, builder, calc) use `setAttribute('data-theme', ...)` in their JS files
 
 **Input text cleaning:**
 - `importTeam(text)` cleans input before parsing: strips BOM, replaces invisible Unicode chars (zero-width, non-breaking), normalizes line endings, removes trailing whitespace per line, collapses 3+ blank lines
@@ -278,10 +279,12 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 
 ### `css/styles.css`
 
-- CSS custom properties for theming (light + dark via `.dark` class on `<html>`)
-- Dark mode: `.dark` selector overrides all color variables + hardcoded colors (cards, inputs, tabs, buttons, modal stats, error messages)
+- CSS custom properties for theming (light + dark via `data-theme` attribute on `<html>`)
+- Dark mode: default (`:root` defines dark values). Light mode: `[data-theme="light"]` overrides
+- Shared design system variables: `--bg-deep`, `--bg-surface`, `--bg-elevated`, `--bg-hover`, `--accent`, `--accent-hover`, `--accent-glow`, `--gold`, `--text-primary`, `--text-secondary`, `--text-muted`, `--border`, `--border-strong`, `--radius-sm/md/lg/xl`, `--shadow-sm/glow`, `--font-display`, `--font-body`, `--transition-fast`
+- All three CSS files (styles.css, builder.css, calc.css) define the same shared variables
 - Responsive: two-column → single-column at 900px (form) and 600px (team grid)
-- Key colors: `--primary: #c41e3a` (red), header `#1a1a1a` (black), PDF buttons `#1a1a1a` (light) / `rgba(255,255,255,0.15)` (dark)
+- Key colors: `--accent: #e63946` (red), `--gold: #f4a261`
 - Pokemon detail modal styles: overlay, content card, stat bars (color-coded per stat), move badges with hover tooltips, responsive layout
 
 ### `server.js`
@@ -687,6 +690,17 @@ Where modifiers are applied in this order:
   - **Crush Grip / Wring Out**: `floor(120 × defender.curHP / defender.maxHP)`
   - **Stored Power / Power Trip**: `20 + 20 × sum(positive boost stages on attacker)`
 
+### 28. Frontend Design System Redesign (FIXED)
+**Problem:** All three pages had different visual designs, CSS variable naming, header structures, and theming approaches. The calc page used completely different class names (`calc-header`, `calc-nav-link`, `--bg`, `--card-bg`, `--primary`) instead of the shared design system.
+**Fix:**
+- Applied the `frontend-design` skill across all pages with a cohesive dark-first design system
+- **Theme system**: Changed from `.dark` class to `data-theme="dark"` / `data-theme="light"` attribute selectors on `<html>`
+- **Shared design system variables**: All three CSS files now define the same `:root` variables (`--bg-deep`, `--bg-surface`, `--accent`, `--gold`, `--text-primary`, `--border`, `--radius-lg`, `--shadow-glow`, etc.)
+- **Shared header**: All three pages use `app-header` > `header-content` > `header-brand` (pokeball icon) + `header-nav` (nav-link) + `header-actions` (icon-btn)
+- **Calc page**: Full CSS rewrite (~1000 lines) — replaced custom variables with design system names, changed panel headers from colored bars to border-bottom pattern, increased border radii/spacing, added focus glow, card hover shadows, font-smoothing, modal animations, improved responsive breakpoints
+- **Builder page**: Fixed age-division chip active state (`.gender-btn` → `.chip-btn`), added `--transition-slow` variable
+- **Calc page**: Fixed theme persistence bug (light theme not restored from localStorage)
+
 ---
 
 ## Bilingual System
@@ -719,9 +733,10 @@ All translatable UI elements use dual attributes:
 - **Template coordinates** were extracted via `pdfjs-dist` (dev dependency) and raw PDF content stream parsing (for shapes like checkboxes) and hardcoded in `pdf.js`
 - **Form IDs** in HTML must match `els` object keys in `app.js` (main page) or `getElementById` calls in `builder.js` (builder page)
 - **localStorage keys** prefixed with `ts` for main page (e.g., `tsLang`, `tsDraft`, `tsTheme`), `pokemon_champion_teams` for builder
-- **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `.dark` class on `<html>`. Builder and calculator define their own component-specific variables for slot/type colors and damage ranges
-- **Builder dark mode** uses same pattern as main page: `setupTheme()` reads `localStorage('tsTheme')`, toggles `.dark` class, persists choice. Syncs with main page preference
-- **Calculator dark mode** uses same pattern: reads `localStorage('tsTheme')`, toggles `.dark` class, persists choice. Syncs with main page and builder preference
+- **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `[data-theme="light"]` attribute selector. All three CSS files define the same shared design system variables (`--bg-deep`, `--accent`, `--text-primary`, etc.) plus page-specific variables (type colors, stat colors, builder slot colors)
+- **Shared header structure** — All three pages use `app-header` > `header-content` > `header-brand` (with `pokeball-icon`) + `header-nav` (with `nav-link`) + `header-actions` (with `icon-btn`). Each CSS file defines these shared classes
+- **Builder dark mode** uses same pattern as main page: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page preference
+- **Calculator dark mode** uses same pattern: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page and builder preference
 - **Runtime has zero npm dependencies** — `pdf-lib` is loaded via CDN, `pdfjs-dist` and `pdf-lib` are dev-only
 - **Regulation data** is hardcoded in `regulation.js` — update when new regulation sets release
 - **Builder uses SP (Stat Points)** — 66 total, max 32 per stat. Convert to/from EVs for Showdown compatibility
@@ -742,8 +757,9 @@ All translatable UI elements use dual attributes:
 2. **Test PDF output (main page):** Import a team → click each PDF button → verify in browser PDF viewer
 3. **Test PDF output (builder):** Build a team → click PDF buttons → verify stats use SP formula
 4. **Test detail modal:** Import a team → click any Pokemon card → verify modal shows sprite, stats, moves with type colors
-5. **Test dark mode:** Toggle via header button → verify all elements render correctly (cards, inputs, tabs, buttons, modal)
-6. **Test builder validation:** Create invalid team (duplicate species, illegal moves) → verify error messages
+5. **Test dark mode:** Toggle via header button → verify all elements render correctly (cards, inputs, tabs, buttons, modal) across all three pages
+6. **Test light mode:** Toggle to light theme → verify all elements render correctly (no white-on-white, proper contrast)
+7. **Test builder validation:** Create invalid team (duplicate species, illegal moves) → verify error messages
 7. **Test builder save/load:** Save a team → reload page → verify team loads from saved list with sprites and type badges
 8. **Test import/export:** Import Showdown text → verify SP conversion → export back → verify EV values match
 9. **Test stat preview:** Select a Pokémon in builder → adjust SP sliders → verify base stats, final stats, nature indicators update in real-time
@@ -756,6 +772,7 @@ All translatable UI elements use dual attributes:
 16. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
 17. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
 18. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
+19. **Test calc light mode:** Toggle to light theme → verify calculator renders correctly (no white-on-white)
 20. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
 14. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
 15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
@@ -770,6 +787,19 @@ All translatable UI elements use dual attributes:
 24. **Damage calculator moves:** Update `calc-move-data.js` when new moves are added to Regulation M-B. Data sourced from PokAPI
 25. **Damage calculator UI:** Modify `calc.js` and `calc.css` for calculator interface changes. Uses same bilingual pattern as main page/builder
 
+### Design System Guidelines
+
+When making UI changes across pages, follow these rules:
+
+1. **Theme attribute**: Always use `data-theme="dark"` / `data-theme="light"` on `<html>`. Never use `.dark` class
+2. **CSS variables**: Use the shared design system variable names (`--bg-deep`, `--bg-surface`, `--accent`, `--text-primary`, etc.). Do not introduce new color variables without adding them to all three `:root` blocks
+3. **Shared header**: All pages must use `app-header` > `header-content` > `header-brand` + `header-nav` + `header-actions` structure
+4. **Font smoothing**: All pages must have `-webkit-font-smoothing: antialiased` on `body`
+5. **Focus glow**: Inputs must have `box-shadow: 0 0 0 3px var(--accent-glow)` on focus
+6. **Cards/panels**: Use `var(--bg-surface)` background, `var(--radius-lg)` border-radius, `var(--shadow-sm)` shadow, `border: 1px solid var(--border)`
+7. **Buttons**: Primary buttons use `var(--accent)` background with `var(--shadow-glow)`. All buttons use `font-family: var(--font-display)`
+8. **Light theme**: Test all changes in both dark and light themes. Verify no white-on-white or invisible text
+
 ---
 
 ## SEO Status
@@ -782,7 +812,7 @@ All translatable UI elements use dual attributes:
 - **Twitter Card** — `summary_large_image` con título, descripción, imagen
 - **Favicon SVG** — Pokeball en `favicon.svg`
 - **Apple touch icon** — Referenciado (pendiente crear PNG 180x180)
-- **`theme-color`** — `#c41e3a` (coincide con `--primary`)
+- **`theme-color`** — `#0b1120` (dark theme primary background)
 - **JSON-LD** — Schema `WebApplication` con features y pricing
 - **`robots.txt`** — Allow all, sitemap reference
 - **`sitemap.xml`** — Placeholder `TU-DOMINIO.com`

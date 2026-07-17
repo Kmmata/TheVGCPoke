@@ -76,10 +76,10 @@
     applyLanguage(currentLang === 'es' ? 'en' : 'es');
   });
 
-  /* ── Dark Mode ── */
+  /* ── Theme Toggle ── */
   function applyTheme(dark) {
-    document.documentElement.classList.toggle('dark', dark);
-    els.themeToggle.querySelector('.theme-icon').textContent = dark ? '🌙' : '☀️';
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    els.themeToggle.querySelector('.theme-icon').textContent = dark ? '☀' : '☾';
     localStorage.setItem('tsTheme', dark ? 'dark' : 'light');
   }
 
@@ -88,7 +88,7 @@
   applyTheme(prefersDark);
 
   els.themeToggle.addEventListener('click', () => {
-    applyTheme(!document.documentElement.classList.contains('dark'));
+    applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
   });
 
   $$('.tab-btn').forEach((btn) => {
@@ -459,7 +459,7 @@
         els.supportId.value = draft.player.supportId || '';
         if (draft.player.ageDivision) {
           const radio = document.querySelector(`input[name="ageDivision"][value="${draft.player.ageDivision}"]`);
-          if (radio) { radio.checked = true; radio.closest('.gender-btn')?.classList.add('active'); }
+          if (radio) { radio.checked = true; radio.closest('.chip-btn')?.classList.add('active'); }
         }
       }
       if (draft.team && Array.isArray(draft.team)) {
@@ -481,7 +481,7 @@
     document.querySelectorAll('[name="ageDivision"]').forEach(r => {
       r.addEventListener('change', () => {
         document.querySelectorAll('[name="ageDivision"]').forEach(l => {
-          l.closest('.gender-btn')?.classList.toggle('active', l.checked);
+          l.closest('.chip-btn')?.classList.toggle('active', l.checked);
         });
       });
     });

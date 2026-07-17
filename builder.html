@@ -1,24 +1,37 @@
 <!DOCTYPE html>
-<html lang="es" data-lang="es">
+<html lang="es" data-lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Team Builder — Regulación M-B Pokémon Champions</title>
   <meta name="description" content="Construye equipos para Pokémon Champions con validación de Regulación M-B. Exporta a PDF y formato Showdown.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="css/builder.css">
 </head>
-<body class="builder-page">
+<body>
 
-  <header class="builder-header">
-    <h1><span>Team Builder</span> — Regulación M-B</h1>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <a href="index.html" class="builder-btn builder-btn-outline" title="Generador de Hojas" style="text-decoration:none;display:flex;align-items:center;">🏠 Hojas</a>
-      <a href="calc.html" class="builder-btn builder-btn-outline" title="Damage Calculator" style="text-decoration:none;display:flex;align-items:center;">⚔️ Calc</a>
-      <button id="btnImportShowdown" class="builder-btn builder-btn-outline" title="Importar desde Showdown">Importar</button>
-      <button id="btnExportShowdown" class="builder-btn builder-btn-outline" title="Exportar a Showdown">Exportar</button>
-      <button id="btnSaveTeam" class="builder-btn builder-btn-success">Guardar</button>
-      <button id="builderThemeToggle" class="theme-toggle" title="Cambiar tema"><span class="theme-icon">☀️</span></button>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-brand">
+        <span class="pokeball-icon">●</span>
+        <h1>Team Builder <span class="header-subtitle">— Reg M-B</span></h1>
+      </div>
+      <nav class="header-nav">
+        <a href="index.html" class="nav-link" style="text-decoration:none">🏠 Hojas</a>
+        <a href="calc.html" class="nav-link" style="text-decoration:none">⚔ Calc</a>
+      </nav>
+      <div class="header-actions">
+        <button id="btnImportShowdown" class="icon-btn" title="Importar desde Showdown">Importar</button>
+        <button id="btnExportShowdown" class="icon-btn" title="Exportar a Showdown">Exportar</button>
+        <button id="btnSaveTeam" class="btn btn-primary">Guardar</button>
+        <button id="builderThemeToggle" class="icon-btn" title="Cambiar tema"><span class="theme-icon">☀</span></button>
+      </div>
     </div>
   </header>
 
@@ -27,9 +40,9 @@
 
       <!-- Team Slots -->
       <section class="builder-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h2 style="margin-bottom:0;">Equipo (6 Pokémon)</h2>
-          <button id="btnClearAll" class="builder-btn builder-btn-danger" style="font-size:0.75rem;padding:4px 10px;">Limpiar todo</button>
+        <div class="card-header-row">
+          <h2>Equipo (6 Pokémon)</h2>
+          <button id="btnClearAll" class="builder-btn builder-btn-danger">Limpiar todo</button>
         </div>
         <div class="team-slots" id="teamSlots"></div>
       </section>
@@ -62,7 +75,7 @@
       <!-- Player Data -->
       <section class="builder-card">
         <h2>Datos del Jugador</h2>
-        <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="player-form">
           <div class="form-row">
             <label>Nombre</label>
             <input type="text" id="playerName" placeholder="Nombre del jugador">
@@ -77,12 +90,12 @@
           </div>
           <div class="form-row">
             <label>Nacim.</label>
-            <div style="display:flex;gap:4px;flex:1;">
-              <input type="text" id="dobMm" placeholder="MM" maxlength="2" style="width:45px;text-align:center;">
-              <span style="color:#475569;">/</span>
-              <input type="text" id="dobDd" placeholder="DD" maxlength="2" style="width:45px;text-align:center;">
-              <span style="color:#475569;">/</span>
-              <input type="text" id="dobYyyy" placeholder="AAAA" maxlength="4" style="width:60px;text-align:center;">
+            <div class="dob-row">
+              <input type="text" id="dobMm" placeholder="MM" maxlength="2">
+              <span class="dob-sep">/</span>
+              <input type="text" id="dobDd" placeholder="DD" maxlength="2">
+              <span class="dob-sep">/</span>
+              <input type="text" id="dobYyyy" placeholder="AAAA" maxlength="4">
             </div>
           </div>
           <div class="form-row">
@@ -96,9 +109,9 @@
           <div class="form-row">
             <label>División</label>
             <div class="division-btns">
-              <label class="gender-btn"><input type="radio" name="ageDivision" value="Juniors" style="display:none;">Juniors</label>
-              <label class="gender-btn"><input type="radio" name="ageDivision" value="Seniors" style="display:none;">Seniors</label>
-              <label class="gender-btn active"><input type="radio" name="ageDivision" value="Masters" checked style="display:none;">Masters</label>
+              <label class="chip-btn"><input type="radio" name="ageDivision" value="Juniors" style="display:none;">Juniors</label>
+              <label class="chip-btn"><input type="radio" name="ageDivision" value="Seniors" style="display:none;">Seniors</label>
+              <label class="chip-btn active"><input type="radio" name="ageDivision" value="Masters" checked style="display:none;">Masters</label>
             </div>
           </div>
         </div>
@@ -118,7 +131,7 @@
       <section class="builder-card">
         <h2>Equipos Guardados</h2>
         <div class="saved-teams-list" id="savedTeamsList">
-          <div style="text-align:center;padding:12px;color:#475569;font-size:0.8rem;">No hay equipos guardados</div>
+          <div class="empty-state">No hay equipos guardados</div>
         </div>
       </section>
 
@@ -130,7 +143,7 @@
     <div class="modal-panel">
       <h3>Importar equipo de Showdown</h3>
       <textarea id="importText" placeholder="Pega el export de Showdown aquí...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect"></textarea>
-      <div id="importError" style="color:#fca5a5;font-size:0.8rem;margin-top:6px;display:none;"></div>
+      <div id="importError" class="form-error hidden"></div>
       <div class="modal-actions">
         <button id="importCancel" class="builder-btn builder-btn-outline">Cancelar</button>
         <button id="importConfirm" class="builder-btn builder-btn-primary">Importar</button>
@@ -156,7 +169,7 @@
       <h3>Guardar equipo</h3>
       <div class="form-row" style="margin-bottom:12px;">
         <label style="width:60px;">Nombre</label>
-        <input type="text" id="saveTeamName" placeholder="Mi equipo Champions" style="flex:1;background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:8px 10px;border-radius:6px;">
+        <input type="text" id="saveTeamName" placeholder="Mi equipo Champions">
       </div>
       <div class="modal-actions">
         <button id="saveCancel" class="builder-btn builder-btn-outline">Cancelar</button>
@@ -171,7 +184,7 @@
   <script src="js/pdf.js?v=2"></script>
   <script src="js/regulation.js?v=1"></script>
   <script src="js/builder-champions-api.js?v=1"></script>
-  <script src="js/builder.js?v=1"></script>
+  <script src="js/builder.js?v=2"></script>
 
 </body>
 </html>

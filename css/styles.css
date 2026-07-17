@@ -1,235 +1,485 @@
+/* ══════════════════════════════════════════════════════════════ */
+/*  Design System: Pokémon VG Team Sheet Generator               */
+/*  Dark-first design with Pokéball-inspired accent              */
+/* ══════════════════════════════════════════════════════════════ */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f0f2f5;
-  --card-bg: #ffffff;
-  --primary: #c41e3a;
-  --primary-hover: #a01830;
-  --secondary: #2d3748;
-  --text: #1a202c;
-  --text-muted: #4a5568;
-  --border: #cbd5e0;
-  --input-bg: #f7fafc;
-  --input-focus: #ebf4ff;
-  --error: #d32f2f;
-  --success: #2e7d32;
-  --radius: 8px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.dark {
-  --bg: #121212;
-  --card-bg: #1e1e1e;
-  --secondary: #3d3d3d;
-  --text: #e0e0e0;
-  --text-muted: #a0a0a0;
-  --border: #3a3a3a;
-  --input-bg: #2a2a2a;
-  --input-focus: #2a2a3a;
+  /* ── Core Palette ── */
+  --bg-deep: #0b1120;
+  --bg-surface: #141c2e;
+  --bg-elevated: #1c2640;
+  --bg-hover: #243050;
+  
+  /* ── Accent Colors ── */
+  --accent: #e63946;
+  --accent-hover: #d62836;
+  --accent-glow: rgba(230, 57, 70, 0.3);
+  --gold: #f4a261;
+  --gold-dim: rgba(244, 162, 97, 0.2);
+  
+  /* ── Text ── */
+  --text-primary: #f1faee;
+  --text-secondary: #8892b0;
+  --text-muted: #5a6480;
+  
+  /* ── Borders ── */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  
+  /* ── Feedback ── */
   --error: #ef5350;
+  --error-bg: rgba(239, 83, 80, 0.1);
   --success: #66bb6a;
-  --shadow: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-hover: 0 4px 12px rgba(0,0,0,0.5);
+  
+  /* ── Spacing & Radius ── */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* ── Shadows ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+  
+  /* ── Typography ── */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* ── Transitions ── */
+  --transition-fast: 0.15s ease;
+  --transition: 0.2s ease;
+  --transition-slow: 0.3s ease;
 }
 
-.dark .pokemon-card.filled { background: #242424; }
-.dark .pokemon-card .poke-moves span { background: #3a3a3a; }
-.dark .error-msg { background: #3a1a1a; border-color: #5a2a2a; }
-.dark .modal-close:hover { background: #3a1a1a; }
-.dark .modal-sprite-wrap { background: linear-gradient(135deg, #1a2030 0%, #1a1a28 100%); }
-.dark .modal-stats { background: #2a2a2a; }
-.dark .modal-stat-bar-wrap { background: #3a3a3a; }
-.dark .btn-action { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); }
-.dark .btn-action:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
-.dark input[type="text"], .dark input[type="url"], .dark select, .dark textarea { color: #e0e0e0; }
-.dark .tab-btn { color: #e0e0e0; }
+/* ── Light Theme ── */
+[data-theme="light"] {
+  --bg-deep: #f8f9fc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f3f8;
+  --bg-hover: #e8ecf4;
+  
+  --accent: #c41e3a;
+  --accent-hover: #a01830;
+  --accent-glow: rgba(196, 30, 58, 0.2);
+  --gold: #d4883c;
+  --gold-dim: rgba(212, 136, 60, 0.15);
+  
+  --text-primary: #1a1a2e;
+  --text-secondary: #5a6480;
+  --text-muted: #8892b0;
+  
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(196, 30, 58, 0.15);
+}
+
+[data-theme="light"] .pokemon-card.filled { background: var(--bg-surface); }
+[data-theme="light"] .pokemon-card .poke-moves span { background: var(--bg-elevated); }
+[data-theme="light"] .error-msg { background: var(--error-bg); border-color: rgba(239, 83, 80, 0.3); }
+[data-theme="light"] .modal-close:hover { background: var(--error-bg); }
+[data-theme="light"] .modal-sprite-wrap { background: linear-gradient(135deg, #f0f4ff 0%, #e8ecf8 100%); }
+[data-theme="light"] .modal-stats { background: var(--bg-elevated); }
+[data-theme="light"] .modal-stat-bar-wrap { background: var(--border); }
+[data-theme="light"] .btn-action { background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-primary); }
+[data-theme="light"] .btn-action:hover:not(:disabled) { background: var(--bg-hover); }
+[data-theme="light"] .tab-btn { color: var(--text-secondary); }
+[data-theme="light"] .modal-move-tag { background: var(--bg-elevated); color: var(--text-primary); }
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Base Styles                                                  */
+/* ══════════════════════════════════════════════════════════════ */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ══════════════════════════════════════════════════════════════ */
+/*  Header with Pokéball Arc Gradient                            */
+/* ══════════════════════════════════════════════════════════════ */
+
 .app-header {
-  background: #1a1a1a;
-  color: white;
-  padding: 14px 24px;
-  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
 }
 
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 24px;
+  padding: 14px 24px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pokeball-icon {
+  color: var(--accent);
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.header-content h1 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.header-nav {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .header-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-.header-content h1 { font-size: 1.2rem; font-weight: 600; }
-
-.lang-toggle {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: white;
-  padding: 6px 14px;
-  border-radius: var(--radius);
+.icon-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
-  transition: background 0.2s;
+  font-size: 0.85rem;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.lang-toggle:hover { background: rgba(255,255,255,0.25); }
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Hero Section                                                 */
+/* ══════════════════════════════════════════════════════════════ */
+
+.hero {
+  position: relative;
+  padding: 60px 24px 40px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.hero-decoration {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Main Layout                                                  */
+/* ══════════════════════════════════════════════════════════════ */
 
 .app-main {
   max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 24px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Step Indicators                                              */
+/* ══════════════════════════════════════════════════════════════ */
+
+.step-section {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.step-number {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.3;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.step-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Cards                                                        */
+/* ══════════════════════════════════════════════════════════════ */
+
 .card {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition);
+}
+
+.card:hover {
   box-shadow: var(--shadow);
 }
 
-.card h2 {
-  font-size: 1.1rem;
+.section-label {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--primary);
-  color: var(--primary);
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.two-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-@media (max-width: 900px) {
-  .two-columns { grid-template-columns: 1fr; }
-}
+/* ══════════════════════════════════════════════════════════════ */
+/*  Import Tabs                                                  */
+/* ══════════════════════════════════════════════════════════════ */
 
 .import-tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  background: var(--bg-elevated);
+  padding: 4px;
+  border-radius: var(--radius);
 }
 
 .tab-btn {
   flex: 1;
-  padding: 10px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.2s;
-  border-radius: var(--radius) var(--radius) 0 0;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .tab-btn.active {
-  background: var(--card-bg);
-  border-bottom-color: var(--card-bg);
-  color: var(--primary);
+  background: var(--accent);
+  color: white;
   font-weight: 600;
+  box-shadow: var(--shadow-glow);
 }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ══════════════════════════════════════════════════════════════ */
+/*  Form Elements                                                */
+/* ══════════════════════════════════════════════════════════════ */
+
 label {
   display: block;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
 input[type="text"], input[type="url"], select, textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.95rem;
-  background: var(--input-bg);
-  transition: border-color 0.2s, background 0.2s;
-  font-family: inherit;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  transition: all var(--transition);
+  font-family: var(--font-body);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--primary);
-  background: var(--input-focus);
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-textarea { resize: vertical; }
+textarea {
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
 
 .input-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .input-row input { flex: 1; }
 
+/* ══════════════════════════════════════════════════════════════ */
+/*  Buttons                                                      */
+/* ══════════════════════════════════════════════════════════════ */
+
 .btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;
-  transition: all 0.2s;
+  transition: all var(--transition);
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: var(--accent);
   color: white;
+  box-shadow: var(--shadow-glow);
 }
 
-.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 24px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-action {
-  background: #1a1a1a;
-  color: white;
-  padding: 12px 20px;
+  padding: 14px 28px;
   font-size: 0.95rem;
 }
 
-.btn-action:hover:not(:disabled) {
-  background: #2d2d2d;
-  box-shadow: var(--shadow-hover);
-}
+/* ══════════════════════════════════════════════════════════════ */
+/*  Form Grid                                                    */
+/* ══════════════════════════════════════════════════════════════ */
 
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
 .form-group.full-width { grid-column: 1 / -1; }
 
 .dob-row {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
 }
 
@@ -239,55 +489,56 @@ textarea { resize: vertical; }
   flex: none;
 }
 
-.dob-row span {
+.dob-separator {
   color: var(--text-muted);
   font-weight: 500;
 }
 
-.radio-group {
-  display: flex;
-  gap: 16px;
-  padding-top: 4px;
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  color: var(--text);
-}
-
-.radio-label input { width: auto; }
-
+/* ── Chip Buttons (Age Division) ── */
 .division-btns {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.gender-btn {
-  background: var(--input-bg);
+.chip-btn {
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: var(--radius-xl);
+  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition);
 }
 
-.gender-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
+.chip-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow: var(--shadow-glow);
 }
 
-.gender-btn:hover:not(.active) {
-  border-color: var(--text-muted);
-  color: var(--text);
+.chip-btn:hover:not(.active) {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Two Columns Layout                                           */
+/* ══════════════════════════════════════════════════════════════ */
+
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Team Grid                                                    */
+/* ══════════════════════════════════════════════════════════════ */
 
 .team-grid {
   display: grid;
@@ -295,50 +546,49 @@ textarea { resize: vertical; }
   gap: 12px;
 }
 
-@media (max-width: 600px) {
-  .team-grid { grid-template-columns: 1fr; }
-}
-
 .pokemon-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
-  background: var(--input-bg);
-  min-height: 80px;
+  padding: 14px;
+  background: var(--bg-elevated);
+  min-height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
   font-size: 0.85rem;
   text-align: center;
+  transition: all var(--transition);
 }
 
 .pokemon-card.filled {
-  border-color: var(--primary);
-  background: white;
+  border-color: var(--border-strong);
+  background: var(--bg-surface);
   text-align: left;
   align-items: flex-start;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.15s;
+  transition: all var(--transition);
 }
 
 .pokemon-card.filled:hover {
-  box-shadow: var(--shadow-hover);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
   transform: translateY(-2px);
 }
 
 .pokemon-card .poke-name {
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 0.95rem;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .pokemon-card .poke-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .pokemon-card .poke-sprite {
@@ -346,27 +596,34 @@ textarea { resize: vertical; }
   height: 48px;
   image-rendering: pixelated;
   flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .pokemon-card .poke-details {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .pokemon-card .poke-moves {
   font-size: 0.78rem;
-  color: var(--text);
-  margin-top: 4px;
+  color: var(--text-primary);
+  margin-top: 6px;
 }
 
 .pokemon-card .poke-moves span {
   display: inline-block;
-  background: #e8e8e8;
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin: 1px 2px 1px 0;
+  background: var(--bg-elevated);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  margin: 2px 4px 2px 0;
   font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
 }
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  PDF Actions                                                  */
+/* ══════════════════════════════════════════════════════════════ */
 
 .pdf-actions .action-buttons {
   display: flex;
@@ -374,26 +631,31 @@ textarea { resize: vertical; }
   flex-wrap: wrap;
 }
 
-.pdf-actions .action-buttons .btn { flex: 1; min-width: 200px; text-align: center; }
+.pdf-actions .action-buttons .btn {
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Error Message                                                */
+/* ══════════════════════════════════════════════════════════════ */
 
 .error-msg {
-  background: #fdecea;
+  background: var(--error-bg);
   color: var(--error);
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: var(--radius);
-  margin-top: 12px;
+  margin-top: 16px;
   font-size: 0.9rem;
-  border: 1px solid #f5c6cb;
+  border: 1px solid rgba(239, 83, 80, 0.3);
 }
 
 .hidden { display: none; }
 
-.app-footer {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-}
+/* ══════════════════════════════════════════════════════════════ */
+/*  Loading Spinner                                              */
+/* ══════════════════════════════════════════════════════════════ */
 
 .btn.loading {
   position: relative;
@@ -408,7 +670,7 @@ textarea { resize: vertical; }
   top: 50%;
   left: 50%;
   margin: -9px 0 0 -9px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -419,19 +681,32 @@ textarea { resize: vertical; }
 }
 
 /* ══════════════════════════════════════════════════════════════ */
-/*  Pokemon Detail Modal                                        */
+/*  Footer                                                       */
+/* ══════════════════════════════════════════════════════════════ */
+
+.app-footer {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  Pokemon Detail Modal                                         */
 /* ══════════════════════════════════════════════════════════════ */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   animation: modalFadeIn 0.2s ease;
+  backdrop-filter: blur(4px);
 }
 
 @keyframes modalFadeIn {
@@ -444,9 +719,10 @@ textarea { resize: vertical; }
 }
 
 .modal-content {
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 520px;
   width: 100%;
   max-height: 90vh;
@@ -462,52 +738,54 @@ textarea { resize: vertical; }
 
 .modal-close {
   position: absolute;
-  top: 10px;
-  right: 14px;
-  background: none;
-  border: none;
-  font-size: 1.6rem;
-  color: var(--text-muted);
+  top: 12px;
+  right: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  font-size: 1.4rem;
+  color: var(--text-secondary);
   cursor: pointer;
   z-index: 10;
   line-height: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.15s, color 0.15s;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
 }
 
 .modal-close:hover {
-  background: #fdecea;
+  background: var(--error-bg);
   color: var(--error);
+  border-color: rgba(239, 83, 80, 0.3);
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 28px;
 }
 
 .modal-top {
   display: flex;
   gap: 20px;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .modal-sprite-wrap {
   flex-shrink: 0;
   width: 120px;
   height: 120px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8ecf8 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-hover) 100%);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .modal-sprite {
   width: 100px;
   height: 100px;
   object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .modal-info {
@@ -516,62 +794,64 @@ textarea { resize: vertical; }
 }
 
 .modal-name {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--text);
-  margin-bottom: 4px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
 }
 
 .modal-types {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .modal-type-badge {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-xl);
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .modal-item {
   font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
   font-style: italic;
 }
 
 .modal-detail-row {
   font-size: 0.88rem;
-  color: var(--text);
-  margin-bottom: 3px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 
 .modal-label {
   font-weight: 600;
-  color: var(--text-muted);
-  margin-right: 4px;
+  color: var(--text-secondary);
+  margin-right: 6px;
 }
 
 /* ── Stat Bars ── */
 .modal-stats {
-  margin-bottom: 18px;
-  padding: 14px;
-  background: #f7f8fa;
-  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
   border: 1px solid var(--border);
 }
 
 .modal-stat-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .modal-stat-row:last-child {
@@ -580,34 +860,37 @@ textarea { resize: vertical; }
 
 .modal-stat-label {
   width: 52px;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-align: right;
   flex-shrink: 0;
+  text-transform: uppercase;
 }
 
 .modal-stat-base {
   width: 28px;
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--accent);
   text-align: right;
   flex-shrink: 0;
 }
 
 .modal-stat-bar-wrap {
   flex: 1;
-  height: 16px;
-  background: #e2e4e8;
-  border-radius: 8px;
+  height: 12px;
+  background: var(--border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   position: relative;
 }
 
 .modal-stat-bar {
   height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   transition: width 0.4s ease;
   min-width: 2px;
 }
@@ -620,17 +903,19 @@ textarea { resize: vertical; }
 .modal-stat-bar.spe { background: linear-gradient(90deg, #e84393, #fd79a8); }
 
 .modal-stat-value {
-  width: 34px;
+  width: 36px;
+  font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text-primary);
   text-align: left;
   flex-shrink: 0;
 }
 
 .modal-stat-sp {
   width: 52px;
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   color: var(--text-muted);
   text-align: right;
   flex-shrink: 0;
@@ -638,7 +923,7 @@ textarea { resize: vertical; }
 
 .modal-stat-nature {
   width: 14px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-align: center;
   flex-shrink: 0;
@@ -650,57 +935,65 @@ textarea { resize: vertical; }
 /* ── Moves ── */
 .modal-moves-section {
   border-top: 1px solid var(--border);
-  padding-top: 14px;
+  padding-top: 16px;
 }
 
 .modal-moves-title {
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .modal-moves {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .modal-move-tag {
   display: inline-block;
-  background: var(--secondary);
+  background: var(--accent);
   color: white;
-  padding: 4px 12px;
-  border-radius: 16px;
+  padding: 6px 14px;
+  border-radius: var(--radius-xl);
   font-size: 0.82rem;
   font-weight: 500;
   position: relative;
   cursor: default;
+  transition: all var(--transition);
+}
+
+.modal-move-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
 }
 
 .modal-move-tag .move-tooltip {
   visibility: hidden;
   opacity: 0;
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background: #1a1a2e;
-  color: #e0e0e0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.78rem;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.5;
   white-space: normal;
   width: max-content;
-  max-width: 260px;
+  max-width: 280px;
   z-index: 1100;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  transition: opacity 0.15s ease;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  transition: opacity var(--transition);
 }
 
 .modal-move-tag .move-tooltip::after {
@@ -710,7 +1003,7 @@ textarea { resize: vertical; }
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: #1a1a2e;
+  border-top-color: var(--bg-deep);
 }
 
 .modal-move-tag:hover .move-tooltip {
@@ -718,99 +1011,135 @@ textarea { resize: vertical; }
   opacity: 1;
 }
 
-/* ── Responsive: Tablets ── */
+/* ══════════════════════════════════════════════════════════════ */
+/*  Responsive: Tablets                                          */
+/* ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .two-columns { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
-  .app-header { padding: 12px 16px; }
-  .app-main { padding: 0 16px; }
-  .card { padding: 18px; }
+  .header-content {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .header-nav {
+    display: none;
+  }
+  
+  .app-main {
+    padding: 0 16px 40px;
+    gap: 36px;
+  }
+  
+  .hero {
+    padding: 40px 16px 30px;
+  }
+  
+  .card { padding: 20px; }
+  
   .form-grid { grid-template-columns: 1fr; }
   .form-group.full-width { grid-column: 1; }
+  
   .pdf-actions .action-buttons { flex-direction: column; }
   .pdf-actions .action-buttons .btn { min-width: 0; width: 100%; }
 }
 
-/* ── Responsive: Móvil (iPhone SE ~ iPhone 16 Pro+) ── */
-@media (max-width: 500px) {
-  .header-content {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+/* ══════════════════════════════════════════════════════════════ */
+/*  Responsive: Mobile (iPhone SE ~ iPhone 16 Pro+)              */
+/* ══════════════════════════════════════════════════════════════ */
 
+@media (max-width: 500px) {
   .header-content h1 {
     font-size: 0.95rem;
-    flex: 1 1 100%;
-    text-align: center;
   }
-
+  
   .header-actions {
-    justify-content: center;
-    flex-wrap: wrap;
+    gap: 4px;
   }
-
-  .lang-toggle {
+  
+  .icon-btn {
     padding: 5px 10px;
     font-size: 0.8rem;
   }
-
+  
+  .hero {
+    padding: 32px 12px 24px;
+  }
+  
+  .hero-title {
+    font-size: 1.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  
   .app-main {
-    padding: 0 12px;
-    margin: 12px auto;
-    gap: 12px;
+    padding: 0 12px 32px;
+    gap: 28px;
   }
-
+  
+  .step-number {
+    font-size: 2rem;
+  }
+  
+  .step-title {
+    font-size: 1.1rem;
+  }
+  
   .card {
-    padding: 14px;
+    padding: 16px;
   }
-
-  .card h2 {
-    font-size: 1rem;
-    margin-bottom: 12px;
+  
+  .section-label {
+    font-size: 0.85rem;
+    margin-bottom: 16px;
   }
-
+  
   .import-tabs { gap: 2px; }
-
+  
   .tab-btn {
-    padding: 8px 6px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-size: 0.85rem;
   }
-
+  
   label { font-size: 0.8rem; }
-
+  
   input[type="text"], input[type="url"], select, textarea {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 0.9rem;
   }
-
-  .btn { padding: 8px 14px; font-size: 0.85rem; }
-
-  .btn-action { padding: 10px 14px; font-size: 0.88rem; }
-
-  .dob-row { gap: 2px; }
-  .dob-row input { width: 48px; padding: 6px 4px; font-size: 0.85rem; }
-
-  .radio-group { gap: 10px; flex-wrap: wrap; }
-
+  
+  .btn { padding: 10px 18px; font-size: 0.85rem; }
+  .btn-action { padding: 12px 18px; font-size: 0.88rem; }
+  
+  .dob-row { gap: 4px; }
+  .dob-row input { width: 52px; padding: 8px 4px; font-size: 0.85rem; }
+  
   .team-grid { gap: 8px; }
-
-  .pokemon-card { padding: 10px; min-height: 70px; }
-  .pokemon-card .poke-sprite { width: 40px; height: 40px; }
-  .pokemon-card .poke-name { font-size: 0.85rem; }
-  .pokemon-card .poke-details { font-size: 0.75rem; }
-  .pokemon-card .poke-moves span { font-size: 0.7rem; padding: 1px 4px; }
-
-  .modal-overlay { padding: 10px; }
-  .modal-content { max-height: 95vh; border-radius: 10px; }
-  .modal-body { padding: 16px; }
-  .modal-top { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+  
+  .pokemon-card { padding: 12px; min-height: 80px; }
+  .pokemon-card .poke-sprite { width: 42px; height: 42px; }
+  .pokemon-card .poke-name { font-size: 0.88rem; }
+  .pokemon-card .poke-details { font-size: 0.78rem; }
+  .pokemon-card .poke-moves span { font-size: 0.72rem; padding: 2px 6px; }
+  
+  .modal-overlay { padding: 12px; }
+  .modal-content { max-height: 95vh; }
+  .modal-body { padding: 20px; }
+  .modal-top { flex-direction: column; align-items: center; text-align: center; gap: 16px; }
   .modal-detail-row { text-align: left; }
   .modal-sprite-wrap { width: 100px; height: 100px; }
   .modal-sprite { width: 80px; height: 80px; }
-  .modal-name { font-size: 1.1rem; }
-  .modal-stat-label { width: 40px; font-size: 0.72rem; }
-  .modal-stat-base { width: 24px; font-size: 0.7rem; }
-  .modal-stat-value { width: 28px; font-size: 0.75rem; }
-  .modal-stat-sp { width: 44px; font-size: 0.68rem; }
-  .modal-move-tag { font-size: 0.75rem; padding: 3px 10px; }
-
-  .app-footer { padding: 14px 12px; font-size: 0.75rem; }
+  .modal-name { font-size: 1.2rem; }
+  .modal-stat-label { width: 44px; font-size: 0.7rem; }
+  .modal-stat-base { width: 24px; font-size: 0.68rem; }
+  .modal-stat-value { width: 30px; font-size: 0.75rem; }
+  .modal-stat-sp { width: 46px; font-size: 0.66rem; }
+  .modal-move-tag { font-size: 0.78rem; padding: 4px 12px; }
+  
+  .app-footer { padding: 24px 12px; font-size: 0.75rem; }
 }

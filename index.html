@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" data-lang="es">
+<html lang="es" data-lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokémon VG Team Sheet Generator — Generador de Hojas de Equipo</title>
-  <meta name="description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet. Los datos se procesan localmente en tu navegador.">
+  <title>Pokémon VG Team Sheet Generator</title>
+  <meta name="description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://TU-DOMINIO.com/">
 
@@ -25,133 +25,182 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="theme-color" content="#c41e3a">
+  <meta name="theme-color" content="#0b1120">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <header class="app-header">
     <div class="header-content">
-      <h1>
-        <span data-es="Generador de Hojas de Equipo Pokémon VG" data-en="Pokémon VG Team Sheet Generator">Generador de Hojas de Equipo Pokémon VG</span>
-      </h1>
+      <div class="header-brand">
+        <span class="pokeball-icon">●</span>
+        <h1>
+          <span data-es="Team Sheet Generator" data-en="Team Sheet Generator">Team Sheet Generator</span>
+        </h1>
+      </div>
+      <nav class="header-nav">
+        <a href="builder.html" class="nav-link">
+          <span data-es="Builder" data-en="Builder">Builder</span>
+        </a>
+        <a href="calc.html" class="nav-link">
+          <span data-es="Calc" data-en="Calc">Calc</span>
+        </a>
+      </nav>
       <div class="header-actions">
-        <a href="builder.html" class="lang-toggle" title="Team Builder" style="text-decoration:none;display:flex;align-items:center;">
-          <span style="font-size:0.85rem;">🧱 Builder</span>
-        </a>
-        <a href="calc.html" class="lang-toggle" title="Damage Calculator" style="text-decoration:none;display:flex;align-items:center;">
-          <span style="font-size:0.85rem;">⚔️ Calc</span>
-        </a>
-        <button id="langToggle" class="lang-toggle" title="Switch language">
+        <button id="langToggle" class="icon-btn" title="Switch language">
           <span class="lang-flag">ES</span>
         </button>
-        <button id="themeToggle" class="lang-toggle" title="Toggle dark mode">
-          <span class="theme-icon">☀️</span>
+        <button id="themeToggle" class="icon-btn" title="Toggle dark mode">
+          <span class="theme-icon">☀</span>
         </button>
       </div>
     </div>
   </header>
 
   <main class="app-main">
-    <section class="import-section card">
-      <h2>
-        <span data-es="Importar Equipo" data-en="Import Team">Importar Equipo</span>
-      </h2>
-      <div class="import-tabs">
-        <button class="tab-btn active" data-tab="url" data-es="URL de PokePaste" data-en="PokePaste URL">URL de PokePaste</button>
-        <button class="tab-btn" data-tab="text" data-es="Texto Showdown" data-en="Showdown Text">Texto Showdown</button>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h2 class="hero-title">
+          <span data-es="Prepara tu equipo para la competición" data-en="Prepare your team for competition">Prepara tu equipo para la competición</span>
+        </h2>
+        <p class="hero-subtitle">
+          <span data-es="Importa tu equipo de Showdown o PokePaste y genera las hojas oficiales en segundos" data-en="Import your team from Showdown or PokePaste and generate official sheets in seconds">Importa tu equipo de Showdown o PokePaste y genera las hojas oficiales en segundos</span>
+        </p>
       </div>
-      <div id="tabUrl" class="tab-content active">
-        <label for="pokepasteUrl" data-es="Pega la URL de pokepast.es:" data-en="Paste the pokepast.es URL:">Pega la URL de pokepast.es:</label>
-        <div class="input-row">
-          <input type="url" id="pokepasteUrl" placeholder="https://pokepast.es/xxxxxxxxxxxx" />
-          <button id="fetchBtn" class="btn btn-primary" data-es="Obtener" data-en="Fetch">Obtener</button>
-        </div>
-      </div>
-      <div id="tabText" class="tab-content">
-        <label for="showdownText" data-es="Pega el texto del export de Showdown:" data-en="Paste the Showdown export text:">Pega el texto del export de Showdown:</label>
-        <textarea id="showdownText" rows="10" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;EVs: 252 Atk / 4 Def / 252 Spe&#10;Jolly Nature&#10;- Thunder&#10;- Volt Tackle&#10;- Fake Out&#10;- Protect"></textarea>
-        <button id="parseBtn" class="btn btn-primary" data-es="Importar" data-en="Import">Importar</button>
-      </div>
-      <div id="importError" class="error-msg hidden"></div>
+      <div class="hero-decoration"></div>
     </section>
 
-    <div class="two-columns">
-      <section class="player-section card">
-        <h2>
-          <span data-es="Datos del Jugador" data-en="Player Information">Datos del Jugador</span>
+    <!-- Step 1: Import -->
+    <section class="step-section">
+      <div class="step-header">
+        <span class="step-number">01</span>
+        <h2 class="step-title">
+          <span data-es="Importar Equipo" data-en="Import Team">Importar Equipo</span>
         </h2>
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="playerName" data-es="Nombre del Jugador" data-en="Player Name">Nombre del Jugador</label>
-            <input type="text" id="playerName" />
-          </div>
-          <div class="form-group full-width">
-            <label for="trainerName" data-es="Nombre de Entrenador en el Juego" data-en="Trainer Name in Game">Nombre de Entrenador en el Juego</label>
-            <input type="text" id="trainerName" />
-          </div>
-          <div class="form-group">
-            <label for="playerId" data-es="ID Jugador" data-en="Player ID">ID Jugador</label>
-            <input type="text" id="playerId" maxlength="10" />
-          </div>
-          <div class="form-group">
-            <label data-es="Fecha de Nacimiento" data-en="Date of Birth">Fecha de Nacimiento</label>
-            <div class="dob-row">
-              <input type="text" id="dobMm" placeholder="MM" maxlength="2" />
-              <span>/</span>
-              <input type="text" id="dobDd" placeholder="DD" maxlength="2" />
-              <span>/</span>
-              <input type="text" id="dobYyyy" placeholder="YYYY" maxlength="4" />
-            </div>
-          </div>
-          <div class="form-group full-width">
-            <label for="teamNumber" data-es="Número / Nombre de Equipo de Batalla" data-en="Battle Team Number / Name">Número / Nombre de Equipo de Batalla</label>
-            <input type="text" id="teamNumber" />
-          </div>
-          <div class="form-group full-width">
-            <label for="switchProfile" data-es="Nombre de Perfil de Switch" data-en="Switch Profile Name">Nombre de Perfil de Switch</label>
-            <input type="text" id="switchProfile" />
-          </div>
-          <div class="form-group">
-            <label for="supportId" data-es="Support ID" data-en="Support ID">Support ID</label>
-            <input type="text" id="supportId" />
-          </div>
-          <div class="form-group">
-            <label data-es="División de Edad" data-en="Age Division">División de Edad</label>
-            <div class="division-btns">
-              <label class="gender-btn"><input type="radio" name="ageDivision" value="Juniors" style="display:none;" /> <span data-es="Juniors" data-en="Juniors">Juniors</span></label>
-              <label class="gender-btn"><input type="radio" name="ageDivision" value="Seniors" style="display:none;" /> <span data-es="Seniors" data-en="Seniors">Seniors</span></label>
-              <label class="gender-btn active"><input type="radio" name="ageDivision" value="Masters" checked style="display:none;" /> <span data-es="Masters" data-en="Masters">Masters</span></label>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="team-section card">
-        <h2>
-          <span data-es="Equipo (6 Pokémon)" data-en="Team (6 Pokémon)">Equipo (6 Pokémon)</span>
-        </h2>
-        <div id="teamGrid" class="team-grid">
-        </div>
-      </section>
-    </div>
-
-    <section class="pdf-actions card">
-      <h2>
-        <span data-es="Generar PDF" data-en="Generate PDF">Generar PDF</span>
-      </h2>
-      <div class="action-buttons">
-        <button id="btnOpenSheet" class="btn btn-action" disabled>
-          <span data-es="Open Team Sheet (Oponentes)" data-en="Open Team Sheet (Opponents)">Open Team Sheet (Oponentes)</span>
-        </button>
-        <button id="btnStaffSheet" class="btn btn-action" disabled>
-          <span data-es="Staff Team Sheet (Jueces)" data-en="Staff Team Sheet (Judges)">Staff Team Sheet (Jueces)</span>
-        </button>
-        <button id="btnBothSheets" class="btn btn-action btn-primary" disabled>
-          <span data-es="Ambas Hojas" data-en="Both Sheets">Ambas Hojas</span>
-        </button>
       </div>
+      
+      <div class="import-section card">
+        <div class="import-tabs">
+          <button class="tab-btn active" data-tab="url" data-es="URL de PokePaste" data-en="PokePaste URL">URL de PokePaste</button>
+          <button class="tab-btn" data-tab="text" data-es="Texto Showdown" data-en="Showdown Text">Texto Showdown</button>
+        </div>
+        
+        <div id="tabUrl" class="tab-content active">
+          <label for="pokepasteUrl" data-es="Pega la URL de pokepast.es:" data-en="Paste the pokepast.es URL:">Pega la URL de pokepast.es:</label>
+          <div class="input-row">
+            <input type="url" id="pokepasteUrl" placeholder="https://pokepast.es/xxxxxxxxxxxx" />
+            <button id="fetchBtn" class="btn btn-primary" data-es="Obtener" data-en="Fetch">Obtener</button>
+          </div>
+        </div>
+        
+        <div id="tabText" class="tab-content">
+          <label for="showdownText" data-es="Pega el texto del export de Showdown:" data-en="Paste the Showdown export text:">Pega el texto del export de Showdown:</label>
+          <textarea id="showdownText" rows="8" placeholder="Pikachu @ Light Ball&#10;Ability: Static&#10;EVs: 252 Atk / 4 Def / 252 Spe&#10;Jolly Nature&#10;- Thunder&#10;- Volt Tackle&#10;- Fake Out&#10;- Protect"></textarea>
+          <button id="parseBtn" class="btn btn-primary" data-es="Importar" data-en="Import">Importar</button>
+        </div>
+        
+        <div id="importError" class="error-msg hidden"></div>
+      </div>
+    </section>
+
+    <!-- Step 2: Team & Player -->
+    <section class="step-section">
+      <div class="step-header">
+        <span class="step-number">02</span>
+        <h2 class="step-title">
+          <span data-es="Configura tu equipo" data-en="Configure your team">Configura tu equipo</span>
+        </h2>
+      </div>
+      
+      <div class="two-columns">
+        <section class="player-section card">
+          <h3 class="section-label">
+            <span data-es="Datos del Jugador" data-en="Player Information">Datos del Jugador</span>
+          </h3>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="playerName" data-es="Nombre del Jugador" data-en="Player Name">Nombre del Jugador</label>
+              <input type="text" id="playerName" />
+            </div>
+            <div class="form-group full-width">
+              <label for="trainerName" data-es="Nombre de Entrenador en el Juego" data-en="Trainer Name in Game">Nombre de Entrenador en el Juego</label>
+              <input type="text" id="trainerName" />
+            </div>
+            <div class="form-group">
+              <label for="playerId" data-es="ID Jugador" data-en="Player ID">ID Jugador</label>
+              <input type="text" id="playerId" maxlength="10" />
+            </div>
+            <div class="form-group">
+              <label data-es="Fecha de Nacimiento" data-en="Date of Birth">Fecha de Nacimiento</label>
+              <div class="dob-row">
+                <input type="text" id="dobMm" placeholder="MM" maxlength="2" />
+                <span class="dob-separator">/</span>
+                <input type="text" id="dobDd" placeholder="DD" maxlength="2" />
+                <span class="dob-separator">/</span>
+                <input type="text" id="dobYyyy" placeholder="YYYY" maxlength="4" />
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label for="teamNumber" data-es="Número / Nombre de Equipo de Batalla" data-en="Battle Team Number / Name">Número / Nombre de Equipo de Batalla</label>
+              <input type="text" id="teamNumber" />
+            </div>
+            <div class="form-group full-width">
+              <label for="switchProfile" data-es="Nombre de Perfil de Switch" data-en="Switch Profile Name">Nombre de Perfil de Switch</label>
+              <input type="text" id="switchProfile" />
+            </div>
+            <div class="form-group">
+              <label for="supportId" data-es="Support ID" data-en="Support ID">Support ID</label>
+              <input type="text" id="supportId" />
+            </div>
+            <div class="form-group">
+              <label data-es="División de Edad" data-en="Age Division">División de Edad</label>
+              <div class="division-btns">
+                <label class="chip-btn"><input type="radio" name="ageDivision" value="Juniors" style="display:none;" /> <span data-es="Juniors" data-en="Juniors">Juniors</span></label>
+                <label class="chip-btn"><input type="radio" name="ageDivision" value="Seniors" style="display:none;" /> <span data-es="Seniors" data-en="Seniors">Seniors</span></label>
+                <label class="chip-btn active"><input type="radio" name="ageDivision" value="Masters" checked style="display:none;" /> <span data-es="Masters" data-en="Masters">Masters</span></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="team-section card">
+          <h3 class="section-label">
+            <span data-es="Tu Equipo (6 Pokémon)" data-en="Your Team (6 Pokémon)">Tu Equipo (6 Pokémon)</span>
+          </h3>
+          <div id="teamGrid" class="team-grid">
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Step 3: Generate -->
+    <section class="step-section">
+      <div class="step-header">
+        <span class="step-number">03</span>
+        <h2 class="step-title">
+          <span data-es="Generar PDF" data-en="Generate PDF">Generar PDF</span>
+        </h2>
+      </div>
+      
+      <section class="pdf-actions card">
+        <div class="action-buttons">
+          <button id="btnOpenSheet" class="btn btn-action" disabled>
+            <span data-es="Open Team Sheet (Oponentes)" data-en="Open Team Sheet (Opponents)">Open Team Sheet (Oponentes)</span>
+          </button>
+          <button id="btnStaffSheet" class="btn btn-action" disabled>
+            <span data-es="Staff Team Sheet (Jueces)" data-en="Staff Team Sheet (Judges)">Staff Team Sheet (Jueces)</span>
+          </button>
+          <button id="btnBothSheets" class="btn btn-primary btn-action" disabled>
+            <span data-es="Ambas Hojas" data-en="Both Sheets">Ambas Hojas</span>
+          </button>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -164,7 +213,7 @@
   <!-- Pokemon Detail Modal -->
   <div id="pokemonModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <button id="modalClose" class="modal-close">&times;</button>
+      <button id="modalClose" class="modal-close" aria-label="Close modal">&times;</button>
       <div class="modal-body">
         <div class="modal-top">
           <div class="modal-sprite-wrap">
@@ -196,7 +245,7 @@
   <script src="js/parser.js?v=2"></script>
   <script src="js/pdf.js?v=2"></script>
   <script src="js/regulation.js?v=1"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="js/app.js?v=3"></script>
 
   <script type="application/ld+json">
   {
