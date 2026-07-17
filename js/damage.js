@@ -190,7 +190,7 @@ const DamageCalc = (() => {
       mods.push(0x800);
     }
 
-    // Flail / Reversal — handled by computeVariableBP, no multiplier needed here
+    // Flail / Reversal / Water Spout / Eruption / Crush Grip / Wring Out / Stored Power / Power Trip — handled by computeVariableBP, no multiplier needed here
 
     // Supreme Overlord (graduated boost based on allies fainted)
     if (atkAb === 'Supreme Overlord' && attacker.supremeOverlord > 0) {
@@ -595,6 +595,30 @@ const DamageCalc = (() => {
       if (ratio >= 0.8) return 80;
       if (ratio >= 0.6) return 60;
       return 40;
+    }
+
+    // HP-ratio moves (attacker current HP / max HP) — 150 BP at full
+    if (name === 'Water Spout' || name === 'Eruption') {
+      const hp = attacker.curHP || 0;
+      const max = attacker.maxHP || 1;
+      return Math.max(1, Math.floor(150 * hp / max));
+    }
+
+    // HP-ratio moves (defender current HP / max HP) — 120 BP at full
+    if (name === 'Crush Grip' || name === 'Wring Out') {
+      const hp = defender.curHP || 0;
+      const max = defender.maxHP || 1;
+      return Math.max(1, Math.floor(120 * hp / max));
+    }
+
+    // Boost-based moves — 20 + 20 per positive stat stage
+    if (name === 'Stored Power' || name === 'Power Trip') {
+      const boosts = attacker.boosts || {};
+      const totalPositive = ['atk','def','spa','spd','spe'].reduce((sum, k) => {
+        const v = boosts[k] || 0;
+        return sum + (v > 0 ? v : 0);
+      }, 0);
+      return 20 + 20 * totalPositive;
     }
 
     return moveData.bp;

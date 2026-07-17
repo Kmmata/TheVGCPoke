@@ -2,7 +2,7 @@
 
 ## Language Preference
 
-**IMPORTANT:** All communication in this project MUST be in Spanish (es). Written notes, commit messages, and documentation should be written in English unless they target a Spanish-speaking audience.
+**IMPORTANT:** Toda comunicación con el usuario DEBE ser en español. Comentarios del código, commit messages y documentación técnica se mantienen en inglés.
 
 ## Project Overview
 
@@ -477,9 +477,10 @@ User selects Pokémon on either panel
 
 **Exports:** `{ getMoveData, MOVES }`
 
-- Move metadata for all 502 legal moves in Regulation M-B
-- Each move includes: `name`, `type`, `category`, `bp`, `pp`, `accuracy`, `flags`
-- Flags: `makesContact`, `isSpread`, `hasSecondaryEffect`, `hasRecoil`, `isPunch`, `isSound`, `isPulse`, `isSlice`, `isBullet`, `isSound`, `isBall`
+- Move metadata for all 502+ legal moves in Regulation M-B
+- Each move includes: `name`, `type`, `category`, `bp`, `flags`
+- Flags: `makesContact`, `isSpread`, `hasSecondaryEffect`, `hasRecoil`, `isPunch`, `isSound`, `isPulse`, `isSlice`, `isBullet`, `isBall`
+- **Variable BP moves** have `bp: 0` — actual BP is computed at runtime by `computeVariableBP()` in `damage.js` based on user/defender stats
 - Data sourced from PokAPI and cross-referenced with NCP calculator
 
 #### `js/damage.js` — DamageCalc
@@ -503,6 +504,14 @@ User selects Pokémon on either panel
 - **Rounding:** Uses `pokeRound` (round .5 down) and `Math.round` in `chainMods` to match NCP
 - **STAB logic:** Handles Terastal (non-Stellar, Stellar), Adaptability, Protean/Libero
 - **Type effectiveness:** Single-type and dual-type calculations with ability overrides (Levitate)
+- **Variable BP:** `computeVariableBP(moveData, attacker, defender)` computes BP for moves whose power depends on stats at runtime:
+  - **Attacker HP ratio** (150 BP at full): Water Spout, Eruption
+  - **Defender HP ratio** (120 BP at full): Crush Grip, Wring Out, Hard Press
+  - **Attacker HP low** (20–200 BP): Flail, Reversal
+  - **Attacker HP at 1**: Endeavor
+  - **Speed ratio**: Gyro Ball, Electro Ball
+  - **Weight ratio**: Grass Knot, Low Kick, Heavy Slam, Heat Crash
+  - **Stat boosts** (20 + 20 × positive stages): Stored Power, Power Trip
 
 #### `js/calc.js` — DamageCalcUI
 
@@ -668,6 +677,15 @@ Where modifiers are applied in this order:
 ### 26. Calc SP Inputs Allow Exceeding Maximum (FIXED)
 **Problem:** In the damage calculator, SP inputs had no validation — users could set values that made the total exceed 66.
 **Fix:** Added clamping logic in the SP input event handler: before applying the new value, the handler calculates the sum of all other stats and limits the current input to `66 - otherTotal`. This prevents the total from ever exceeding 66.
+
+### 27. Water Spout / Eruption Damage Ignored HP (FIXED)
+**Problem:** Water Spout and Eruption had their base power hardcoded as `150` in `calc-move-data.js`. Their actual BP should scale with the user's current HP: `BP = floor(150 × currentHP / maxHP)`. Changing the attacker's HP in the calculator had no effect on their damage. Similarly, Stored Power and Power Trip had fixed BP instead of scaling with stat boosts (`BP = 20 + 20 × sum(positive boost stages)`).
+**Fix:**
+- `calc-move-data.js`: Set BP to `0` for eruption, waterspout, storedpower, powertrip (marking them as variable). Added `crushgrip` (Physical) and `wringout` (Special) entries with BP 0.
+- `damage.js` `computeVariableBP()`: Added 3 new cases:
+  - **Water Spout / Eruption**: `floor(150 × attacker.curHP / attacker.maxHP)`
+  - **Crush Grip / Wring Out**: `floor(120 × defender.curHP / defender.maxHP)`
+  - **Stored Power / Power Trip**: `20 + 20 × sum(positive boost stages on attacker)`
 
 ---
 
