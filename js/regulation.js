@@ -6,6 +6,26 @@
 const RegulationMB = (() => {
   'use strict';
 
+  const REG_STR = {
+    spExceeds:      { es: (t, mx) => `SP total ${t} excede el máximo de ${mx}`,      en: (t, mx) => `Total SP ${t} exceeds max of ${mx}` },
+    spMaxPer:       { es: (s, v, mx) => `${s.toUpperCase()} tiene ${v} SP, máximo ${mx}`, en: (s, v, mx) => `${s.toUpperCase()} has ${v} SP, max ${mx}` },
+    spNegative:     { es: (s) => `${s.toUpperCase()} no puede ser negativo`,            en: (s) => `${s.toUpperCase()} cannot be negative` },
+    speciesClause:  { es: (n, a, b) => `Cláusula de especie: "${n}" duplicado (slots ${a} y ${b})`, en: (n, a, b) => `Species clause: "${n}" duplicated (slots ${a} and ${b})` },
+    itemClause:     { es: (n, a, b) => `Cláusula de objeto: "${n}" duplicado (slots ${a} y ${b})`, en: (n, a, b) => `Item clause: "${n}" duplicated (slots ${a} and ${b})` },
+    noSpecies:      { es: 'Pokémon sin especificar', en: 'Pokémon not specified' },
+    illegalPokemon: { es: (n) => `"${n}" no es legal en Regulación M-B`, en: (n) => `"${n}" is not legal in Regulation M-B` },
+    illegalItem:    { es: (n) => `"${n}" no es un objeto legal en M-B`, en: (n) => `"${n}" is not a legal item in M-B` },
+    illegalAbility: { es: (a, p) => `"${a}" no es una habilidad legal para ${p} en Champions`, en: (a, p) => `"${a}" is not a legal ability for ${p} in Champions` },
+    movesCount:     { es: (n) => `Exactamente 4 movimientos requeridos (actual: ${n})`, en: (n) => `Exactly 4 moves required (current: ${n})` },
+    illegalMove:    { es: (m) => `"${m}" no es un movimiento legal en M-B`, en: (m) => `"${m}" is not a legal move in M-B` },
+  };
+
+  function _msg(key, lang, ...args) {
+    const entry = REG_STR[key];
+    if (!entry) return '';
+    return entry[lang](...args);
+  }
+
   const LEGAL_POKEMON = [
     { name: 'Abomasnow', types: ['Grass','Ice'], baseStats: {hp:90,atk:92,def:75,spa:92,spd:85,spe:60}, abilities: ['Snow Warning','Soundproof'], mega: 'Abomasnow-Mega' },
     { name: 'Absol', types: ['Dark'], baseStats: {hp:65,atk:130,def:60,spa:75,spd:60,spe:75}, abilities: ['Pressure','Super Luck','Justified'], mega: 'Absol-Mega' },
@@ -562,22 +582,22 @@ const RegulationMB = (() => {
     return stones.some(s => _norm(s) === iname);
   }
 
-  function validateSP(sp) {
+  function validateSP(sp, lang = 'es') {
     const errors = [];
     const total = STAT_KEYS.reduce((s, k) => s + (sp[k] || 0), 0);
-    if (total > MAX_SP) errors.push(`SP total ${total} excede el máximo de ${MAX_SP}`);
+    if (total > MAX_SP) errors.push(_msg('spExceeds', lang, total, MAX_SP));
     for (const k of STAT_KEYS) {
       if ((sp[k] || 0) > MAX_SP_PER_STAT) {
-        errors.push(`${k.toUpperCase()} tiene ${sp[k]} SP, máximo ${MAX_SP_PER_STAT}`);
+        errors.push(_msg('spMaxPer', lang, k, sp[k], MAX_SP_PER_STAT));
       }
       if ((sp[k] || 0) < 0) {
-        errors.push(`${k.toUpperCase()} no puede ser negativo`);
+        errors.push(_msg('spNegative', lang, k));
       }
     }
     return errors;
   }
 
-  function validateSpeciesClause(team) {
+  function validateSpeciesClause(team, lang = 'es') {
     const seen = {};
     const errors = [];
     for (let i = 0; i < team.length; i++) {
@@ -587,7 +607,7 @@ const RegulationMB = (() => {
       if (!data) continue;
       const key = _norm(data.name);
       if (seen[key] !== undefined) {
-        errors.push(`Cláusula de especie: "${p.species}" duplicado (slots ${seen[key]+1} y ${i+1})`);
+        errors.push(_msg('speciesClause', lang, p.species, seen[key]+1, i+1));
       } else {
         seen[key] = i;
       }
@@ -595,7 +615,7 @@ const RegulationMB = (() => {
     return errors;
   }
 
-  function validateItemClause(team) {
+  function validateItemClause(team, lang = 'es') {
     const seen = {};
     const errors = [];
     for (let i = 0; i < team.length; i++) {
@@ -603,7 +623,7 @@ const RegulationMB = (() => {
       if (!p || !p.item) continue;
       const key = _norm(p.item);
       if (seen[key] !== undefined) {
-        errors.push(`Cláusula de objeto: "${p.item}" duplicado (slots ${seen[key]+1} y ${i+1})`);
+        errors.push(_msg('itemClause', lang, p.item, seen[key]+1, i+1));
       } else {
         seen[key] = i;
       }
@@ -611,17 +631,17 @@ const RegulationMB = (() => {
     return errors;
   }
 
-  function validatePokemon(pokemon, team, slotIndex) {
+  function validatePokemon(pokemon, team, slotIndex, lang = 'es') {
     const errors = [];
     if (!pokemon || !pokemon.species) {
-      errors.push({ slot: slotIndex, field: 'species', msg: 'Pokémon sin especificar' });
+      errors.push({ slot: slotIndex, field: 'species', msg: _msg('noSpecies', lang) });
       return errors;
     }
     if (!isLegalPokemon(pokemon.species)) {
-      errors.push({ slot: slotIndex, field: 'species', msg: `"${pokemon.species}" no es legal en Regulación M-B` });
+      errors.push({ slot: slotIndex, field: 'species', msg: _msg('illegalPokemon', lang, pokemon.species) });
     }
     if (pokemon.item && !isLegalItem(pokemon.item)) {
-      errors.push({ slot: slotIndex, field: 'item', msg: `"${pokemon.item}" no es un objeto legal en M-B` });
+      errors.push({ slot: slotIndex, field: 'item', msg: _msg('illegalItem', lang, pokemon.item) });
     }
     if (pokemon.item && pokemon.species) {
       const data = getPokemonData(pokemon.species);
@@ -638,36 +658,36 @@ const RegulationMB = (() => {
         const abilityNorm = _norm(pokemon.ability);
         const legal = data.abilities.some(a => _norm(a) === abilityNorm);
         if (!legal) {
-          errors.push({ slot: slotIndex, field: 'ability', msg: `"${pokemon.ability}" no es una habilidad legal para ${pokemon.species} en Champions` });
+          errors.push({ slot: slotIndex, field: 'ability', msg: _msg('illegalAbility', lang, pokemon.ability, pokemon.species) });
         }
       }
     }
     if (!pokemon.moves || pokemon.moves.length !== 4) {
-      errors.push({ slot: slotIndex, field: 'moves', msg: `Exactamente 4 movimientos requeridos (actual: ${pokemon.moves ? pokemon.moves.length : 0})` });
+      errors.push({ slot: slotIndex, field: 'moves', msg: _msg('movesCount', lang, pokemon.moves ? pokemon.moves.length : 0) });
     }
     for (let m = 0; m < (pokemon.moves || []).length; m++) {
       const move = pokemon.moves[m];
       if (!move) continue;
       if (!isLegalMove(move)) {
-        errors.push({ slot: slotIndex, field: 'moves', msg: `"${move}" no es un movimiento legal en M-B` });
+        errors.push({ slot: slotIndex, field: 'moves', msg: _msg('illegalMove', lang, move) });
       }
     }
-    const spErrors = validateSP(pokemon.sp || {});
+    const spErrors = validateSP(pokemon.sp || {}, lang);
     for (const msg of spErrors) {
       errors.push({ slot: slotIndex, field: 'sp', msg });
     }
     return errors;
   }
 
-  function validateTeam(team) {
+  function validateTeam(team, lang = 'es') {
     let errors = [];
     for (let i = 0; i < team.length; i++) {
       if (team[i]) {
-        errors = errors.concat(validatePokemon(team[i], team, i));
+        errors = errors.concat(validatePokemon(team[i], team, i, lang));
       }
     }
-    errors = errors.concat(validateSpeciesClause(team));
-    errors = errors.concat(validateItemClause(team));
+    errors = errors.concat(validateSpeciesClause(team, lang));
+    errors = errors.concat(validateItemClause(team, lang));
     return errors;
   }
 

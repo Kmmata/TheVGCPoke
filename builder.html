@@ -47,6 +47,7 @@
       </div>
       <div class="header-actions">
         <div id="authContainer"></div>
+        <button id="builderLangToggle" class="icon-btn" title="Switch language" aria-label="Switch language"><span class="lang-flag">ES</span></button>
         <button id="builderThemeToggle" class="icon-btn" title="Cambiar tema" aria-label="Toggle dark mode"><span class="theme-icon">☀</span></button>
       </div>
     </div>
@@ -58,12 +59,12 @@
       <!-- Team Slots -->
       <section class="builder-card">
         <div class="card-header-row">
-          <h2>Equipo (6 Pokémon)</h2>
+          <h2><span data-es="Equipo (6 Pokémon)" data-en="Team (6 Pokémon)">Equipo (6 Pokémon)</span></h2>
           <div class="card-header-actions">
-            <button id="btnImportShowdown" class="builder-btn builder-btn-outline" style="font-size:0.78rem;">Importar</button>
-            <button id="btnExportShowdown" class="builder-btn builder-btn-outline" style="font-size:0.78rem;">Exportar</button>
-            <button id="btnSaveTeam" class="builder-btn builder-btn-primary" style="font-size:0.78rem;">Guardar</button>
-            <button id="btnClearAll" class="builder-btn builder-btn-danger" style="font-size:0.78rem;">Limpiar</button>
+            <button id="btnImportShowdown" class="builder-btn builder-btn-outline" style="font-size:0.78rem;"><span data-es="Importar" data-en="Import">Importar</span></button>
+            <button id="btnExportShowdown" class="builder-btn builder-btn-outline" style="font-size:0.78rem;"><span data-es="Exportar" data-en="Export">Exportar</span></button>
+            <button id="btnSaveTeam" class="builder-btn builder-btn-primary" style="font-size:0.78rem;"><span data-es="Guardar" data-en="Save">Guardar</span></button>
+            <button id="btnClearAll" class="builder-btn builder-btn-danger" style="font-size:0.78rem;"><span data-es="Limpiar" data-en="Clear">Limpiar</span></button>
           </div>
         </div>
         <div class="team-slots" id="teamSlots"></div>
@@ -71,21 +72,21 @@
 
       <!-- Pokémon Editor -->
       <section class="builder-card">
-        <h2 id="editorTitle">Selecciona un slot para editar</h2>
+        <h2 id="editorTitle"><span data-es="Selecciona un slot para editar" data-en="Select a slot to edit">Selecciona un slot para editar</span></h2>
         <div id="editorContent">
           <div class="editor-empty">
             <div class="empty-icon">🎯</div>
-            <p>Haz clic en un slot del equipo para empezar a construir</p>
+            <p><span data-es="Haz clic en un slot del equipo para empezar a construir" data-en="Click a team slot to start building">Haz clic en un slot del equipo para empezar a construir</span></p>
           </div>
         </div>
       </section>
 
       <!-- Validation Panel -->
       <section class="builder-card">
-        <h2>Validación</h2>
+        <h2><span data-es="Validación" data-en="Validation">Validación</span></h2>
         <div class="validation-panel" id="validationPanel">
           <div class="validation-msg success">
-            <span class="v-icon">✓</span> Añade Pokémon al equipo para validar
+            <span class="v-icon">✓</span> <span data-es="Añade Pokémon al equipo para validar" data-en="Add Pokémon to the team to validate">Añade Pokémon al equipo para validar</span>
           </div>
         </div>
       </section>
@@ -97,42 +98,45 @@
       <!-- Player Data -->
       <section class="builder-card">
         <div class="card-header-row">
-          <h2>Datos del Jugador</h2>
-          <button id="loadProfileBtn" class="builder-btn builder-btn-outline hidden" style="font-size:0.75rem;padding:4px 10px;">Cargar perfil</button>
+          <h2><span data-es="Datos del Jugador" data-en="Player Data">Datos del Jugador</span></h2>
+          <div class="card-header-player-btns">
+            <button id="loadProfileBtn" class="builder-btn builder-btn-outline hidden" style="font-size:0.75rem;padding:4px 10px;"><span data-es="Cargar perfil" data-en="Load profile">Cargar perfil</span></button>
+            <button id="clearPlayerDataBtn" class="builder-btn builder-btn-outline" style="font-size:0.75rem;padding:4px 10px;"><span data-es="Limpiar datos" data-en="Clear data">Limpiar datos</span></button>
+          </div>
         </div>
         <div class="player-form">
           <div class="form-row">
-            <label>Nombre</label>
-            <input type="text" id="playerName" placeholder="Nombre del jugador">
+            <label data-es="Nombre" data-en="Name">Nombre</label>
+            <input type="text" id="playerName" data-placeholder-es="Nombre del jugador" data-placeholder-en="Player name" placeholder="Nombre del jugador">
           </div>
           <div class="form-row">
-            <label>Entrenador</label>
-            <input type="text" id="trainerName" placeholder="Nombre en el juego">
+            <label data-es="Entrenador" data-en="Trainer">Entrenador</label>
+            <input type="text" id="trainerName" data-placeholder-es="Nombre en el juego" data-placeholder-en="In-game name" placeholder="Nombre en el juego">
           </div>
           <div class="form-row">
             <label>ID</label>
-            <input type="text" id="playerId" placeholder="ID de jugador" maxlength="10">
+            <input type="text" id="playerId" data-placeholder-es="ID de jugador" data-placeholder-en="Player ID" placeholder="ID de jugador" maxlength="10">
           </div>
           <div class="form-row">
-            <label>Nacim.</label>
+            <label data-es="Nacim." data-en="DOB">Nacim.</label>
             <div class="dob-row">
               <input type="text" id="dobMm" placeholder="MM" maxlength="2">
               <span class="dob-sep">/</span>
               <input type="text" id="dobDd" placeholder="DD" maxlength="2">
               <span class="dob-sep">/</span>
-              <input type="text" id="dobYyyy" placeholder="AAAA" maxlength="4">
+              <input type="text" id="dobYyyy" data-placeholder-es="AAAA" data-placeholder-en="YYYY" placeholder="AAAA" maxlength="4">
             </div>
           </div>
           <div class="form-row">
-            <label>Equipo</label>
-            <input type="text" id="teamNumber" placeholder="Número/nombre de equipo">
+            <label data-es="Equipo" data-en="Team">Equipo</label>
+            <input type="text" id="teamNumber" data-placeholder-es="Número/nombre de equipo" data-placeholder-en="Team number/name" placeholder="Número/nombre de equipo">
           </div>
           <div class="form-row">
-            <label>Perfil</label>
-            <input type="text" id="switchProfile" placeholder="Perfil de Switch">
+            <label data-es="Perfil" data-en="Profile">Perfil</label>
+            <input type="text" id="switchProfile" data-placeholder-es="Perfil de Switch" data-placeholder-en="Switch profile" placeholder="Perfil de Switch">
           </div>
           <div class="form-row">
-            <label>División</label>
+            <label data-es="División" data-en="Division">División</label>
             <div class="division-btns">
               <label class="chip-btn"><input type="radio" name="ageDivision" value="Juniors" style="display:none;">Juniors</label>
               <label class="chip-btn"><input type="radio" name="ageDivision" value="Seniors" style="display:none;">Seniors</label>
@@ -144,19 +148,19 @@
 
       <!-- PDF Export -->
       <section class="builder-card">
-        <h2>Exportar PDF</h2>
+        <h2><span data-es="Exportar PDF" data-en="Export PDF">Exportar PDF</span></h2>
         <div class="builder-actions">
-          <button id="btnOpenSheet" class="builder-btn builder-btn-outline" disabled>Open Team Sheet</button>
-          <button id="btnStaffSheet" class="builder-btn builder-btn-outline" disabled>Staff Sheet</button>
-          <button id="btnBothSheets" class="builder-btn builder-btn-primary" disabled>Ambas Hojas</button>
+          <button id="btnOpenSheet" class="builder-btn builder-btn-outline" disabled><span data-es="Open Team Sheet" data-en="Open Team Sheet">Open Team Sheet</span></button>
+          <button id="btnStaffSheet" class="builder-btn builder-btn-outline" disabled><span data-es="Staff Sheet" data-en="Staff Sheet">Staff Sheet</span></button>
+          <button id="btnBothSheets" class="builder-btn builder-btn-primary" disabled><span data-es="Ambas Hojas" data-en="Both Sheets">Ambas Hojas</span></button>
         </div>
       </section>
 
       <!-- Saved Teams -->
       <section class="builder-card">
-        <h2>Equipos Guardados</h2>
+        <h2><span data-es="Equipos Guardados" data-en="Saved Teams">Equipos Guardados</span></h2>
         <div class="saved-teams-list" id="savedTeamsList">
-          <div class="empty-state">No hay equipos guardados</div>
+          <div class="empty-state"><span data-es="No hay equipos guardados" data-en="No saved teams">No hay equipos guardados</span></div>
         </div>
       </section>
 
@@ -166,12 +170,12 @@
   <!-- Import Showdown Modal -->
   <div id="importModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Import Showdown team">
     <div class="modal-panel">
-      <h3>Importar equipo de Showdown</h3>
-      <textarea id="importText" placeholder="Pega el export de Showdown aquí...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect"></textarea>
+      <h3><span data-es="Importar equipo de Showdown" data-en="Import Showdown team">Importar equipo de Showdown</span></h3>
+      <textarea id="importText" data-placeholder-es="Pega el export de Showdown aquí...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect" data-placeholder-en="Paste Showdown export here...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect" placeholder="Pega el export de Showdown aquí...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect"></textarea>
       <div id="importError" class="form-error hidden"></div>
       <div class="modal-actions">
-        <button id="importCancel" class="builder-btn builder-btn-outline">Cancelar</button>
-        <button id="importConfirm" class="builder-btn builder-btn-primary">Importar</button>
+        <button id="importCancel" class="builder-btn builder-btn-outline"><span data-es="Cancelar" data-en="Cancel">Cancelar</span></button>
+        <button id="importConfirm" class="builder-btn builder-btn-primary"><span data-es="Importar" data-en="Import">Importar</span></button>
       </div>
     </div>
   </div>
@@ -179,11 +183,11 @@
   <!-- Export Showdown Modal -->
   <div id="exportModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Export Showdown team">
     <div class="modal-panel">
-      <h3>Exportar en formato Showdown</h3>
+      <h3><span data-es="Exportar en formato Showdown" data-en="Export in Showdown format">Exportar en formato Showdown</span></h3>
       <textarea id="exportText" readonly></textarea>
       <div class="modal-actions">
-        <button id="exportCopy" class="builder-btn builder-btn-primary">Copiar</button>
-        <button id="exportClose" class="builder-btn builder-btn-outline">Cerrar</button>
+        <button id="exportCopy" class="builder-btn builder-btn-primary"><span data-es="Copiar" data-en="Copy">Copiar</span></button>
+        <button id="exportClose" class="builder-btn builder-btn-outline"><span data-es="Cerrar" data-en="Close">Cerrar</span></button>
       </div>
     </div>
   </div>
@@ -191,14 +195,14 @@
   <!-- Save Team Modal -->
   <div id="saveModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Save team">
     <div class="modal-panel">
-      <h3>Guardar equipo</h3>
+      <h3><span data-es="Guardar equipo" data-en="Save team">Guardar equipo</span></h3>
       <div class="form-row" style="margin-bottom:12px;">
-        <label style="width:60px;">Nombre</label>
-        <input type="text" id="saveTeamName" placeholder="Mi equipo Champions">
+        <label style="width:60px;" data-es="Nombre" data-en="Name">Nombre</label>
+        <input type="text" id="saveTeamName" data-placeholder-es="Mi equipo Champions" data-placeholder-en="My Champions team" placeholder="Mi equipo Champions">
       </div>
       <div class="modal-actions">
-        <button id="saveCancel" class="builder-btn builder-btn-outline">Cancelar</button>
-        <button id="saveConfirm" class="builder-btn builder-btn-success">Guardar</button>
+        <button id="saveCancel" class="builder-btn builder-btn-outline"><span data-es="Cancelar" data-en="Cancel">Cancelar</span></button>
+        <button id="saveConfirm" class="builder-btn builder-btn-success"><span data-es="Guardar" data-en="Save">Guardar</span></button>
       </div>
     </div>
   </div>

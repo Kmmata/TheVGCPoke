@@ -8,6 +8,34 @@ const CalcApp = (() => {
   const TYPE_NAMES = TypeChart.TYPES;
   const NATURE_NAMES = Object.keys(RegulationMB.NATURES);
 
+  // ─── Translation Dictionary ─────────────────────────────────────────
+
+  const STR = {
+    selectForm: { es: 'Seleccionar forma', en: 'Select Form' },
+    selectMove: { es: 'Selecciona un movimiento', en: 'Select a move' },
+    status: { es: 'Estado', en: 'Status' },
+    statusMove: { es: 'Movimiento de estado', en: 'Status move' },
+    immune: { es: 'inmune', en: 'immune' },
+    nve: { es: 'NVE', en: 'NVE' },
+    se: { es: 'SE', en: 'SE' },
+    stab: { es: 'STAB', en: 'STAB' },
+    ohko: { es: 'OHKO', en: 'OHKO' },
+    moveN: { es: 'Movimiento', en: 'Move' },
+    urlRequired: { es: 'Introduce una URL de pokepast.es', en: 'Enter a pokepast.es URL' },
+    urlInvalid: { es: 'URL no válida. Debe ser de pokepast.es', en: 'Invalid URL. Must be from pokepast.es' },
+    fetchError: { es: 'Error al obtener el paste: ', en: 'Error fetching paste: ' },
+    pasteEmpty: { es: 'Pega un paste de Showdown', en: 'Paste a Showdown team' },
+    parseError: { es: 'Error al parsear: ', en: 'Parse error: ' },
+    parseNone: { es: 'No se pudo parsear ningún Pokémon', en: 'No Pokémon could be parsed' },
+    importBtn: { es: 'Importar', en: 'Import' },
+    megaSelectForm: { es: 'Seleccionar forma', en: 'Select Form' },
+  };
+
+  function t(key) {
+    const s = STR[key];
+    return s ? s[state.lang] || s.es : key;
+  }
+
   // ─── State ──────────────────────────────────────────────────────────
 
   const state = {
@@ -147,8 +175,25 @@ const CalcApp = (() => {
         }
       }
     });
+    // Update placeholder attributes
+    $$('[data-placeholder-es]').forEach(el => {
+      const ph = el.getAttribute(`data-placeholder-${lang}`);
+      if (ph) el.placeholder = ph;
+    });
+    // Update title attributes
+    $$('[data-title-es]').forEach(el => {
+      const tt = el.getAttribute(`data-title-${lang}`);
+      if (tt) el.title = tt;
+    });
     const langBtn = $('#langToggle');
-    langBtn.textContent = lang === 'es' ? 'EN' : 'ES';
+    langBtn.textContent = lang.toUpperCase();
+    // Re-translate type and nature dropdowns
+    populateTypeSelects();
+    populateNatureSelects();
+    // Re-translate mega form selects
+    ['left','right'].forEach(side => updateMegaUI(side));
+    // Re-render results with translated descriptions
+    recalcAll();
   }
 
   // ─── Populate type selects ─────────────────────────────────────────
@@ -157,24 +202,28 @@ const CalcApp = (() => {
     const selects = ['type1Left','type2Left','teraLeft','type1Right','type2Right','teraRight'];
     selects.forEach(id => {
       const sel = $(`#${id}`);
+      const prevVal = sel.value;
       sel.innerHTML = '';
       TYPE_NAMES.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t;
-        opt.textContent = t;
+        opt.textContent = PokeTranslations.translateType(t, state.lang);
         sel.appendChild(opt);
       });
+      if (prevVal) sel.value = prevVal;
     });
 
     // Also populate move type selects
     $$('.calc-move-type-select').forEach(sel => {
+      const prevVal = sel.value;
       sel.innerHTML = '';
       TYPE_NAMES.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t;
-        opt.textContent = t;
+        opt.textContent = PokeTranslations.translateType(t, state.lang);
         sel.appendChild(opt);
       });
+      if (prevVal) sel.value = prevVal;
     });
 
     // Bind type change events
@@ -203,18 +252,21 @@ const CalcApp = (() => {
   function populateNatureSelects() {
     ['Left','Right'].forEach(side => {
       const sel = $(`#nature${side}`);
+      const prevVal = sel.value;
       sel.innerHTML = '';
       NATURE_NAMES.forEach(n => {
         const opt = document.createElement('option');
         opt.value = n;
         const data = RegulationMB.NATURES[n];
+        const translatedName = PokeTranslations.translateNature(n, state.lang);
         if (data.plus && data.minus) {
-          opt.textContent = `${n} (+${data.plus.toUpperCase()}, -${data.minus.toUpperCase()})`;
+          opt.textContent = `${translatedName} (+${data.plus.toUpperCase()}, -${data.minus.toUpperCase()})`;
         } else {
-          opt.textContent = n;
+          opt.textContent = translatedName;
         }
         sel.appendChild(opt);
       });
+      if (prevVal) sel.value = prevVal;
       sel.addEventListener('change', () => {
         state[side.toLowerCase()].nature = sel.value;
         recalcStats(side.toLowerCase());
@@ -282,21 +334,24 @@ const CalcApp = (() => {
       const ac = $(`#autocomplete${side}`);
       const s = side.toLowerCase();
 
-      input.addEventListener('input', () => {
+      input.addEventListener('input', async () => {
         const q = input.value.trim();
         if (q.length < 1) { ac.classList.remove('visible'); return; }
         const results = RegulationMB.searchPokemon(q, 8);
         if (results.length === 0) { ac.classList.remove('visible'); return; }
         ac.innerHTML = '';
-        results.forEach(p => {
+        const lang = state.lang;
+        const names = lang === 'en' ? results.map(r => r.name) :
+          await Promise.all(results.map(r => PokeTranslations.translateSpecies(r.name, lang)));
+        results.forEach((p, i) => {
           const div = document.createElement('div');
           div.className = 'calc-ac-item';
           const typeBadges = p.types.map(t =>
-            `<span class="calc-ac-type-badge" style="background:var(--type-${t.toLowerCase()})">${t}</span>`
+            `<span class="calc-ac-type-badge" style="background:var(--type-${t.toLowerCase()})">${PokeTranslations.translateType(t, lang)}</span>`
           ).join(' ');
-          div.innerHTML = `<span>${p.name}</span> ${typeBadges}`;
+          div.innerHTML = `<span>${names[i]}</span> ${typeBadges}`;
           div.addEventListener('click', () => {
-            input.value = p.name;
+            input.value = names[i];
             ac.classList.remove('visible');
             selectPokemon(s, p.name);
           });
@@ -394,20 +449,23 @@ const CalcApp = (() => {
       const side = input.closest('.calc-pokemon-panel').id === 'panelLeft' ? 'left' : 'right';
       const ac = input.parentElement.querySelector('.calc-autocomplete');
 
-      input.addEventListener('input', () => {
+      input.addEventListener('input', async () => {
         const q = input.value.trim();
         if (q.length < 1) { ac.classList.remove('visible'); return; }
         const results = RegulationMB.searchMoves(q, 8);
         if (results.length === 0) { ac.classList.remove('visible'); return; }
         ac.innerHTML = '';
-        results.forEach(m => {
+        const lang = state.lang;
+        const names = lang === 'en' ? results.map(r => r) :
+          await Promise.all(results.map(m => PokeTranslations.translateMove(m, lang)));
+        results.forEach((m, i) => {
           const div = document.createElement('div');
           div.className = 'calc-ac-item';
           const moveData = CalcMoveData.getMoveData(m);
-          const typeBadge = moveData ? `<span class="calc-ac-type-badge" style="background:var(--type-${moveData.type.toLowerCase()})">${moveData.type}</span>` : '';
-          div.innerHTML = `<span>${m}</span> ${typeBadge}`;
+          const typeBadge = moveData ? `<span class="calc-ac-type-badge" style="background:var(--type-${moveData.type.toLowerCase()})">${PokeTranslations.translateType(moveData.type, lang)}</span>` : '';
+          div.innerHTML = `<span>${names[i]}</span> ${typeBadge}`;
           div.addEventListener('click', () => {
-            input.value = m;
+            input.value = names[i];
             ac.classList.remove('visible');
             state[side].moves[idx] = m;
             state[side].moveData[idx] = moveData;
@@ -594,7 +652,7 @@ const CalcApp = (() => {
         'Costar', 'Embody Aspect',
       ];
 
-      input.addEventListener('input', () => {
+      input.addEventListener('input', async () => {
         const q = input.value.trim().toLowerCase();
         if (q.length < 1) { ac.classList.remove('visible'); return; }
 
@@ -608,12 +666,15 @@ const CalcApp = (() => {
         const results = pool.filter(a => a.toLowerCase().includes(q)).slice(0, 8);
         if (results.length === 0) { ac.classList.remove('visible'); return; }
         ac.innerHTML = '';
-        results.forEach(a => {
+        const lang = state.lang;
+        const names = lang === 'en' ? results.map(r => r) :
+          await Promise.all(results.map(a => PokeTranslations.translateAbility(a, lang)));
+        results.forEach((a, i) => {
           const div = document.createElement('div');
           div.className = 'calc-ac-item';
-          div.textContent = a;
+          div.textContent = names[i];
           div.addEventListener('click', () => {
-            input.value = a;
+            input.value = names[i];
             ac.classList.remove('visible');
             state[s].ability = a;
             recalcAll();
@@ -644,18 +705,21 @@ const CalcApp = (() => {
       const ac = $(`#itemAutocomplete${side}`);
       const s = side.toLowerCase();
 
-      input.addEventListener('input', () => {
+      input.addEventListener('input', async () => {
         const q = input.value.trim();
         if (q.length < 1) { ac.classList.remove('visible'); return; }
         const results = RegulationMB.searchItems(q, 8);
         if (results.length === 0) { ac.classList.remove('visible'); return; }
         ac.innerHTML = '';
-        results.forEach(item => {
+        const lang = state.lang;
+        const names = lang === 'en' ? results.map(r => r) :
+          await Promise.all(results.map(item => PokeTranslations.translateItem(item, lang)));
+        results.forEach((item, i) => {
           const div = document.createElement('div');
           div.className = 'calc-ac-item';
-          div.textContent = item;
+          div.textContent = names[i];
           div.addEventListener('click', () => {
-            input.value = item;
+            input.value = names[i];
             ac.classList.remove('visible');
             state[s].item = item;
             recalcAll();
@@ -802,7 +866,7 @@ const CalcApp = (() => {
     const isDual = RegulationMB.hasDualMega(s.species);
 
     if (canMega && isDual) {
-      formSelect.innerHTML = '<option value="">Select Form</option><option value="X">X</option><option value="Y">Y</option>';
+      formSelect.innerHTML = `<option value="">${t('megaSelectForm')}</option><option value="X">X</option><option value="Y">Y</option>`;
       formSelect.classList.remove('hidden');
       formSelect.value = 'X';
       s.megaForm = 'X';
@@ -830,7 +894,7 @@ const CalcApp = (() => {
     const isDual = RegulationMB.hasDualMega(s.species);
     const formSelect = $(`#megaForm${cap}`);
     if (canMega && isDual) {
-      formSelect.innerHTML = '<option value="">Select Form</option><option value="X">X</option><option value="Y">Y</option>';
+      formSelect.innerHTML = `<option value="">${t('megaSelectForm')}</option><option value="X">X</option><option value="Y">Y</option>`;
       formSelect.classList.remove('hidden');
       formSelect.value = s.megaForm || 'X';
     } else {
@@ -980,8 +1044,8 @@ const CalcApp = (() => {
     const defender = buildPokemonObj(defSide);
 
     // Calculate all moves for both sides
-    const leftResults = DamageCalc.calcAllMoves(attacker, defender, state.field);
-    const rightResults = DamageCalc.calcAllMoves(defender, attacker, state.field);
+    const leftResults = DamageCalc.calcAllMoves(attacker, defender, state.field, state.lang);
+    const rightResults = DamageCalc.calcAllMoves(defender, attacker, state.field, state.lang);
 
     // Update move result buttons (left side = attacker -> defender)
     updateMoveResults('left', leftResults);
@@ -1034,7 +1098,7 @@ const CalcApp = (() => {
     const ranges = resultSide.querySelectorAll('.calc-damage-range');
 
     results.forEach((r, i) => {
-      if (btns[i]) btns[i].textContent = r.name || `Move ${i + 1}`;
+      if (btns[i]) btns[i].textContent = r.name || `${t('moveN')} ${i + 1}`;
       if (ranges[i]) {
         if (r.isStatus || !r.percent || r.percent.every(p => p === 0)) {
           ranges[i].textContent = '—';
@@ -1057,18 +1121,18 @@ const CalcApp = (() => {
     const moveName = s.moves[index];
     if (!moveName) {
       $('#mainResultText').textContent = '— %';
-      $('#mainResultDesc').textContent = state.lang === 'es' ? 'Selecciona un movimiento' : 'Select a move';
+      $('#mainResultDesc').textContent = t('selectMove');
       return;
     }
 
     const moveData = CalcMoveData.getMoveData(moveName);
     if (!moveData || moveData.category === 'Status') {
-      $('#mainResultText').textContent = 'Status';
-      $('#mainResultDesc').textContent = moveData ? `${moveData.type} — Status` : moveName;
+      $('#mainResultText').textContent = t('status');
+      $('#mainResultDesc').textContent = moveData ? `${moveData.type} — ${t('status')}` : moveName;
       return;
     }
 
-    const result = DamageCalc.calcDamage(attacker, defender, moveData, state.field);
+    const result = DamageCalc.calcDamage(attacker, defender, moveData, state.field, state.lang);
     const defHP = defender.stats.hp;
 
     if (result.damage[0] === 0) {
@@ -1085,8 +1149,8 @@ const CalcApp = (() => {
     // KO check
     let koText = '';
     const koCount = percents.filter(p => p >= 100).length;
-    if (koCount === 16) koText = ' — OHKO';
-    else if (koCount > 0) koText = ` — ${koCount}/16 OHKO`;
+    if (koCount === 16) koText = ` — ${t('ohko')}`;
+    else if (koCount > 0) koText = ` — ${koCount}/16 ${t('ohko')}`;
 
     $('#mainResultText').textContent = `${min}% – ${max}%${koText}`;
     $('#mainResultDesc').textContent = result.desc;
@@ -1161,9 +1225,9 @@ const CalcApp = (() => {
 
     if (activeTab === 'url') {
       const url = $('#importPasteUrl').value.trim();
-      if (!url) { showImportError('Introduce una URL de pokepast.es'); return; }
+      if (!url) { showImportError(t('urlRequired')); return; }
       if (!ShowdownParser.isPokepasteUrl(url)) {
-        showImportError('URL no válida. Debe ser de pokepast.es');
+        showImportError(t('urlInvalid'));
         return;
       }
       try {
@@ -1171,31 +1235,31 @@ const CalcApp = (() => {
         $('#importConfirm').textContent = '...';
         text = await ShowdownParser.fetchPokepaste(url);
       } catch (e) {
-        showImportError('Error al obtener el paste: ' + e.message);
+        showImportError(t('fetchError') + e.message);
         $('#importConfirm').disabled = false;
-        $('#importConfirm').textContent = state.lang === 'es' ? 'Importar' : 'Import';
+        $('#importConfirm').textContent = t('importBtn');
         return;
       }
       $('#importConfirm').disabled = false;
-      $('#importConfirm').textContent = state.lang === 'es' ? 'Importar' : 'Import';
+      $('#importConfirm').textContent = t('importBtn');
     } else {
       text = $('#importPasteText').value.trim();
     }
 
     if (!text) {
-      showImportError('Pega un paste de Showdown');
+      showImportError(t('pasteEmpty'));
       return;
     }
 
     try {
       importParsedList = ShowdownParser.parse(text);
     } catch (e) {
-      showImportError('Error al parsear: ' + e.message);
+      showImportError(t('parseError') + e.message);
       return;
     }
 
     if (!importParsedList || importParsedList.length === 0) {
-      showImportError('No se pudo parsear ningún Pokémon');
+      showImportError(t('parseNone'));
       return;
     }
 

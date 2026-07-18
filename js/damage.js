@@ -6,6 +6,21 @@
 const DamageCalc = (() => {
   'use strict';
 
+  const DMG_STR = {
+    statusMove: { es: 'Movimiento de estado', en: 'Status move' },
+    immune: { es: 'inmune', en: 'immune' },
+    nve: { es: 'NVE', en: 'NVE' },
+    se: { es: 'SE', en: 'SE' },
+    stab: { es: 'STAB', en: 'STAB' },
+    status: { es: 'Estado', en: 'Status' },
+    bpLabel: { es: 'BP', en: 'BP' },
+  };
+
+  function _dmgT(key, lang) {
+    const s = DMG_STR[key];
+    return s ? s[lang || 'es'] : key;
+  }
+
   const LEVEL = 50;
   const MIN_DMG = 1;
   const MAX_DMG = 65535;
@@ -626,9 +641,9 @@ const DamageCalc = (() => {
 
   // ─── Main damage calculation ────────────────────────────────────────
 
-  function calcDamage(attacker, defender, moveData, field) {
+  function calcDamage(attacker, defender, moveData, field, lang) {
     if (!moveData || moveData.category === 'Status') {
-      return { damage: [0], desc: 'Status move' };
+      return { damage: [0], desc: _dmgT('statusMove', lang) };
     }
 
     const weather = field.weather || '';
@@ -748,27 +763,27 @@ const DamageCalc = (() => {
 
     // Description
     let desc = `${moveData.name} (${moveData.type}, ${moveData.category}`;
-    if (moveData.bp) desc += `, ${moveData.bp} BP`;
+    if (moveData.bp) desc += `, ${moveData.bp} ${_dmgT('bpLabel', lang)}`;
     desc += ')';
-    if (typeEff === 0) desc += ' — 0× (immune)';
-    else if (typeEff < 1) desc += ` — ${typeEff}× (NVE)`;
-    else if (typeEff > 1) desc += ` — ${typeEff}× (SE)`;
-    if (stabMod > 0x1000) desc += ' — STAB';
+    if (typeEff === 0) desc += ` — 0× (${_dmgT('immune', lang)})`;
+    else if (typeEff < 1) desc += ` — ${typeEff}× (${_dmgT('nve', lang)})`;
+    else if (typeEff > 1) desc += ` — ${typeEff}× (${_dmgT('se', lang)})`;
+    if (stabMod > 0x1000) desc += ` — ${_dmgT('stab', lang)}`;
 
     return { damage: damages, desc, typeEff };
   }
 
   // ─── Calculate all moves for a matchup ──────────────────────────────
 
-  function calcAllMoves(attacker, defender, field) {
+  function calcAllMoves(attacker, defender, field, lang) {
     const results = [];
     for (const moveName of attacker.moves) {
       const moveData = CalcMoveData.getMoveData(moveName);
       if (!moveData || moveData.category === 'Status') {
-        results.push({ name: moveName, damage: [0], percent: [0], desc: 'Status', isStatus: true });
+        results.push({ name: moveName, damage: [0], percent: [0], desc: _dmgT('status', lang), isStatus: true });
         continue;
       }
-      const res = calcDamage(attacker, defender, moveData, field);
+      const res = calcDamage(attacker, defender, moveData, field, lang);
       const defHP = defender.stats.hp;
       const percents = res.damage.map(d => Math.round(d / defHP * 1000) / 10);
       results.push({

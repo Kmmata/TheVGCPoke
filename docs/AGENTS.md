@@ -223,6 +223,14 @@ User authentication and profile management using `localStorage`. No server-side 
 - `getTypeColor(typeName)` → Returns hex color for a type name (from `TYPE_COLORS` map)
 - `TYPE_COLORS` — Map of 18 types + Stellar to hex colors for move type badges
 
+**Translation functions:**
+- `translateSpecies(name, lang)` → Translated species name (async, PokéAPI)
+- `translateMove(name, lang)` → Translated move name (async, PokéAPI)
+- `translateItem(name, lang)` → Translated item name (async, PokéAPI)
+- `translateAbility(name, lang)` → Translated ability name (async, PokéAPI)
+- `translateNature(name, lang)` → Translated nature name (sync, local dict)
+- `translateType(name, lang)` → Translated type name (sync, local dict)
+
 **Pokémon object structure:**
 ```js
 {
@@ -379,7 +387,7 @@ The Team Builder (`builder.html`) is a **separate page** from the main Team Shee
 ```
 User creates team in Builder UI
   → TeamBuilder.team[] array (6 slots, English names)
-  → RegulationMB.validateTeam() validates all rules
+  → RegulationMB.validateTeam() validates all rules (accepts lang param)
   → ChampionsAPI.fetchPokemonFull() fetches learnsets/abilities from PokAPI
   → On load (draft/saved team):
     → Populates _types/_baseStats from RegulationMB if missing
@@ -424,6 +432,12 @@ User creates team in Builder UI
 - `convertSPtoEVs(sp)` — Convert SP (0-32) to Showdown EVs (4-252) for export compatibility
 - `convertEVsToSP(evs)` — Convert Showdown EVs to SP for import compatibility. Auto-detects: if total ≤ 66, values are already SP (used directly); if total > 66, converts from traditional EVs using formula
 
+**Translation system:**
+- `REG_STR` dictionary (12 keys) with `_regT(key, lang)` helper
+- Validation functions accept `lang` param for translated error messages
+- `validateTeam(team, lang)`, `validatePokemon(p, lang)`, `validateSP(p, lang)`, `validateSpeciesClause(team, lang)`, `validateItemClause(team, lang)`
+- Translated error messages: species clause, item clause, SP exceed, SP per stat, missing moves, illegal Pokemon/item/move, illegal ability, too many Pokemon
+
 **SP to EV conversion formula:**
 - 1st SP = 4 EVs, each additional SP = 8 EVs
 - Example: 32 SP → 4 + 31×8 = 252 EVs
@@ -447,6 +461,7 @@ User creates team in Builder UI
 
 **State:**
 - `team[]` — Array of 6 slots (null or Pokémon objects)
+- `translatedTeam[]` — Array of 6 slots (translated Pokémon objects, or English if `currentLang === 'en'`)
 - `activeSlot` — Currently selected slot index (-1 if none)
 - `apiCache` — Cached PokAPI responses by species name
 - `importBuffer` — Temporary storage for Showdown import
@@ -479,6 +494,8 @@ User creates team in Builder UI
 - `calcFinalStat(baseStat, spVal, nature, statKey)` — Calculates final stat: HP = base + sp + 75, others = floor((base + sp + 20) × natureMult)
 - `updateStatPreview(pokemon)` — Renders live stat preview below SP sliders (base, nature, bar, final, SP). Called on every SP slider input and nature change
 - `loadPokemonAPIData(pokemon)` — Fetches full data from PokAPI (sprites, learnsets, abilities). Populates `_apiData`, `_spriteURL`, `_types`, `_baseStats`. Calls `updateStatPreview()` and `renderTeamSlots()` after loading. Also updates editor sprite/type elements in DOM if editor is showing this Pokémon
+- `getDisplayPokemon(i)` — Returns translated or English Pokémon based on language
+- `translateAndRender()` — Async function that fetches translations and updates UI (called on language change and all mutations)
 
 ### UI Components
 
@@ -581,6 +598,12 @@ User selects Pokémon on either panel
   - **Weight ratio**: Grass Knot, Low Kick, Heavy Slam, Heat Crash
   - **Stat boosts** (20 + 20 × positive stages): Stored Power, Power Trip
 
+**Translation system:**
+- `DMG_STR` dictionary (7 keys) with `_dmgT(key, lang)` helper
+- `calcDamage()` and `calcAllMoves()` accept `lang` param
+- Translated terms: "Status move", "immune", "NVE", "SE", "STAB", "BP"
+- Results include translated status descriptions for move tooltips
+
 #### `js/calc.js` — DamageCalcUI
 
 **Exports:** `{ init }`
@@ -598,6 +621,17 @@ User selects Pokémon on either panel
   - Real-time damage calculation on any input change
   - Bilingual UI labels via `data-es` / `data-en`
   - Dark mode support (synced with `localStorage.tsTheme`)
+- **Translation system:**
+  - `STR` dictionary (16 keys) with `t(key)` helper function
+  - `applyLang()` swaps `data-es`/`data-en` content + placeholders + titles
+  - All 4 autocomlates translated via `async` + `Promise.all` + `PokeTranslations`
+  - `populateTypeSelects()` uses `PokeTranslations.translateType()`
+  - `populateNatureSelects()` uses `PokeTranslations.translateNature()`
+  - Mega form select uses `t('megaSelectForm')`
+  - Move result buttons use `t('moveN')`, KO text uses `t('ohko')`
+  - All error messages use `t()` (URL required/invalid, fetch error, paste empty, parse error/none)
+  - `applyLang()` does NOT overwrite icon buttons (hamburger ☰)
+  - Lang toggle shows current language (`.toUpperCase()`)
 
 ### UI Components
 
@@ -770,6 +804,12 @@ Where modifiers are applied in this order:
 
 ## Bilingual System
 
+### Overview
+All three pages (index, builder, calc) support bilingual ES/EN with:
+- UI labels via `data-es`/`data-en` attributes
+- Game data translations via PokéAPI (`translations.js`)
+- Language persisted in `localStorage` key `tsLang` (values: `'es'` | `'en'`)
+
 ### UI Labels
 All translatable UI elements use dual attributes:
 ```html
@@ -787,6 +827,32 @@ All translatable UI elements use dual attributes:
   - PokéAPI base stats lookup (`_fetchBaseStats`)
   - Nature multiplier lookup (`NATURE_MAP`)
 - Language toggle triggers `translateAndRender()` which fetches translations and updates both web UI and PDF output
+
+### Builder Page Translation (`builder.js`)
+- `STR` dictionary (30+ keys) with `t(key)` helper function
+- `applyLanguage()` swaps `data-es`/`data-en` content + placeholders + drawer title
+- `translatedTeam[]` array stores translated Pokémon objects
+- `getDisplayPokemon(i)` returns translated or English Pokémon based on language
+- `translateAndRender()` async function fetches translations and updates UI
+- All mutation callbacks (autocomplete, nature/tera change, clear slot, remove, import, load team, clear all) call `translateAndRender()`
+- `loadPokemonAPIData()` translates type badges via `PokeTranslations.translateType()`
+
+### Calculator Page Translation (`calc.js`)
+- `STR` dictionary (16 keys) with `t(key)` helper function
+- `applyLang()` swaps `data-es`/`data-en` content + placeholders + titles
+- All 4 autocomlates translated (species, moves, abilities, items) via `async` + `Promise.all` + `PokeTranslations`
+- `populateTypeSelects()` uses `PokeTranslations.translateType()`
+- `populateNatureSelects()` uses `PokeTranslations.translateNature()`
+- Mega form select uses `t('megaSelectForm')`
+- Move result buttons use `t('moveN')`, KO text uses `t('ohko')`
+- All error messages use `t()` (URL required/invalid, fetch error, paste empty, parse error/none)
+- `applyLang()` does NOT overwrite icon buttons (hamburger ☰)
+
+### Damage Calculator Translation (`damage.js`)
+- `DMG_STR` dictionary (7 keys) with `_dmgT(key, lang)` helper
+- `calcDamage()` and `calcAllMoves()` accept `lang` param
+- Translated terms: "Status move", "immune", "NVE", "SE", "STAB", "BP"
+- Results include translated status descriptions for move tooltips
 
 ---
 
@@ -819,6 +885,7 @@ All translatable UI elements use dual attributes:
 
 ## How to Continue Development
 
+### Testing Checklist
 1. **Run as web:** `npm run dev` → http://localhost:8080
 2. **Test PDF output (main page):** Import a team → click each PDF button → verify in browser PDF viewer
 3. **Test PDF output (builder):** Build a team → click PDF buttons → verify stats use SP formula
@@ -826,33 +893,44 @@ All translatable UI elements use dual attributes:
 5. **Test dark mode:** Toggle via header button → verify all elements render correctly (cards, inputs, tabs, buttons, modal) across all three pages
 6. **Test light mode:** Toggle to light theme → verify all elements render correctly (no white-on-white, proper contrast)
 7. **Test builder validation:** Create invalid team (duplicate species, illegal moves) → verify error messages
-7. **Test builder save/load:** Save a team → reload page → verify team loads from saved list with sprites and type badges
-8. **Test import/export:** Import Showdown text → verify SP conversion → export back → verify EV values match
-9. **Test stat preview:** Select a Pokémon in builder → adjust SP sliders → verify base stats, final stats, nature indicators update in real-time
-10. **Test import types/stats:** Import a full paste → verify type badges and stat preview load correctly (from RegulationMB data immediately, PokAPI data in background)
-11. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
-12. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
-13. **Test damage calculator:** Go to /calc → select Pokémon on both panels → verify damage ranges match NCP reference calculator
-14. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB
-15. **Test calc stat display:** Select a Pokémon → verify HP, Atk, Def, Spa, Spd, Spe match expected values (SP + nature)
-16. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
-17. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
-18. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
-19. **Test calc light mode:** Toggle to light theme → verify calculator renders correctly (no white-on-white)
-20. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
-21. **Auth system:** `auth.js` exposes `PokeAuth` global. All auth logic (register, login, profile, session) goes through this module. CSS in `auth.css`. Auth container `#authContainer` in both page headers.
-22. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
-15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
-16. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
-17. **New form fields:** Add HTML in `index.html` or `builder.html`, add to `els` object and `getPlayerData()` in respective JS files, add `_val()` call in `pdf.js`
-18. **New languages:** Add `data-xx` attributes to HTML elements, extend `applyLanguage()` logic, and add PokéAPI language code to `translations.js` (`_langCode()` + local mappings)
-19. **New translations categories:** Add fetch function in `translations.js` (e.g., for items, abilities) and integrate into `translatePokemon()`
-20. **If template PDF changes:** Extract new coordinates with `pdfjs-dist` (text items) or raw PDF stream parsing (shapes/rectangles) and update positions in `pdf.js`
-21. **Regulation updates:** When a new regulation set releases (M-C, M-D, etc.), update `regulation.js` with new legal lists, or create a new `regulation-mc.js` and select in builder UI
-22. **Builder validation changes:** Modify validation functions in `regulation.js` (validateTeam, validatePokemon, etc.)
-23. **Damage calculator formula:** Modify `damage.js` — must match NCP VGC reference exactly. Test with known matchups (e.g., Garchomp Dragon Claw Hardy nature)
-24. **Damage calculator moves:** Update `calc-move-data.js` when new moves are added to Regulation M-B. Data sourced from PokAPI
-25. **Damage calculator UI:** Modify `calc.js` and `calc.css` for calculator interface changes. Uses same bilingual pattern as main page/builder
+8. **Test builder save/load:** Save a team → reload page → verify team loads from saved list with sprites and type badges
+9. **Test import/export:** Import Showdown text → verify SP conversion → export back → verify EV values match
+10. **Test stat preview:** Select a Pokémon in builder → adjust SP sliders → verify base stats, final stats, nature indicators update in real-time
+11. **Test import types/stats:** Import a full paste → verify type badges and stat preview load correctly (from RegulationMB data immediately, PokAPI data in background)
+12. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
+13. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
+14. **Test damage calculator:** Go to /calc → select Pokémon on both panels → verify damage ranges match NCP reference calculator
+15. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB
+16. **Test calc stat display:** Select a Pokémon → verify HP, Atk, Def, Spa, Spd, Spe match expected values (SP + nature)
+17. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
+18. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
+19. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
+20. **Test calc light mode:** Toggle to light theme → verify calculator renders correctly (no white-on-white)
+21. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
+22. **Auth system:** `auth.js` exposes `PokeAuth` global. All auth logic (register, login, profile, session) goes through this module. CSS in `auth.css`. Auth container `#authContainer` in both page headers.
+23. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
+24. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
+25. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
+26. **New form fields:** Add HTML in `index.html` or `builder.html`, add to `els` object and `getPlayerData()` in respective JS files, add `_val()` call in `pdf.js`
+27. **New languages:** Add `data-xx` attributes to HTML elements, extend `applyLanguage()` logic in all JS files, add PokéAPI language code to `translations.js` (`_langCode()` + local mappings), add entries to all STR dictionaries (app.js, builder.js, calc.js, regulation.js, damage.js), add nature/type translations to local dicts in translations.js
+28. **New translations categories:** Add fetch function in `translations.js` (e.g., for items, abilities) and integrate into `translatePokemon()`
+29. **If template PDF changes:** Extract new coordinates with `pdfjs-dist` (text items) or raw PDF stream parsing (shapes/rectangles) and update positions in `pdf.js`
+30. **Regulation updates:** When a new regulation set releases (M-C, M-D, etc.), update `regulation.js` with new legal lists, or create a new `regulation-mc.js` and select in builder UI
+31. **Builder validation changes:** Modify validation functions in `regulation.js` (validateTeam, validatePokemon, etc.). Validation functions accept `lang` param for translated error messages.
+32. **Damage calculator formula:** Modify `damage.js` — must match NCP VGC reference exactly. Test with known matchups (e.g., Garchomp Dragon Claw Hardy nature). Functions accept `lang` param for translated results.
+33. **Damage calculator moves:** Update `calc-move-data.js` when new moves are added to Regulation M-B. Data sourced from PokAPI
+34. **Damage calculator UI:** Modify `calc.js` and `calc.css` for calculator interface changes. Uses same bilingual pattern as main page/builder
+
+### Translation Workflow
+
+When adding new translatable content:
+
+1. **UI labels:** Add `data-es` and `data-en` attributes to HTML elements
+2. **JS strings:** Add entries to `STR` dictionary in respective JS file (app.js, builder.js, calc.js)
+3. **Game data:** Use `PokeTranslations.translate*()` functions for species/moves/items/abilities
+4. **Error messages:** Add to validation dictionaries (REG_STR, DMG_STR) with `lang` param
+5. **Dropdowns:** Call `PokeTranslations.translateType()` or `translateNature()` when populating selects
+6. **Tooltips:** Use `data-title-es`/`data-title-en` for static tooltips, or fetch dynamically
 
 ### Design System Guidelines
 

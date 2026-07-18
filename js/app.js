@@ -551,6 +551,29 @@
     $loadProfileBtn.addEventListener('click', loadProfileData);
   }
 
+  const $clearPlayerDataBtn = document.getElementById('clearPlayerDataBtn');
+  if ($clearPlayerDataBtn) {
+    $clearPlayerDataBtn.addEventListener('click', () => {
+      els.playerName.value = '';
+      els.trainerName.value = '';
+      els.playerId.value = '';
+      els.dobMm.value = '';
+      els.dobDd.value = '';
+      els.dobYyyy.value = '';
+      els.teamNumber.value = '';
+      els.switchProfile.value = '';
+      els.supportId.value = '';
+      const defaultRadio = document.querySelector('input[name="ageDivision"][value="Masters"]');
+      if (defaultRadio) {
+        defaultRadio.checked = true;
+        document.querySelectorAll('[name="ageDivision"]').forEach(l => {
+          l.closest('.chip-btn')?.classList.add('active');
+        });
+      }
+      saveDraft();
+    });
+  }
+
   if (PokeAuth.isLoggedIn()) {
     const profile = PokeAuth.getProfile();
     const hasAnyData = profile && Object.values(profile).some(v => v && v !== 'Masters');

@@ -12,6 +12,46 @@ const TeamBuilder = (() => {
   const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
   const STAT_LABELS = { hp: 'HP', atk: 'Atk', def: 'Def', spa: 'Sp.Atk', spd: 'Sp.Def', spe: 'Speed' };
   const STAT_MAX = 255;
+
+  let currentLang = localStorage.getItem('tsLang') || 'es';
+
+  const STR = {
+    selectSlot: { es: 'Selecciona un slot para editar', en: 'Select a slot to edit' },
+    clickSlot: { es: 'Haz clic en un slot del equipo para empezar a construir', en: 'Click a team slot to start building' },
+    newPokemon: { es: 'Nuevo Pokémon', en: 'New Pokémon' },
+    pokemon: { es: 'Pokémon', en: 'Pokémon' },
+    item: { es: 'Objeto', en: 'Item' },
+    ability: { es: 'Habilidad', en: 'Ability' },
+    nature: { es: 'Naturaleza', en: 'Nature' },
+    gender: { es: 'Género', en: 'Gender' },
+    tera: { es: 'Tera', en: 'Tera' },
+    none: { es: 'Ninguno', en: 'None' },
+    moves: { es: 'Movimientos (4)', en: 'Moves (4)' },
+    movePlaceholder: { es: 'Movimiento', en: 'Move' },
+    clearSlot: { es: 'Limpiar slot', en: 'Clear slot' },
+    searchPokemon: { es: 'Buscar Pokémon...', en: 'Search Pokémon...' },
+    searchItem: { es: 'Buscar objeto...', en: 'Search item...' },
+    searchAbility: { es: 'Buscar habilidad...', en: 'Search ability...' },
+    selectPokemonStats: { es: 'Selecciona un Pokémon para ver stats', en: 'Select a Pokémon to see stats' },
+    addPokemon: { es: 'Añade Pokémon al equipo para validar', en: 'Add Pokémon to the team to validate' },
+    validTeam: { es: 'Equipo válido — Regulación M-B', en: 'Valid team — Regulation M-B' },
+    noSaved: { es: 'No hay equipos guardados', en: 'No saved teams' },
+    load: { es: 'Cargar', en: 'Load' },
+    delete: { es: 'Borrar', en: 'Delete' },
+    copied: { es: 'Copiado!', en: 'Copied!' },
+    copy: { es: 'Copiar', en: 'Copy' },
+    pasteError: { es: 'Pega un equipo de Showdown', en: 'Paste a Showdown team' },
+    parseError: { es: 'No se pudo parsear ningún Pokémon', en: 'No Pokémon could be parsed' },
+    parseErrorPrefix: { es: 'Error al parsear: ', en: 'Parse error: ' },
+    pdfError: { es: 'Error al generar el PDF: ', en: 'PDF generation error: ' },
+    statPoints: { es: 'Puntos de Stat', en: 'Stat Points' },
+    validationSlot: { es: 'Slot', en: 'Slot' },
+  };
+
+  function t(key) {
+    const s = STR[key];
+    return s ? s[currentLang] || s.es : key;
+  }
   const NATURE_MAP = {
     'Adamant':  { plus: 'atk', minus: 'spa' },
     'Bold':     { plus: 'def', minus: 'atk' },
@@ -36,6 +76,7 @@ const TeamBuilder = (() => {
   };
 
   let team = new Array(TEAM_SIZE).fill(null);
+  let translatedTeam = new Array(TEAM_SIZE).fill(null);
   let activeSlot = -1;
   let apiCache = {};
   let importBuffer = null;
@@ -60,8 +101,65 @@ const TeamBuilder = (() => {
     setupPDFButtons();
     setupTheme();
     setupClearAll();
+    setupLanguage();
     loadDraft();
     setupAuth();
+  }
+
+  // ─── Language Toggle ───
+  function setupLanguage() {
+    const btn = document.getElementById('builderLangToggle');
+    if (!btn) return;
+    applyLanguage(currentLang);
+    btn.addEventListener('click', () => {
+      currentLang = currentLang === 'es' ? 'en' : 'es';
+      localStorage.setItem('tsLang', currentLang);
+      applyLanguage(currentLang);
+    });
+  }
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.setAttribute('data-lang', lang);
+    const langBtn = document.getElementById('builderLangToggle');
+    if (langBtn) langBtn.querySelector('.lang-flag').textContent = lang.toUpperCase();
+    document.querySelectorAll('[data-es][data-en]').forEach(el => {
+      const text = el.getAttribute(`data-${lang}`);
+      if (text) el.textContent = text;
+    });
+    document.querySelectorAll('input[data-placeholder-es]').forEach(el => {
+      const ph = el.getAttribute(`data-placeholder-${lang}`);
+      if (ph) el.placeholder = ph;
+    });
+    const drawerTitle = document.querySelector('.drawer-title');
+    if (drawerTitle) {
+      drawerTitle.textContent = lang === 'es' ? 'Menú' : 'Menu';
+    }
+    translateAndRender();
+  }
+
+  // ─── Game Data Translation ───
+  function getDisplayPokemon(i) {
+    if (currentLang === 'en' || !translatedTeam[i]) return team[i];
+    return translatedTeam[i];
+  }
+
+  async function translateAndRender() {
+    if (currentLang === 'en') {
+      translatedTeam = new Array(TEAM_SIZE).fill(null);
+    } else {
+      translatedTeam = await Promise.all(
+        team.map(p => p && p.species ? PokeTranslations.translatePokemon(p, currentLang) : null)
+      );
+    }
+    renderTeamSlots();
+    if (activeSlot >= 0 && team[activeSlot]) {
+      renderEditor(team[activeSlot], activeSlot);
+    } else {
+      renderEditorEmpty();
+    }
+    validateTeam();
+    renderSavedTeams();
   }
 
   // ─── Drawer Toggle ───
@@ -122,6 +220,7 @@ const TeamBuilder = (() => {
       slot.appendChild(num);
 
       if (team[i]) {
+        const display = getDisplayPokemon(i);
         const sprite = document.createElement('img');
         sprite.className = 'slot-sprite';
         sprite.src = getSpriteURL(team[i].species);
@@ -131,7 +230,7 @@ const TeamBuilder = (() => {
 
         const name = document.createElement('div');
         name.className = 'slot-name';
-        name.textContent = team[i].nickname || team[i].species;
+        name.textContent = team[i].nickname || (display ? display.species : team[i].species);
         slot.appendChild(name);
 
         const removeBtn = document.createElement('button');
@@ -141,9 +240,8 @@ const TeamBuilder = (() => {
           e.stopPropagation();
           team[i] = null;
           if (activeSlot === i) { activeSlot = -1; renderEditorEmpty(); }
-          renderTeamSlots();
-          validateTeam();
           saveDraft();
+          translateAndRender();
         });
         slot.appendChild(removeBtn);
       } else {
@@ -189,16 +287,18 @@ const TeamBuilder = (() => {
 
   // ─── Editor ───
   function renderEditorEmpty() {
-    $editorTitle.textContent = 'Selecciona un slot para editar';
+    $editorTitle.textContent = t('selectSlot');
     $editorContent.innerHTML = `
       <div class="editor-empty">
         <div class="empty-icon">🎯</div>
-        <p>Haz clic en un slot del equipo para empezar a construir</p>
+        <p>${t('clickSlot')}</p>
       </div>`;
   }
 
   function renderEditor(pokemon, slotIndex) {
-    $editorTitle.textContent = `Slot ${slotIndex + 1} — ${pokemon.species || 'Nuevo Pokémon'}`;
+    const dp = getDisplayPokemon(slotIndex) || pokemon;
+    const typeArr = dp._types || pokemon._types || [];
+    $editorTitle.textContent = `${t('validationSlot')} ${slotIndex + 1} — ${dp.species || t('newPokemon')}`;
     const html = `
       <div class="editor-form">
         <div class="editor-top-row">
@@ -208,34 +308,34 @@ const TeamBuilder = (() => {
           </div>
           <div class="editor-info">
             <div class="form-row">
-              <label>Pokémon</label>
+              <label>${t('pokemon')}</label>
               <div class="autocomplete-wrap">
-                <input type="text" id="acPokemon" value="${pokemon.species}" placeholder="Buscar Pokémon..." autocomplete="off">
+                <input type="text" id="acPokemon" value="${dp.species || ''}" placeholder="${t('searchPokemon')}" autocomplete="off">
                 <div class="autocomplete-list" id="acPokemonList"></div>
               </div>
             </div>
             <div id="pokemonTypes" style="display:flex;gap:4px;padding-left:92px;">
-              ${pokemon._types ? pokemon._types.map(t => `<span class="type-badge ${t}">${t}</span>`).join('') : ''}
+              ${typeArr.map(ty => `<span class="type-badge ${ty}">${PokeTranslations.translateType(ty, currentLang)}</span>`).join('')}
             </div>
             <div class="form-row">
-              <label>Objeto</label>
+              <label>${t('item')}</label>
               <div class="autocomplete-wrap">
-                <input type="text" id="acItem" value="${pokemon.item}" placeholder="Buscar objeto..." autocomplete="off">
+                <input type="text" id="acItem" value="${dp.item || ''}" placeholder="${t('searchItem')}" autocomplete="off">
                 <div class="autocomplete-list" id="acItemList"></div>
               </div>
             </div>
             <div class="form-row">
-              <label>Habilidad</label>
+              <label>${t('ability')}</label>
               <div class="autocomplete-wrap">
-                <input type="text" id="acAbility" value="${pokemon.ability}" placeholder="Buscar habilidad..." autocomplete="off">
+                <input type="text" id="acAbility" value="${dp.ability || ''}" placeholder="${t('searchAbility')}" autocomplete="off">
                 <div class="autocomplete-list" id="acAbilityList"></div>
               </div>
             </div>
             <div class="form-row">
-              <label>Naturaleza</label>
+              <label>${t('nature')}</label>
               <select id="selNature">
                 ${Object.keys(RegulationMB.NATURES).map(n =>
-                  `<option value="${n}" ${pokemon.nature === n ? 'selected' : ''}>${n}${RegulationMB.NATURES[n].plus ? ` (+${RegulationMB.NATURES[n].plus.toUpperCase()}, -${RegulationMB.NATURES[n].minus.toUpperCase()})` : ''}</option>`
+                  `<option value="${n}" ${pokemon.nature === n ? 'selected' : ''}>${PokeTranslations.translateNature(n, currentLang)}${RegulationMB.NATURES[n].plus ? ` (+${RegulationMB.NATURES[n].plus.toUpperCase()}, -${RegulationMB.NATURES[n].minus.toUpperCase()})` : ''}</option>`
                 ).join('')}
               </select>
             </div>
@@ -243,18 +343,18 @@ const TeamBuilder = (() => {
         </div>
 
         <div class="detail-row">
-          <label>Género</label>
+          <label>${t('gender')}</label>
           <div class="gender-btns">
             <button class="gender-btn ${pokemon.gender === 'Male' ? 'active' : ''}" data-gender="Male">♂</button>
             <button class="gender-btn ${pokemon.gender === 'Female' ? 'active' : ''}" data-gender="Female">♀</button>
             <button class="gender-btn ${pokemon.gender === '' ? 'active' : ''}" data-gender="">—</button>
           </div>
           <div style="margin-left:16px;" class="detail-row">
-            <label>Tera</label>
+            <label>${t('tera')}</label>
             <select id="selTeraType">
-              <option value="">Ninguno</option>
-              ${['Normal','Fire','Water','Electric','Grass','Ice','Fighting','Poison','Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy','Stellar'].map(t =>
-                `<option value="${t}" ${pokemon.teraType === t ? 'selected' : ''}>${t}</option>`
+              <option value="">${t('none')}</option>
+              ${['Normal','Fire','Water','Electric','Grass','Ice','Fighting','Poison','Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy','Stellar'].map(ty =>
+                `<option value="${ty}" ${pokemon.teraType === ty ? 'selected' : ''}>${PokeTranslations.translateType(ty, currentLang)}</option>`
               ).join('')}
             </select>
           </div>
@@ -262,7 +362,7 @@ const TeamBuilder = (() => {
 
         <div class="sp-section">
           <div class="sp-header">
-            <span class="sp-title">Stat Points</span>
+            <span class="sp-title">${t('statPoints')}</span>
             <span class="sp-total ${getSPTotalClass(pokemon.sp)}" id="spTotal">${getSPTotal(pokemon.sp)} / ${RegulationMB.MAX_SP}</span>
           </div>
           ${['hp','atk','def','spa','spd','spe'].map(k => `
@@ -277,19 +377,21 @@ const TeamBuilder = (() => {
         </div>
 
         <div class="moves-section">
-          <div class="moves-title">Movimientos (4)</div>
+          <div class="moves-title">${t('moves')}</div>
           <div class="moves-grid" id="movesGrid">
-            ${pokemon.moves.map((m, mi) => `
+            ${pokemon.moves.map((m, mi) => {
+              const dm = dp.moves && dp.moves[mi] ? dp.moves[mi] : m;
+              return `
               <div class="move-slot">
-                <input type="text" id="move_${mi}" value="${m}" placeholder="Movimiento ${mi + 1}" autocomplete="off">
+                <input type="text" id="move_${mi}" value="${dm}" placeholder="${t('movePlaceholder')} ${mi + 1}" autocomplete="off">
                 <div class="autocomplete-list" id="acMoveList_${mi}"></div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         </div>
 
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button id="btnClearSlot" class="builder-btn builder-btn-outline" style="flex:1;">Limpiar slot</button>
+          <button id="btnClearSlot" class="builder-btn builder-btn-outline" style="flex:1;">${t('clearSlot')}</button>
         </div>
       </div>`;
 
@@ -325,7 +427,7 @@ const TeamBuilder = (() => {
     if (!$el) return;
     const base = pokemon._baseStats;
     if (!base) {
-      $el.innerHTML = '<div class="stat-preview-empty">Selecciona un Pokémon para ver stats</div>';
+      $el.innerHTML = `<div class="stat-preview-empty">${t('selectPokemonStats')}</div>`;
       return;
     }
     const nature = pokemon.nature || '';
@@ -393,10 +495,8 @@ const TeamBuilder = (() => {
       }
       // Load full data from API
       loadPokemonAPIData(pokemon);
-      renderEditor(pokemon, slotIndex);
-      renderTeamSlots();
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
 
     // Item autocomplete
@@ -407,8 +507,8 @@ const TeamBuilder = (() => {
       }));
     }, (selected) => {
       pokemon.item = selected.label;
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
 
     // Ability autocomplete
@@ -423,16 +523,15 @@ const TeamBuilder = (() => {
         .map(a => ({ label: a.name, sub: a.isHidden ? 'Hidden' : '' }));
     }, (selected) => {
       pokemon.ability = selected.label;
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
 
     // Nature
     document.getElementById('selNature').addEventListener('change', (e) => {
       pokemon.nature = e.target.value;
-      updateStatPreview(pokemon);
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
 
     // Gender
@@ -449,6 +548,7 @@ const TeamBuilder = (() => {
     document.getElementById('selTeraType').addEventListener('change', (e) => {
       pokemon.teraType = e.target.value;
       saveDraft();
+      translateAndRender();
     });
 
     // SP sliders
@@ -486,9 +586,8 @@ const TeamBuilder = (() => {
         return moves.map(m => ({ label: m, sub: '' }));
       }, (selected) => {
         pokemon.moves[mi] = selected.label;
-        document.getElementById(`move_${mi}`).value = selected.label;
-        validateTeam();
         saveDraft();
+        translateAndRender();
       });
     }
 
@@ -497,9 +596,8 @@ const TeamBuilder = (() => {
       team[slotIndex] = null;
       activeSlot = -1;
       renderEditorEmpty();
-      renderTeamSlots();
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
   }
 
@@ -508,9 +606,8 @@ const TeamBuilder = (() => {
       team = new Array(TEAM_SIZE).fill(null);
       activeSlot = -1;
       renderEditorEmpty();
-      renderTeamSlots();
-      validateTeam();
       saveDraft();
+      translateAndRender();
     });
   }
 
@@ -616,7 +713,7 @@ const TeamBuilder = (() => {
           }
           const typesEl = document.getElementById('pokemonTypes');
           if (typesEl && pokemon._types) {
-            typesEl.innerHTML = pokemon._types.map(t => `<span class="type-badge ${t}">${t}</span>`).join('');
+            typesEl.innerHTML = pokemon._types.map(ty => `<span class="type-badge ${ty}">${PokeTranslations.translateType(ty, currentLang)}</span>`).join('');
           }
         }
       }
@@ -642,19 +739,19 @@ const TeamBuilder = (() => {
 
   // ─── Validation ───
   function validateTeam() {
-    const errors = RegulationMB.validateTeam(team);
+    const errors = RegulationMB.validateTeam(team, currentLang);
     if (errors.length === 0 && team.every(p => !p || !p.species)) {
       $validationPanel.innerHTML = `
-        <div class="validation-msg success"><span class="v-icon">✓</span> Añade Pokémon al equipo para validar</div>`;
+        <div class="validation-msg success"><span class="v-icon">✓</span> ${t('addPokemon')}</div>`;
       updatePDFButtons();
       return;
     }
     if (errors.length === 0) {
       $validationPanel.innerHTML = `
-        <div class="validation-msg success"><span class="v-icon">✓</span> Equipo válido — Regulación M-B</div>`;
+        <div class="validation-msg success"><span class="v-icon">✓</span> ${t('validTeam')}</div>`;
     } else {
       $validationPanel.innerHTML = errors.map(e =>
-        `<div class="validation-msg error"><span class="v-icon">✕</span> Slot ${e.slot + 1}: ${e.msg}</div>`
+        `<div class="validation-msg error"><span class="v-icon">✕</span> ${t('validationSlot')} ${e.slot + 1}: ${e.msg}</div>`
       ).join('');
     }
     updatePDFButtons();
@@ -713,6 +810,7 @@ const TeamBuilder = (() => {
           renderEditor(team[activeSlot], activeSlot);
         }
         validateTeam();
+        translateAndRender();
         return;
       }
     } catch {}
@@ -761,7 +859,7 @@ const TeamBuilder = (() => {
   function renderSavedTeams() {
     const saved = getSavedTeams();
     if (saved.length === 0) {
-      $savedTeamsList.innerHTML = `<div style="text-align:center;padding:12px;color:#475569;font-size:0.8rem;">No hay equipos guardados</div>`;
+      $savedTeamsList.innerHTML = `<div style="text-align:center;padding:12px;color:#475569;font-size:0.8rem;">${t('noSaved')}</div>`;
       return;
     }
     $savedTeamsList.innerHTML = saved.map((s, i) => `
@@ -771,8 +869,8 @@ const TeamBuilder = (() => {
           <div class="st-date">${new Date(s.date).toLocaleDateString()}</div>
         </div>
         <div class="st-actions">
-          <button data-action="load" data-index="${i}">Cargar</button>
-          <button data-action="delete" data-index="${i}" class="delete-btn">Borrar</button>
+          <button data-action="load" data-index="${i}">${t('load')}</button>
+          <button data-action="delete" data-index="${i}" class="delete-btn">${t('delete')}</button>
         </div>
       </div>`).join('');
 
@@ -797,10 +895,8 @@ const TeamBuilder = (() => {
                 loadPokemonAPIData(p);
               }
             }
-            renderTeamSlots();
-            renderEditorEmpty();
-            validateTeam();
             saveDraft();
+            translateAndRender();
           }
         } else if (btn.dataset.action === 'delete') {
           if (PokeAuth.isLoggedIn()) {
@@ -834,8 +930,8 @@ const TeamBuilder = (() => {
     });
     document.getElementById('exportCopy').addEventListener('click', () => {
       navigator.clipboard.writeText(document.getElementById('exportText').value);
-      document.getElementById('exportCopy').textContent = 'Copiado!';
-      setTimeout(() => document.getElementById('exportCopy').textContent = 'Copiar', 1500);
+      document.getElementById('exportCopy').textContent = t('copied');
+      setTimeout(() => { document.getElementById('exportCopy').textContent = t('copy'); }, 1500);
     });
     document.getElementById('exportClose').addEventListener('click', () => $exportModal.classList.add('hidden'));
 
@@ -859,14 +955,14 @@ const TeamBuilder = (() => {
   function importFromShowdown() {
     const text = document.getElementById('importText').value.trim();
     if (!text) {
-      document.getElementById('importError').textContent = 'Pega un equipo de Showdown';
+      document.getElementById('importError').textContent = t('pasteError');
       document.getElementById('importError').style.display = 'block';
       return;
     }
     try {
       const parsed = ShowdownParser.parse(text);
       if (!parsed || parsed.length === 0) {
-        document.getElementById('importError').textContent = 'No se pudo parsear ningún Pokémon';
+        document.getElementById('importError').textContent = t('parseError');
         document.getElementById('importError').style.display = 'block';
         return;
       }
@@ -907,13 +1003,11 @@ const TeamBuilder = (() => {
         loadPokemonAPIData(team[i]);
       }
       activeSlot = -1;
-      renderTeamSlots();
-      renderEditorEmpty();
-      validateTeam();
       saveDraft();
+      translateAndRender();
       $importModal.classList.add('hidden');
     } catch (err) {
-      document.getElementById('importError').textContent = 'Error al parsear: ' + err.message;
+      document.getElementById('importError').textContent = t('parseErrorPrefix') + err.message;
       document.getElementById('importError').style.display = 'block';
     }
   }
@@ -1033,7 +1127,7 @@ const TeamBuilder = (() => {
       TeamSheetPDF.downloadPdf(bytes, `${names[mode] || 'TeamSheet'}.pdf`);
     }).catch(err => {
       console.error('PDF generation error:', err);
-      alert('Error al generar el PDF: ' + err.message);
+      alert(t('pdfError') + err.message);
     });
   }
 
@@ -1051,6 +1145,28 @@ const TeamBuilder = (() => {
     }
 
     $loadProfileBtn?.addEventListener('click', loadProfileData);
+
+    const $clearPlayerDataBtn = document.getElementById('clearPlayerDataBtn');
+    if ($clearPlayerDataBtn) {
+      $clearPlayerDataBtn.addEventListener('click', () => {
+        document.getElementById('playerName').value = '';
+        document.getElementById('trainerName').value = '';
+        document.getElementById('playerId').value = '';
+        document.getElementById('dobMm').value = '';
+        document.getElementById('dobDd').value = '';
+        document.getElementById('dobYyyy').value = '';
+        document.getElementById('teamNumber').value = '';
+        document.getElementById('switchProfile').value = '';
+        const defaultRadio = document.querySelector('[name="ageDivision"][value="Masters"]');
+        if (defaultRadio) {
+          defaultRadio.checked = true;
+          document.querySelectorAll('[name="ageDivision"]').forEach(l => {
+            l.closest('.chip-btn')?.classList.add('active');
+          });
+        }
+        saveDraft();
+      });
+    }
 
     renderSavedTeams();
   }

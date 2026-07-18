@@ -123,7 +123,7 @@
             </div>
             <div class="calc-species-input-wrap">
               <label data-es="Especie" data-en="Species">Especie</label>
-              <input type="text" id="speciesLeft" class="calc-input calc-species-input" autocomplete="off" placeholder="Ej: Garchomp">
+              <input type="text" id="speciesLeft" class="calc-input calc-species-input" autocomplete="off" placeholder="Ej: Garchomp" data-placeholder-es="Ej: Garchomp" data-placeholder-en="e.g. Garchomp">
               <div class="calc-autocomplete" id="autocompleteLeft"></div>
             </div>
           </div>
@@ -156,7 +156,7 @@
           <div class="calc-row calc-row-center">
             <label class="calc-checkbox-label">
               <input type="checkbox" id="megaActiveLeft" class="calc-checkbox">
-              <span>Mega Evolution</span>
+              <span data-es="Megaevolución" data-en="Mega Evolution">Megaevolución</span>
             </label>
             <select id="megaFormLeft" class="calc-select calc-mega-select hidden"></select>
           </div>
@@ -259,14 +259,14 @@
           <div class="calc-row">
             <div class="calc-field calc-field-grow">
               <label data-es="Habilidad" data-en="Ability">Habilidad</label>
-              <input type="text" id="abilityLeft" class="calc-input" autocomplete="off" placeholder="Ability">
+              <input type="text" id="abilityLeft" class="calc-input" autocomplete="off" placeholder="Ability" data-placeholder-es="Habilidad" data-placeholder-en="Ability">
               <div class="calc-autocomplete" id="abilityAutocompleteLeft"></div>
             </div>
           </div>
           <div class="calc-row">
             <div class="calc-field calc-field-grow">
               <label data-es="Objeto" data-en="Item">Objeto</label>
-              <input type="text" id="itemLeft" class="calc-input" autocomplete="off" placeholder="Item">
+              <input type="text" id="itemLeft" class="calc-input" autocomplete="off" placeholder="Item" data-placeholder-es="Objeto" data-placeholder-en="Item">
               <div class="calc-autocomplete" id="itemAutocompleteLeft"></div>
             </div>
           </div>
@@ -300,9 +300,9 @@
           <div class="calc-moves-section">
             <h3 data-es="Movimientos" data-en="Moves">Movimientos</h3>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="0" autocomplete="off" placeholder="Move 1">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="0" autocomplete="off" placeholder="Move 1" data-placeholder-es="Movimiento 1" data-placeholder-en="Move 1">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="0" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="0" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="0"></select>
               <select class="calc-select calc-cat-select" data-moveidx="0">
                 <option value="Physical">Phys</option>
@@ -311,9 +311,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="1" autocomplete="off" placeholder="Move 2">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="1" autocomplete="off" placeholder="Move 2" data-placeholder-es="Movimiento 2" data-placeholder-en="Move 2">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="1" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="1" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="1"></select>
               <select class="calc-select calc-cat-select" data-moveidx="1">
                 <option value="Physical">Phys</option>
@@ -322,9 +322,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="2" autocomplete="off" placeholder="Move 3">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="2" autocomplete="off" placeholder="Move 3" data-placeholder-es="Movimiento 3" data-placeholder-en="Move 3">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="2" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="2" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="2"></select>
               <select class="calc-select calc-cat-select" data-moveidx="2">
                 <option value="Physical">Phys</option>
@@ -333,9 +333,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="3" autocomplete="off" placeholder="Move 4">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="3" autocomplete="off" placeholder="Move 4" data-placeholder-es="Movimiento 4" data-placeholder-en="Move 4">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="3" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="3" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="3"></select>
               <select class="calc-select calc-cat-select" data-moveidx="3">
                 <option value="Physical">Phys</option>
@@ -429,7 +429,7 @@
             </div>
             <div class="calc-species-input-wrap">
               <label data-es="Especie" data-en="Species">Especie</label>
-              <input type="text" id="speciesRight" class="calc-input calc-species-input" autocomplete="off" placeholder="Ej: Charizard">
+              <input type="text" id="speciesRight" class="calc-input calc-species-input" autocomplete="off" placeholder="Ej: Charizard" data-placeholder-es="Ej: Charizard" data-placeholder-en="e.g. Charizard">
               <div class="calc-autocomplete" id="autocompleteRight"></div>
             </div>
           </div>
@@ -462,7 +462,7 @@
           <div class="calc-row calc-row-center">
             <label class="calc-checkbox-label">
               <input type="checkbox" id="megaActiveRight" class="calc-checkbox">
-              <span>Mega Evolution</span>
+              <span data-es="Megaevolución" data-en="Mega Evolution">Megaevolución</span>
             </label>
             <select id="megaFormRight" class="calc-select calc-mega-select hidden"></select>
           </div>
@@ -565,14 +565,14 @@
           <div class="calc-row">
             <div class="calc-field calc-field-grow">
               <label data-es="Habilidad" data-en="Ability">Habilidad</label>
-              <input type="text" id="abilityRight" class="calc-input" autocomplete="off" placeholder="Ability">
+              <input type="text" id="abilityRight" class="calc-input" autocomplete="off" placeholder="Ability" data-placeholder-es="Habilidad" data-placeholder-en="Ability">
               <div class="calc-autocomplete" id="abilityAutocompleteRight"></div>
             </div>
           </div>
           <div class="calc-row">
             <div class="calc-field calc-field-grow">
               <label data-es="Objeto" data-en="Item">Objeto</label>
-              <input type="text" id="itemRight" class="calc-input" autocomplete="off" placeholder="Item">
+              <input type="text" id="itemRight" class="calc-input" autocomplete="off" placeholder="Item" data-placeholder-es="Objeto" data-placeholder-en="Item">
               <div class="calc-autocomplete" id="itemAutocompleteRight"></div>
             </div>
           </div>
@@ -606,9 +606,9 @@
           <div class="calc-moves-section">
             <h3 data-es="Movimientos" data-en="Moves">Movimientos</h3>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="0" autocomplete="off" placeholder="Move 1">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="0" autocomplete="off" placeholder="Move 1" data-placeholder-es="Movimiento 1" data-placeholder-en="Move 1">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="0" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="0" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="0"></select>
               <select class="calc-select calc-cat-select" data-moveidx="0">
                 <option value="Physical">Phys</option>
@@ -617,9 +617,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="1" autocomplete="off" placeholder="Move 2">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="1" autocomplete="off" placeholder="Move 2" data-placeholder-es="Movimiento 2" data-placeholder-en="Move 2">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="1" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="1" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="1"></select>
               <select class="calc-select calc-cat-select" data-moveidx="1">
                 <option value="Physical">Phys</option>
@@ -628,9 +628,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="2" autocomplete="off" placeholder="Move 3">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="2" autocomplete="off" placeholder="Move 3" data-placeholder-es="Movimiento 3" data-placeholder-en="Move 3">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="2" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="2" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="2"></select>
               <select class="calc-select calc-cat-select" data-moveidx="2">
                 <option value="Physical">Phys</option>
@@ -639,9 +639,9 @@
               </select>
             </div>
             <div class="calc-move-row">
-              <input type="text" class="calc-input calc-move-input" data-moveidx="3" autocomplete="off" placeholder="Move 4">
+              <input type="text" class="calc-input calc-move-input" data-moveidx="3" autocomplete="off" placeholder="Move 4" data-placeholder-es="Movimiento 4" data-placeholder-en="Move 4">
               <div class="calc-autocomplete calc-move-autocomplete"></div>
-              <input type="number" class="calc-input calc-bp-input" data-moveidx="3" value="0" min="0" title="Base Power">
+              <input type="number" class="calc-input calc-bp-input" data-moveidx="3" value="0" min="0" title="Base Power" data-title-es="Potencia" data-title-en="Base Power">
               <select class="calc-select calc-move-type-select" data-moveidx="3"></select>
               <select class="calc-select calc-cat-select" data-moveidx="3">
                 <option value="Physical">Phys</option>
@@ -670,7 +670,7 @@
           <button class="calc-modal-tab" data-tab="url" data-es="URL" data-en="URL">URL</button>
         </div>
         <div class="calc-modal-tab-content" id="tabText">
-          <textarea id="importPasteText" class="calc-modal-textarea" rows="10" placeholder="Pega aquí el paste de Showdown..."></textarea>
+          <textarea id="importPasteText" class="calc-modal-textarea" rows="10" placeholder="Pega aquí el paste de Showdown..." data-placeholder-es="Pega aquí el paste de Showdown..." data-placeholder-en="Paste your Showdown team here..."></textarea>
         </div>
         <div class="calc-modal-tab-content hidden" id="tabUrl">
           <input type="text" id="importPasteUrl" class="calc-input" placeholder="https://pokepast.es/abcdef123456">
@@ -734,7 +734,7 @@
   <nav id="drawer" class="drawer">
     <div class="drawer-header">
       <span class="pokeball-icon">●</span>
-      <span class="drawer-title">Menu</span>
+      <span class="drawer-title" data-es="Menú" data-en="Menu">Menú</span>
     </div>
     <a href="index.html" class="drawer-link">
       <span data-es="Hojas" data-en="Sheets">Hojas</span>
