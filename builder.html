@@ -18,14 +18,13 @@
 
   <header class="app-header">
     <div class="header-content">
+      <button id="menuToggle" class="hamburger-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
       <div class="header-brand">
         <span class="pokeball-icon">●</span>
         <h1>Team Builder <span class="header-subtitle">— Reg M-B</span></h1>
       </div>
-      <nav class="header-nav">
-        <a href="index.html" class="nav-link" style="text-decoration:none">Hojas</a>
-        <a href="calc.html" class="nav-link" style="text-decoration:none">Calc</a>
-      </nav>
       <div class="header-actions">
         <button id="btnImportShowdown" class="icon-btn" title="Importar desde Showdown">Importar</button>
         <button id="btnExportShowdown" class="icon-btn" title="Exportar a Showdown">Exportar</button>
@@ -177,6 +176,24 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile Drawer -->
+  <div id="drawerOverlay" class="drawer-overlay hidden"></div>
+  <nav id="drawer" class="drawer">
+    <div class="drawer-header">
+      <span class="pokeball-icon">●</span>
+      <span class="drawer-title">Menu</span>
+    </div>
+    <a href="index.html" class="drawer-link">
+      <span data-es="Hojas" data-en="Sheets">Hojas</span>
+    </a>
+    <a href="builder.html" class="drawer-link active">
+      <span data-es="Builder" data-en="Builder">Builder</span>
+    </a>
+    <a href="calc.html" class="drawer-link">
+      <span data-es="Calc" data-en="Calc">Calc</span>
+    </a>
+  </nav>
 
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="js/translations.js?v=1"></script>

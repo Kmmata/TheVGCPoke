@@ -52,6 +52,7 @@ const TeamBuilder = (() => {
 
   // ─── Init ───
   function init() {
+    setupDrawer();
     renderTeamSlots();
     renderSavedTeams();
     setupAgeDivision();
@@ -61,6 +62,25 @@ const TeamBuilder = (() => {
     setupTheme();
     setupClearAll();
     loadDraft();
+  }
+
+  // ─── Drawer Toggle ───
+  function setupDrawer() {
+    const menuToggle = document.getElementById('menuToggle');
+    const drawer = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    function openDrawer() {
+      drawer.classList.add('open');
+      drawerOverlay.classList.remove('hidden');
+      menuToggle.classList.add('open');
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawerOverlay.classList.add('hidden');
+      menuToggle.classList.remove('open');
+    }
+    if (menuToggle) menuToggle.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
+    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
   }
 
   // ─── Theme Toggle ───

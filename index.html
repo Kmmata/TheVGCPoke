@@ -37,20 +37,15 @@
 <body>
   <header class="app-header">
     <div class="header-content">
+      <button id="menuToggle" class="hamburger-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
       <div class="header-brand">
         <span class="pokeball-icon">●</span>
         <h1>
           <span data-es="Team Sheet Generator" data-en="Team Sheet Generator">Team Sheet Generator</span>
         </h1>
       </div>
-      <nav class="header-nav">
-        <a href="builder.html" class="nav-link">
-          <span data-es="Builder" data-en="Builder">Builder</span>
-        </a>
-        <a href="calc.html" class="nav-link">
-          <span data-es="Calc" data-en="Calc">Calc</span>
-        </a>
-      </nav>
       <div class="header-actions">
         <button id="langToggle" class="icon-btn" title="Switch language">
           <span class="lang-flag">ES</span>
@@ -239,6 +234,24 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile Drawer -->
+  <div id="drawerOverlay" class="drawer-overlay hidden"></div>
+  <nav id="drawer" class="drawer">
+    <div class="drawer-header">
+      <span class="pokeball-icon">●</span>
+      <span class="drawer-title">Menu</span>
+    </div>
+    <a href="index.html" class="drawer-link active">
+      <span data-es="Hojas" data-en="Sheets">Hojas</span>
+    </a>
+    <a href="builder.html" class="drawer-link">
+      <span data-es="Builder" data-en="Builder">Builder</span>
+    </a>
+    <a href="calc.html" class="drawer-link">
+      <span data-es="Calc" data-en="Calc">Calc</span>
+    </a>
+  </nav>
 
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="js/translations.js?v=1"></script>

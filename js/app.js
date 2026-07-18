@@ -50,6 +50,23 @@
     modalMoves: $('#modalMoves'),
   };
 
+  /* ── Drawer Toggle ── */
+  const menuToggle = $('#menuToggle');
+  const drawer = $('#drawer');
+  const drawerOverlay = $('#drawerOverlay');
+  function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.remove('hidden');
+    menuToggle.classList.add('open');
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.add('hidden');
+    menuToggle.classList.remove('open');
+  }
+  if (menuToggle) menuToggle.addEventListener('click', () => drawer.classList.contains('open') ? closeDrawer() : openDrawer());
+  if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
   function applyLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('tsLang', lang);
