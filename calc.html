@@ -5,10 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pokémon Champions Damage Calculator — Calculadora de Daños</title>
   <meta name="description" content="Calculadora de daños completa para Pokémon Champions / Regulación M-B. Calcula daño con STAB, tipos, clima, terreno, habilidades, objetos y más.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://kmmata.github.io/TheVGCPoke/calc">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Damage Calculator — Pokémon Champions">
+  <meta property="og:description" content="Calculadora de daños completa para Pokémon Champions / Regulación M-B. Calcula daño con STAB, tipos, clima, terreno, habilidades, objetos y más.">
+  <meta property="og:url" content="https://kmmata.github.io/TheVGCPoke/calc">
+  <meta property="og:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Damage Calculator — Pokémon Champions">
+  <meta name="twitter:description" content="Calculadora de daños completa para Pokémon Champions / Regulación M-B. Calcula daño con STAB, tipos, clima, terreno, habilidades, objetos y más.">
+  <meta name="twitter:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
+
   <meta name="theme-color" content="#0b1120">
   <link rel="stylesheet" href="css/calc.css">
 </head>
@@ -27,10 +46,10 @@
         </h1>
       </div>
       <div class="header-actions">
-        <button id="langToggle" class="icon-btn" title="Switch language">
+        <button id="langToggle" class="icon-btn" title="Switch language" aria-label="Switch language">
           <span class="lang-flag">EN</span>
         </button>
-        <button id="themeToggle" class="icon-btn" title="Toggle dark mode">
+        <button id="themeToggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
           <span class="theme-icon">☀</span>
         </button>
       </div>
@@ -100,7 +119,7 @@
           <!-- Species & Sprite -->
           <div class="calc-species-row">
             <div class="calc-sprite-box">
-              <img id="spriteLeft" class="calc-sprite" src="" alt="">
+              <img id="spriteLeft" class="calc-sprite" src="" alt="Pokemon sprite">
             </div>
             <div class="calc-species-input-wrap">
               <label data-es="Especie" data-en="Species">Especie</label>
@@ -406,7 +425,7 @@
           <!-- Species & Sprite -->
           <div class="calc-species-row">
             <div class="calc-sprite-box">
-              <img id="spriteRight" class="calc-sprite" src="" alt="">
+              <img id="spriteRight" class="calc-sprite" src="" alt="Pokemon sprite">
             </div>
             <div class="calc-species-input-wrap">
               <label data-es="Especie" data-en="Species">Especie</label>

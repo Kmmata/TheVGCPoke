@@ -200,7 +200,7 @@
         const genderAttr = team[i].gender === 'Male' ? 'male' : team[i].gender === 'Female' ? 'female' : '';
         card.innerHTML = `
           <div class="poke-header">
-            <img class="poke-sprite" data-species="${team[i].species}" alt="" />
+            <img class="poke-sprite" data-species="${team[i].species}" alt="${team[i].species}" />
             <div class="poke-name">${name}</div>
           </div>
           <div class="poke-details">
@@ -279,6 +279,7 @@
     PokeTranslations.fetchPokemonSprite(apiName, gender).then((url) => {
       if (url) {
         els.modalSprite.src = url;
+        els.modalSprite.alt = p.species;
         els.modalSprite.alt = display.species;
         els.modalSprite.style.display = '';
       } else {

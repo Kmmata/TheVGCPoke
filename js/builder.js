@@ -529,7 +529,7 @@ const TeamBuilder = (() => {
       selectedIdx = -1;
       $list.innerHTML = items.map((it, i) => `
         <div class="autocomplete-item" data-index="${i}">
-          ${it.sprite ? `<img class="ac-sprite" src="${it.sprite}" alt="">` : ''}
+          ${it.sprite ? `<img class="ac-sprite" src="${it.sprite}" alt="${it.name || ''}">` : ''}
           <span class="ac-name">${it.label}</span>
           ${it.sub ? `<span class="ac-types"><span class="type-badge" style="font-size:0.55rem;background:#334155;padding:1px 4px;">${it.sub}</span></span>` : ''}
         </div>`).join('');

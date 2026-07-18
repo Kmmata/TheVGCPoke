@@ -369,7 +369,9 @@ const CalcApp = (() => {
     }
     const sprite = await ChampionsAPI.fetchSprite(spriteName);
     if (sprite) {
-      $(`#sprite${capitalize(side)}`).src = sprite;
+      const spriteEl = $(`#sprite${capitalize(side)}`);
+      spriteEl.src = sprite;
+      spriteEl.alt = name;
     }
   }
 
@@ -920,7 +922,10 @@ const CalcApp = (() => {
         const img = targetSlot.querySelector('img');
         if (s.species) {
           ChampionsAPI.fetchSprite(s.species).then(sprite => {
-            if (sprite) img.src = sprite;
+            if (sprite) {
+              img.src = sprite;
+              img.alt = s.species;
+            }
           });
         }
       }

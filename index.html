@@ -6,14 +6,14 @@
   <title>Pokémon VG Team Sheet Generator</title>
   <meta name="description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://TU-DOMINIO.com/">
+  <link rel="canonical" href="https://kmmata.github.io/TheVGCPoke/">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Pokémon VG Team Sheet Generator">
   <meta property="og:description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown y genera PDFs listos para torneos.">
-  <meta property="og:url" content="https://TU-DOMINIO.com/">
-  <meta property="og:image" content="https://TU-DOMINIO.com/og-image.png">
+  <meta property="og:url" content="https://kmmata.github.io/TheVGCPoke/">
+  <meta property="og:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
   <meta property="og:locale" content="es_ES">
   <meta property="og:locale:alternate" content="en_US">
 
@@ -21,15 +21,17 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Pokémon VG Team Sheet Generator">
   <meta name="twitter:description" content="Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown y genera PDFs listos para torneos.">
-  <meta name="twitter:image" content="https://TU-DOMINIO.com/og-image.png">
+  <meta name="twitter:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="theme-color" content="#0b1120">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
@@ -47,10 +49,10 @@
         </h1>
       </div>
       <div class="header-actions">
-        <button id="langToggle" class="icon-btn" title="Switch language">
+        <button id="langToggle" class="icon-btn" title="Switch language" aria-label="Switch language">
           <span class="lang-flag">ES</span>
         </button>
-        <button id="themeToggle" class="icon-btn" title="Toggle dark mode">
+        <button id="themeToggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
           <span class="theme-icon">☀</span>
         </button>
       </div>
@@ -197,6 +199,63 @@
         </div>
       </section>
     </section>
+
+    <!-- SEO Content Section -->
+    <section class="seo-content">
+      <h2>
+        <span data-es="Sobre esta herramienta" data-en="About this tool">Sobre esta herramienta</span>
+      </h2>
+      <div class="seo-content-grid">
+        <div class="seo-card">
+          <h3>
+            <span data-es="Generador de Hojas de Equipo" data-en="Team Sheet Generator">Generador de Hojas de Equipo</span>
+          </h3>
+          <p>
+            <span data-es="Genera hojas de equipo oficiales para torneos Pokémon VG y Pokémon Champions. Importa tu equipo desde Showdown o PokePaste y genera PDFs listos para competición en segundos." data-en="Generate official team sheets for Pokémon VG and Pokémon Champions tournaments. Import your team from Showdown or PokePaste and generate competition-ready PDFs in seconds.">Genera hojas de equipo oficiales para torneos Pokémon VG y Pokémon Champions. Importa tu equipo desde Showdown o PokePaste y genera PDFs listos para competición en segundos.</span>
+          </p>
+        </div>
+        <div class="seo-card">
+          <h3>
+            <span data-es="Staff y Open Team Sheet" data-en="Staff and Open Team Sheet">Staff y Open Team Sheet</span>
+          </h3>
+          <p>
+            <span data-es="Genera dos tipos de hojas: Staff Team Sheet (para jueces con estadísticas calculadas) y Open Team Sheet (para oponentes sin estadísticas). Ambas siguen el formato oficial de Play! Pokémon." data-en="Generate two types of sheets: Staff Team Sheet (for judges with calculated stats) and Open Team Sheet (for opponents without stats). Both follow the official Play! Pokémon format.">Genera dos tipos de hojas: Staff Team Sheet (para jueces con estadísticas calculadas) y Open Team Sheet (para oponentes sin estadísticas). Ambas siguen el formato oficial de Play! Pokémon.</span>
+          </p>
+        </div>
+        <div class="seo-card">
+          <h3>
+            <span data-es="Validación de Regulación M-B" data-en="Regulation M-B Validation">Validación de Regulación M-B</span>
+          </h3>
+          <p>
+            <span data-es="El Team Builder incluye validación completa de Regulación M-B: 226 Pokémon legales, 148 objetos, 502 movimientos. Sistema de Stat Points (SP) con 66 puntos totales y máximo 32 por stat." data-en="The Team Builder includes full Regulation M-B validation: 226 legal Pokémon, 148 items, 502 moves. Stat Points (SP) system with 66 total points and max 32 per stat.">El Team Builder incluye validación completa de Regulación M-B: 226 Pokémon legales, 148 objetos, 502 movimientos. Sistema de Stat Points (SP) con 66 puntos totales y máximo 32 por stat.</span>
+          </p>
+        </div>
+        <div class="seo-card">
+          <h3>
+            <span data-es="Calculadora de Daños" data-en="Damage Calculator">Calculadora de Daños</span>
+          </h3>
+          <p>
+            <span data-es="Calculadora de daños completa para Pokémon Champions con fórmula exacta del NCP VGC Calculator. Calcula daño con STAB, efectividad de tipos, clima, terreno, habilidades, objetos y más." data-en="Complete damage calculator for Pokémon Champions with the exact NCP VGC Calculator formula. Calculate damage with STAB, type effectiveness, weather, terrain, abilities, items and more.">Calculadora de daños completa para Pokémon Champions con fórmula exacta del NCP VGC Calculator. Calcula daño con STAB, efectividad de tipos, clima, terreno, habilidades, objetos y más.</span>
+          </p>
+        </div>
+        <div class="seo-card">
+          <h3>
+            <span data-es="Bilingüe y Privado" data-en="Bilingual and Private">Bilingüe y Privado</span>
+          </h3>
+          <p>
+            <span data-es="Interfaz completa en español e inglés. Todos los datos se procesan localmente en tu navegador — ningún dato se envía a servidores externos. Tu equipo permanece privado." data-en="Full interface in Spanish and English. All data is processed locally in your browser — no data is sent to external servers. Your team stays private.">Interfaz completa en español e inglés. Todos los datos se procesan localmente en tu navegador — ningún dato se envía a servidores externos. Tu equipo permanece privado.</span>
+          </p>
+        </div>
+        <div class="seo-card">
+          <h3>
+            <span data-es="Exporta y Comparte" data-en="Export and Share">Exporta y Comparte</span>
+          </h3>
+          <p>
+            <span data-es="Guarda tus equipos, exporta en formato Showdown, genera PDFs para torneos y comparte con tu equipo. Todo funciona directamente en el navegador sin necesidad de instalar nada." data-en="Save your teams, export in Showdown format, generate PDFs for tournaments and share with your team. Everything works directly in the browser with no installation needed.">Guarda tus equipos, exporta en formato Showdown, genera PDFs para torneos y comparte con tu equipo. Todo funciona directamente en el navegador sin necesidad de instalar nada.</span>
+          </p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="app-footer">
@@ -206,13 +265,13 @@
   </footer>
 
   <!-- Pokemon Detail Modal -->
-  <div id="pokemonModal" class="modal-overlay hidden">
+  <div id="pokemonModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalName">
     <div class="modal-content">
       <button id="modalClose" class="modal-close" aria-label="Close modal">&times;</button>
       <div class="modal-body">
         <div class="modal-top">
           <div class="modal-sprite-wrap">
-            <img id="modalSprite" class="modal-sprite" src="" alt="" />
+            <img id="modalSprite" class="modal-sprite" src="" alt="Pokemon sprite" />
           </div>
           <div class="modal-info">
             <div class="modal-name" id="modalName"></div>
@@ -263,11 +322,11 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
+    "@type": "SoftwareApplication",
     "name": "Pokémon VG Team Sheet Generator",
     "description": "Genera hojas de equipo oficiales para torneos Pokémon VG / Champions. Importa equipos de Showdown o PokePaste y genera PDFs de Staff y Open Team Sheet.",
-    "url": "https://TU-DOMINIO.com/",
-    "applicationCategory": "GameApplication",
+    "url": "https://kmmata.github.io/TheVGCPoke/",
+    "applicationCategory": "https://schema.org/GameApplication",
     "operatingSystem": "Web Browser",
     "offers": {
       "@type": "Offer",
@@ -282,7 +341,9 @@
       "Bilingual interface (Spanish / English)",
       "Stat calculation for Pokémon Champions",
       "Local processing — no data sent to servers"
-    ]
+    ],
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled",
+    "softwareVersion": "1.0"
   }
   </script>
 </body>

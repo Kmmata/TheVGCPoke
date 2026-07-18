@@ -5,11 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Team Builder — Regulación M-B Pokémon Champions</title>
   <meta name="description" content="Construye equipos para Pokémon Champions con validación de Regulación M-B. Exporta a PDF y formato Showdown.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://kmmata.github.io/TheVGCPoke/builder">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="theme-color" content="#0b1120">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Team Builder — Pokémon Champions">
+  <meta property="og:description" content="Construye equipos para Pokémon Champions con validación de Regulación M-B. Exporta a PDF y formato Showdown.">
+  <meta property="og:url" content="https://kmmata.github.io/TheVGCPoke/builder">
+  <meta property="og:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Team Builder — Pokémon Champions">
+  <meta name="twitter:description" content="Construye equipos para Pokémon Champions con validación de Regulación M-B. Exporta a PDF y formato Showdown.">
+  <meta name="twitter:image" content="https://kmmata.github.io/TheVGCPoke/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/builder.css">
@@ -26,10 +45,10 @@
         <h1>Team Builder <span class="header-subtitle">— Reg M-B</span></h1>
       </div>
       <div class="header-actions">
-        <button id="btnImportShowdown" class="icon-btn" title="Importar desde Showdown">Importar</button>
-        <button id="btnExportShowdown" class="icon-btn" title="Exportar a Showdown">Exportar</button>
-        <button id="btnSaveTeam" class="btn btn-primary">Guardar</button>
-        <button id="builderThemeToggle" class="icon-btn" title="Cambiar tema"><span class="theme-icon">☀</span></button>
+        <button id="btnImportShowdown" class="icon-btn" title="Importar desde Showdown" aria-label="Import from Showdown">Importar</button>
+        <button id="btnExportShowdown" class="icon-btn" title="Exportar a Showdown" aria-label="Export to Showdown">Exportar</button>
+        <button id="btnSaveTeam" class="btn btn-primary" aria-label="Save team">Guardar</button>
+        <button id="builderThemeToggle" class="icon-btn" title="Cambiar tema" aria-label="Toggle dark mode"><span class="theme-icon">☀</span></button>
       </div>
     </div>
   </header>
@@ -138,7 +157,7 @@
   </main>
 
   <!-- Import Showdown Modal -->
-  <div id="importModal" class="modal-overlay hidden">
+  <div id="importModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Import Showdown team">
     <div class="modal-panel">
       <h3>Importar equipo de Showdown</h3>
       <textarea id="importText" placeholder="Pega el export de Showdown aquí...&#10;&#10;Garchomp @ Life Orb&#10;Ability: Rough Skin&#10;Level: 50&#10;EVs: 4 HP / 252 Atk / 252 Spe&#10;Jolly Nature&#10;- Earthquake&#10;- Dragon Claw&#10;- Rock Slide&#10;- Protect"></textarea>
@@ -151,7 +170,7 @@
   </div>
 
   <!-- Export Showdown Modal -->
-  <div id="exportModal" class="modal-overlay hidden">
+  <div id="exportModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Export Showdown team">
     <div class="modal-panel">
       <h3>Exportar en formato Showdown</h3>
       <textarea id="exportText" readonly></textarea>
@@ -163,7 +182,7 @@
   </div>
 
   <!-- Save Team Modal -->
-  <div id="saveModal" class="modal-overlay hidden">
+  <div id="saveModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Save team">
     <div class="modal-panel">
       <h3>Guardar equipo</h3>
       <div class="form-row" style="margin-bottom:12px;">

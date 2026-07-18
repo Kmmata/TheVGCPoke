@@ -272,7 +272,8 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 
 - Bilingual via `data-es` / `data-en` attributes on elements
 - Language toggle updates all matching elements
-- Header contains `.header-actions` div with language toggle (`#langToggle`) and dark mode toggle (`#themeToggle`)
+- Header contains hamburger button (`#menuToggle`) for navigation drawer, `.header-brand` (pokeball + title, centered), and `.header-actions` div with language toggle (`#langToggle`) and dark mode toggle (`#themeToggle`)
+- Navigation drawer (`#drawer` + `#drawerOverlay`) contains links to Hojas, Builder, Calc. Slides in from left on hamburger click, closes on overlay click or re-click
 - External dependency: `pdf-lib@1.17.1` from unpkg CDN
 - Form fields use specific IDs that must match `app.js` els object
 - Pokemon detail modal (`#pokemonModal`) — overlay with sprite, info, stat bars, and moves
@@ -286,6 +287,7 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 - Responsive: two-column → single-column at 900px (form) and 600px (team grid)
 - Key colors: `--accent: #e63946` (red), `--gold: #f4a261`
 - Pokemon detail modal styles: overlay, content card, stat bars (color-coded per stat), move badges with hover tooltips, responsive layout
+- Navigation drawer styles: `.hamburger-btn` (3-bar → X animation), `.drawer-overlay` (backdrop), `.drawer` (slide-in from left), `.drawer-link` (with `.active` state). Visible on all screen sizes, replaces inline `header-nav`
 
 ### `server.js`
 
@@ -734,7 +736,7 @@ All translatable UI elements use dual attributes:
 - **Form IDs** in HTML must match `els` object keys in `app.js` (main page) or `getElementById` calls in `builder.js` (builder page)
 - **localStorage keys** prefixed with `ts` for main page (e.g., `tsLang`, `tsDraft`, `tsTheme`), `pokemon_champion_teams` for builder
 - **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `[data-theme="light"]` attribute selector. All three CSS files define the same shared design system variables (`--bg-deep`, `--accent`, `--text-primary`, etc.) plus page-specific variables (type colors, stat colors, builder slot colors)
-- **Shared header structure** — All three pages use `app-header` > `header-content` > `header-brand` (with `pokeball-icon`) + `header-nav` (with `nav-link`) + `header-actions` (with `icon-btn`). Each CSS file defines these shared classes
+- **Shared header structure** — All three pages use `app-header` > `header-content` > `hamburger-btn` (menu toggle) + `header-brand` (pokeball icon + title, centered) + `header-actions` (lang toggle + theme toggle). Navigation links are in a slide-in drawer (`drawer-overlay` + `drawer`) instead of inline nav. Each CSS file defines these shared classes
 - **Builder dark mode** uses same pattern as main page: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page preference
 - **Calculator dark mode** uses same pattern: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page and builder preference
 - **Runtime has zero npm dependencies** — `pdf-lib` is loaded via CDN, `pdfjs-dist` and `pdf-lib` are dev-only
@@ -793,7 +795,7 @@ When making UI changes across pages, follow these rules:
 
 1. **Theme attribute**: Always use `data-theme="dark"` / `data-theme="light"` on `<html>`. Never use `.dark` class
 2. **CSS variables**: Use the shared design system variable names (`--bg-deep`, `--bg-surface`, `--accent`, `--text-primary`, etc.). Do not introduce new color variables without adding them to all three `:root` blocks
-3. **Shared header**: All pages must use `app-header` > `header-content` > `header-brand` + `header-nav` + `header-actions` structure
+3. **Shared header**: All pages must use `app-header` > `header-content` > `hamburger-btn` + `header-brand` (centered) + `header-actions`. Navigation is in a slide-in drawer from the left (`drawer-overlay` + `drawer` with `drawer-link` items). The active page link is highlighted with `.active` class
 4. **Font smoothing**: All pages must have `-webkit-font-smoothing: antialiased` on `body`
 5. **Focus glow**: Inputs must have `box-shadow: 0 0 0 3px var(--accent-glow)` on focus
 6. **Cards/panels**: Use `var(--bg-surface)` background, `var(--radius-lg)` border-radius, `var(--shadow-sm)` shadow, `border: 1px solid var(--border)`
@@ -807,7 +809,7 @@ When making UI changes across pages, follow these rules:
 ### Completed ✓
 - `<meta name="description">` — Descripción de la herramienta
 - `<meta name="robots">` — Index, follow
-- `<link rel="canonical">` — Placeholder `TU-DOMINIO.com`
+- `<link rel="canonical">` — Placeholder `kmmata.github.io/TheVGCPoke`
 - **Open Graph** — `og:title`, `og:description`, `og:type`, `og:url`, `og:image`, `og:locale`
 - **Twitter Card** — `summary_large_image` con título, descripción, imagen
 - **Favicon SVG** — Pokeball en `favicon.svg`
@@ -815,14 +817,14 @@ When making UI changes across pages, follow these rules:
 - **`theme-color`** — `#0b1120` (dark theme primary background)
 - **JSON-LD** — Schema `WebApplication` con features y pricing
 - **`robots.txt`** — Allow all, sitemap reference
-- **`sitemap.xml`** — Placeholder `TU-DOMINIO.com`
+- **`sitemap.xml`** — Placeholder `kmmata.github.io/TheVGCPoke`
 - **server.js** — MIME types para `.ico`, `.xml`, `.txt`
 - **Builder page** — `builder.html` accessible at `/builder` route
 - **Calculator page** — `calc.html` accessible at `/calc` route
 
 ### Pendiente — Cuando tengas dominio
 Cuando el usuario tenga dominio, preguntar y actualizar:
-1. **Reemplazar `TU-DOMINIO.com`** en:
+1. **Reemplazar `kmmata.github.io/TheVGCPoke`** en:
    - `index.html`: canonical URL, og:url, og:image, twitter:image
    - `robots.txt`: Sitemap URL
    - `sitemap.xml`: `<loc>` URL

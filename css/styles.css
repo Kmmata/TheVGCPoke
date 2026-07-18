@@ -813,6 +813,57 @@ textarea {
 }
 
 /* ══════════════════════════════════════════════════════════════ */
+/*  SEO Content Section                                          */
+/* ══════════════════════════════════════════════════════════════ */
+
+.seo-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 48px;
+}
+
+.seo-content h2 {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 24px;
+}
+
+.seo-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.seo-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.seo-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.seo-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.seo-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════ */
 /*  Footer                                                       */
 /* ══════════════════════════════════════════════════════════════ */
 
@@ -1278,4 +1329,6 @@ textarea {
   .modal-move-tag { font-size: 0.78rem; padding: 4px 12px; }
   
   .app-footer { padding: 24px 12px; font-size: 0.75rem; }
+
+  .seo-content-grid { grid-template-columns: 1fr; }
 }
