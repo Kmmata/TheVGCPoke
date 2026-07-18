@@ -81,19 +81,19 @@ const TeamSheetPDF = (() => {
   /* ══════════════════════════════════════════════════════════ */
   function _fillStaffPage(pg, font, bold, pd, team, baseStatsMap) {
     /* Player info — coordinates from extracted reference */
-    _val(pg, bold, pd.playerName, 149, 706.4, 12.2, 230);
-    _val(pg, bold, pd.trainerName, 149, 684.3, 9.6, 240);
-    _val(pg, bold, pd.playerId, 449, 684.3, 9.6, 140);
-    _val(pg, bold, pd.teamNumber, 149, 664.4, 9.6, 225);
-    _val(pg, bold, pd.switchProfile, 149, 639.9, 9.6, 225);
-    _val(pg, bold, pd.supportId, 451, 639.9, 9.6, 140);
+    _val(pg, bold, pd.playerName, 149, 706.4, 13.5, 230);
+    _val(pg, bold, pd.trainerName, 149, 684.3, 10.5, 240);
+    _val(pg, bold, pd.playerId, 449, 684.3, 10.5, 140);
+    _val(pg, bold, pd.teamNumber, 149, 664.4, 10.5, 225);
+    _val(pg, bold, pd.switchProfile, 149, 639.9, 10.5, 225);
+    _val(pg, bold, pd.supportId, 451, 639.9, 10.5, 140);
 
     /* Date of Birth */
     if (pd.dob) {
       const parts = pd.dob.split('/');
-      if (parts[0]) _val(pg, bold, parts[0], 431, 664.4, 9.6, 42);
-      if (parts[1]) _val(pg, bold, parts[1], 491, 664.4, 9.6, 42);
-      if (parts[2]) _val(pg, bold, parts[2], 540, 664.4, 9.6, 50);
+      if (parts[0]) _val(pg, bold, parts[0], 431, 664.4, 10.5, 42);
+      if (parts[1]) _val(pg, bold, parts[1], 491, 664.4, 10.5, 42);
+      if (parts[2]) _val(pg, bold, parts[2], 540, 664.4, 10.5, 50);
     }
 
     /* Age Division checkbox */
@@ -123,12 +123,15 @@ const TeamSheetPDF = (() => {
 
     const lxAdjusts = [0, -19.1, -6, -6, -6, -6];
     const contentX = lx + rightShift;
-    const valueX = contentX + bold.widthOfTextAtSize('Ability', 13.9) + 2;
+
+    const labels = ['Ability', 'Held Item', 'Move 1', 'Move 2', 'Move 3', 'Move 4'];
+    const labelXPositions = labels.map((l, i) => (lx + lxAdjusts[i] + rightShift) + bold.widthOfTextAtSize(l, 18) + 2);
+    const valueX = Math.max(...labelXPositions);
 
     const name = p.nickname ? `${p.nickname} (${p.species})` : p.species;
-    _val(pg, bold, name, valueX, cellTop, 10, sx - valueX - 4);
+    _val(pg, bold, name, valueX, cellTop, 11.5, sx - valueX - 4);
 
-    _val(pg, bold, p.nature, valueX, cellTop - 26.1, 8, sx - valueX - 4);
+    _val(pg, bold, p.nature, valueX, cellTop - 26.1, 11, sx - valueX - 4);
 
     const labelYOffsets = [-50.9, -74.1, -97.3, -120.4, -143.6, -166.8];
 
@@ -137,26 +140,22 @@ const TeamSheetPDF = (() => {
 
     for (let i = 0; i < 6; i++) {
       const y = cellTop + labelYOffsets[i];
-      const xLabel = lx + lxAdjusts[i] + rightShift;
-
-      const labels = ['Ability', 'Held Item', 'Move 1', 'Move 2', 'Move 3', 'Move 4'];
-      const lw = bold.widthOfTextAtSize(labels[i], 13.9);
-      const valX = xLabel + lw + 2;
 
       if (values[i]) {
-        const maxW = sx - valX - 4;
-        _val(pg, bold, values[i], valX, y + 1, 8, maxW > 0 ? maxW : 120);
+        const maxW = sx - valueX - 4;
+        _val(pg, bold, values[i], valueX, y + 1, 11, maxW > 0 ? maxW : 120);
       }
     }
 
     /* Stats */
     const statLabels = ['HP', 'Atk', 'Def', 'Sp. Atk', 'Sp. Def', 'Speed'];
-    const statY = [-40.5, -63.6, -86.8, -110, -133.1, -156.3];
-    const statBaseX = isRight ? 540.9 : 248.8;
+    const statY = [-50.9, -74.1, -97.3, -120.4, -143.6, -166.8];
+    const statBaseX = isRight ? 525.9 : 233.8;
+    const maxStatLabelW = Math.max(...statLabels.map(l => bold.widthOfTextAtSize(l, 9.5)));
+    const statValX = statBaseX + maxStatLabelW + 2;
     for (let s = 0; s < 6; s++) {
-      const y = cellTop + statY[s];
-      const slw = bold.widthOfTextAtSize(statLabels[s], 5.6);
-      _val(pg, bold, String(statVals[s]), statBaseX + slw + 2, y, 5.6, 40);
+      const y = cellTop + statY[s] + 1;
+      _val(pg, bold, String(statVals[s]), statValX, y, 9.5, 40);
     }
   }
 
@@ -164,10 +163,10 @@ const TeamSheetPDF = (() => {
   /*  OPEN PAGE (page 2) — values on template                 */
   /* ══════════════════════════════════════════════════════════ */
   function _fillOpenPage(pg, font, bold, pd, team) {
-    _val(pg, bold, pd.playerName, 149, 708.2, 12.2, 230);
-    _val(pg, bold, pd.trainerName, 149, 686.1, 9.6, 440);
-    _val(pg, bold, pd.teamNumber, 149, 664.8, 9.6, 440);
-    _val(pg, bold, pd.switchProfile, 149, 641.7, 9.6, 440);
+    _val(pg, bold, pd.playerName, 149, 708.2, 13.5, 230);
+    _val(pg, bold, pd.trainerName, 149, 686.1, 10.5, 440);
+    _val(pg, bold, pd.teamNumber, 149, 664.8, 10.5, 440);
+    _val(pg, bold, pd.switchProfile, 149, 641.7, 10.5, 440);
 
     _checkAgeDivision(pg, bold, pd.ageDivision);
 
@@ -192,24 +191,23 @@ const TeamSheetPDF = (() => {
     const lxAdjusts = [0, -19.1, -6, -6, -6, -6];
     const labelYOffsets = [-50.9, -74.1, -97.3, -120.4, -143.6, -166.8];
     const contentX = lx + rightShift;
-    const valueX = contentX + bold.widthOfTextAtSize('Ability', 13.9) + 2;
+
+    const labels = ['Ability', 'Held Item', 'Move 1', 'Move 2', 'Move 3', 'Move 4'];
+    const labelXPositions = labels.map((l, i) => (lx + lxAdjusts[i] + rightShift) + bold.widthOfTextAtSize(l, 18) + 2);
+    const valueX = Math.max(...labelXPositions);
 
     const name = p.nickname ? `${p.nickname} (${p.species})` : p.species;
-    _val(pg, bold, name, valueX, cellTop, 10, sx - valueX - 4);
+    _val(pg, bold, name, valueX, cellTop, 11.5, sx - valueX - 4);
 
-    _val(pg, bold, p.nature, valueX, cellTop - 26.1, 8, sx - valueX - 4);
+    _val(pg, bold, p.nature, valueX, cellTop - 26.1, 11, sx - valueX - 4);
 
     const values = [p.ability || '', p.item || '', p.moves[0] || '', p.moves[1] || '', p.moves[2] || '', p.moves[3] || ''];
-    const labels = ['Ability', 'Held Item', 'Move 1', 'Move 2', 'Move 3', 'Move 4'];
 
     for (let i = 0; i < 6; i++) {
       const y = cellTop + labelYOffsets[i];
-      const xLabel = lx + lxAdjusts[i] + rightShift;
-      const lw = bold.widthOfTextAtSize(labels[i], 13.9);
-      const valX = xLabel + lw + 2;
 
       if (values[i]) {
-        _val(pg, bold, values[i], valX, y + 1, 8, 120);
+        _val(pg, bold, values[i], valueX, y + 1, 11, 120);
       }
     }
   }
