@@ -445,6 +445,14 @@ body {
   border-bottom: none;
 }
 
+.card-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 /* ══════════════════════════════════════════════════════════════ */
 /*  Team Slots                                                   */
 /* ══════════════════════════════════════════════════════════════ */
@@ -1250,8 +1258,6 @@ body {
   background: transparent;
   border: 1px solid rgba(239, 83, 80, 0.3);
   color: var(--error);
-  padding: 4px 10px;
-  font-size: 0.75rem;
 }
 
 .builder-btn-danger:hover:not(:disabled) {
@@ -1442,6 +1448,14 @@ body {
   .icon-btn { padding: 5px 10px; font-size: 0.78rem; }
   .btn { padding: 6px 12px; font-size: 0.78rem; }
 
+  .card-header-actions {
+    gap: 4px;
+  }
+  .card-header-actions .builder-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
   .builder-main {
     padding: 12px;
     gap: 12px;
@@ -1454,6 +1468,11 @@ body {
 
   .builder-card h2 {
     font-size: 0.82rem;
+  }
+
+  .card-header-row {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .team-slots {

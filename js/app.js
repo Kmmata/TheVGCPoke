@@ -510,4 +510,56 @@
   setupAgeDivision();
   renderTeamGrid();
   updatePdfButtons();
+
+  /* ── Auth Integration ── */
+  PokeAuth.renderAuthButton('authContainer');
+
+  const $loadProfileBtn = document.getElementById('loadProfileBtn');
+  if (PokeAuth.isLoggedIn()) {
+    const profile = PokeAuth.getProfile();
+    const hasProfileData = profile && (profile.playerName || profile.trainerName || profile.playerId);
+    if (hasProfileData && !$loadProfileBtn.classList.contains('always-show')) {
+      $loadProfileBtn.classList.remove('hidden');
+    }
+  }
+
+  function loadProfileData() {
+    const profile = PokeAuth.getProfile();
+    if (!profile) return;
+    if (profile.playerName) els.playerName.value = profile.playerName;
+    if (profile.trainerName) els.trainerName.value = profile.trainerName;
+    if (profile.playerId) els.playerId.value = profile.playerId;
+    if (profile.dobMm) els.dobMm.value = profile.dobMm;
+    if (profile.dobDd) els.dobDd.value = profile.dobDd;
+    if (profile.dobYyyy) els.dobYyyy.value = profile.dobYyyy;
+    if (profile.teamNumber) els.teamNumber.value = profile.teamNumber;
+    if (profile.switchProfile) els.switchProfile.value = profile.switchProfile;
+    if (profile.supportId) els.supportId.value = profile.supportId;
+    if (profile.ageDivision) {
+      const radio = document.querySelector(`input[name="ageDivision"][value="${profile.ageDivision}"]`);
+      if (radio) {
+        radio.checked = true;
+        document.querySelectorAll('[name="ageDivision"]').forEach(l => {
+          l.closest('.chip-btn')?.classList.toggle('active', l.checked);
+        });
+      }
+    }
+    saveDraft();
+  }
+
+  if ($loadProfileBtn) {
+    $loadProfileBtn.addEventListener('click', loadProfileData);
+  }
+
+  if (PokeAuth.isLoggedIn()) {
+    const profile = PokeAuth.getProfile();
+    const hasAnyData = profile && Object.values(profile).some(v => v && v !== 'Masters');
+    if (hasAnyData) {
+      const pd = getPlayerData();
+      const draftHasData = pd.playerName || pd.trainerName || pd.playerId;
+      if (!draftHasData) {
+        loadProfileData();
+      }
+    }
+  }
 })();

@@ -54,7 +54,6 @@ const TeamBuilder = (() => {
   function init() {
     setupDrawer();
     renderTeamSlots();
-    renderSavedTeams();
     setupAgeDivision();
     setupModals();
     setupExportButtons();
@@ -62,6 +61,7 @@ const TeamBuilder = (() => {
     setupTheme();
     setupClearAll();
     loadDraft();
+    setupAuth();
   }
 
   // ─── Drawer Toggle ───
@@ -669,7 +669,10 @@ const TeamBuilder = (() => {
 
   // ─── Save/Load ───
   function getSavedTeams() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    if (PokeAuth.isLoggedIn()) {
+      return PokeAuth.getSavedTeams();
+    }
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').filter(t => !t.userId); }
     catch { return []; }
   }
 
@@ -710,8 +713,20 @@ const TeamBuilder = (() => {
           renderEditor(team[activeSlot], activeSlot);
         }
         validateTeam();
+        return;
       }
     } catch {}
+
+    if (PokeAuth.isLoggedIn()) {
+      const profile = PokeAuth.getProfile();
+      if (profile) {
+        const hasAnyData = Object.values(profile).some(v => v && v !== 'Masters');
+        if (hasAnyData) {
+          setPlayerData(profile);
+          saveDraft();
+        }
+      }
+    }
   }
 
   function getPlayerData() {
@@ -788,9 +803,13 @@ const TeamBuilder = (() => {
             saveDraft();
           }
         } else if (btn.dataset.action === 'delete') {
-          const saved = getSavedTeams();
-          saved.splice(idx, 1);
-          saveTeamsToStorage(saved);
+          if (PokeAuth.isLoggedIn()) {
+            PokeAuth.deleteTeamFromStorage(idx);
+          } else {
+            const saved = getSavedTeams();
+            saved.splice(idx, 1);
+            saveTeamsToStorage(saved);
+          }
           renderSavedTeams();
         }
       });
@@ -925,14 +944,19 @@ const TeamBuilder = (() => {
   function saveTeam() {
     const name = document.getElementById('saveTeamName').value.trim();
     if (!name) return;
-    const saved = getSavedTeams();
-    saved.push({
+    const teamData = {
       name,
       date: new Date().toISOString(),
       team: JSON.parse(JSON.stringify(team)),
       playerData: getPlayerData(),
-    });
-    saveTeamsToStorage(saved);
+    };
+    if (PokeAuth.isLoggedIn()) {
+      PokeAuth.saveTeamToStorage(teamData);
+    } else {
+      const saved = getSavedTeams();
+      saved.push(teamData);
+      saveTeamsToStorage(saved);
+    }
     $saveModal.classList.add('hidden');
     renderSavedTeams();
   }
@@ -1011,6 +1035,47 @@ const TeamBuilder = (() => {
       console.error('PDF generation error:', err);
       alert('Error al generar el PDF: ' + err.message);
     });
+  }
+
+  // ─── Auth Integration ───
+  function setupAuth() {
+    PokeAuth.renderAuthButton('authContainer');
+
+    const $loadProfileBtn = document.getElementById('loadProfileBtn');
+    if (PokeAuth.isLoggedIn()) {
+      const profile = PokeAuth.getProfile();
+      const hasProfileData = profile && (profile.playerName || profile.trainerName || profile.playerId);
+      if (hasProfileData) {
+        $loadProfileBtn.classList.remove('hidden');
+      }
+    }
+
+    $loadProfileBtn?.addEventListener('click', loadProfileData);
+
+    renderSavedTeams();
+  }
+
+  function loadProfileData() {
+    const profile = PokeAuth.getProfile();
+    if (!profile) return;
+    if (profile.playerName) document.getElementById('playerName').value = profile.playerName;
+    if (profile.trainerName) document.getElementById('trainerName').value = profile.trainerName;
+    if (profile.playerId) document.getElementById('playerId').value = profile.playerId;
+    if (profile.dobMm) document.getElementById('dobMm').value = profile.dobMm;
+    if (profile.dobDd) document.getElementById('dobDd').value = profile.dobDd;
+    if (profile.dobYyyy) document.getElementById('dobYyyy').value = profile.dobYyyy;
+    if (profile.teamNumber) document.getElementById('teamNumber').value = profile.teamNumber;
+    if (profile.switchProfile) document.getElementById('switchProfile').value = profile.switchProfile;
+    if (profile.ageDivision) {
+      const radio = document.querySelector(`[name="ageDivision"][value="${profile.ageDivision}"]`);
+      if (radio) {
+        radio.checked = true;
+        document.querySelectorAll('[name="ageDivision"]').forEach(l => {
+          l.closest('.chip-btn')?.classList.toggle('active', l.checked);
+        });
+      }
+    }
+    saveDraft();
   }
 
   // ─── Init on load ───

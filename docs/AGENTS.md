@@ -28,17 +28,19 @@ Vanilla HTML/CSS/JS web application that generates official **Play! Pokémon VG 
 
 ```
 pokemon-team-sheets/
-├── index.html                    # Main page — Team Sheet Generator (import from Showdown/PokePaste)
+├── index.html                    # Main page — Team Sheet Generator (import from Showdown/PokePaste) + SEO content section
 ├── builder.html                  # Team Builder page — create teams from scratch with validation
-├── calc.html                     # Damage Calculator page — full Champions damage calc matching NCP reference
+├── calc.html                     # Damage Calculator page — full Champions damage calc matching NCP reference + SEO content section
+├── README.md                     # GitHub project documentation (SEO-indexable)
 ├── server.js                     # Minimal Node.js static server (port 8080), /builder and /calc routes
 ├── package.json                  # Scripts: dev
 ├── package-lock.json
 ├── node_modules/
 ├── css/
-│   ├── styles.css                # Main page styles, CSS variables, responsive, modal
+│   ├── styles.css                # Main page styles, CSS variables, responsive, modal, SEO section
 │   ├── builder.css               # Team Builder styles (shared CSS variables with main page, light+dark themes, SP sliders, autocomplete, validation)
-│   └── calc.css                  # Damage Calculator styles (light+dark themes, two-panel NCP layout, responsive)
+│   ├── calc.css                  # Damage Calculator styles (light+dark themes, two-panel NCP layout, responsive, SEO section)
+│   └── auth.css                  # Auth module styles (login/register/profile modals, user menu dropdown, dark+light themes)
 ├── js/
 │   ├── translations.js           # PokéAPI name translations (ES↔EN) + nature/type maps + move types + type colors
 │   ├── parser.js                 # Showdown/PokePaste text parser
@@ -47,6 +49,7 @@ pokemon-team-sheets/
 │   ├── regulation.js             # Regulation M-B data: 226 legal Pokémon, 148 items, 502 moves + validation
 │   ├── builder-champions-api.js  # PokAPI layer for builder: sprites, learnsets, abilities, base stats
 │   ├── builder.js                # Team Builder logic: slots, editor, autocomplete, SP, save/load, import/export
+│   ├── auth.js                   # Auth module: register, login, logout, session, profile, user-scoped teams
 │   ├── type-chart.js             # Type effectiveness chart (19×19 matrix including Stellar)
 │   ├── calc-move-data.js         # Move metadata for all 502 legal moves (type, category, BP, flags, PokAPI-sourced)
 │   ├── damage.js                 # Damage calculation engine (complete formula, matches NCP VGC reference)
@@ -109,7 +112,8 @@ User creates team in Builder UI
   → On export:
     → PDF: TeamSheetPDF.generate() (same as main page, SP→EV conversion)
     → Showdown: exportToShowdownText() (SP→EV conversion for compatibility)
-  → On save: localStorage[pokemon_champion_teams] stores full team data
+  → On save: localStorage[pokemon_champion_teams] stores full team data (with userId if logged in)
+  → On load: if logged in, auto-fills player data from profile if draft is empty
 ```
 
 ### Module Pattern
@@ -125,11 +129,66 @@ const ModuleName = (() => {
 })();
 ```
 
-Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.js` → `app.js`.
+Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.js` → `auth.js` → `app.js`.
 
-**Builder page load order:** `translations.js` → `parser.js` → `pdf.js` → `regulation.js` → `builder-champions-api.js` → `builder.js`.
+**Builder page load order:** `translations.js` → `parser.js` → `pdf.js` → `regulation.js` → `auth.js` → `builder-champions-api.js` → `builder.js`.
 
 **Calculator page load order:** `translations.js` → `parser.js` → `pdf.js` → `regulation.js` → `builder-champions-api.js` → `type-chart.js` → `calc-move-data.js` → `damage.js` → `calc.js`.
+
+---
+
+## Auth System (localStorage)
+
+### Overview
+
+User authentication and profile management using `localStorage`. No server-side component. Passwords are hashed with SHA-256 via `SubtleCrypto`.
+
+### `js/auth.js` — PokeAuth
+
+**Exports:** `{ register, login, logout, isLoggedIn, getCurrentUser, getProfile, updateProfile, getSavedTeams, saveTeamToStorage, deleteTeamFromStorage, loadTeamFromStorage, renderAuthButton, openLoginModal, openRegisterModal, openProfileModal }`
+
+**localStorage keys:**
+- `pokemon_users` — Array of user objects: `{ id, username, email, password (hashed), profile, createdAt }`
+- `pokemon_current_user` — ID of the currently logged-in user
+
+**User profile structure:**
+```js
+{
+  playerName: '',
+  trainerName: '',
+  playerId: '',
+  dobMm: '', dobDd: '', dobYyyy: '',
+  teamNumber: '',
+  switchProfile: '',
+  supportId: '',
+  ageDivision: 'Masters',
+}
+```
+
+**Key functions:**
+- `register(username, email, password)` → Creates user, hashes password, starts session
+- `login(username, password)` → Validates credentials, starts session
+- `logout()` → Clears session
+- `renderAuthButton(containerId)` → Renders login button or user menu dropdown in the given container
+- `getSavedTeams()` → Returns teams filtered by current user's ID
+- `saveTeamToStorage(teamObj)` → Saves team with userId attached
+
+**UI components:**
+- Login button in header → opens login modal
+- User avatar + dropdown (Profile, Logout) when logged in
+- Register modal with username/email/password/confirm
+- Profile modal with all player data fields (8 fields matching the team sheets)
+
+**Integration with builder.js:**
+- `getSavedTeams()` returns only the current user's teams
+- `saveTeam()` adds `userId` to saved team objects
+- On draft load, if logged in and no draft data, auto-fills from profile
+- "Cargar perfil" button visible only when logged in with profile data
+
+**Integration with app.js:**
+- Same `renderAuthButton()` for header
+- "Cargar datos del perfil" button visible only when logged in with profile data
+- On page load, if logged in and no draft data, auto-fills from profile
 
 ---
 
@@ -256,6 +315,8 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 - `tsLang` — Language preference
 - `tsDraft` — Full player data + team (auto-saved on input changes)
 - `tsTheme` — Dark mode preference (`'dark'` | `'light'`, defaults to `prefers-color-scheme`)
+- `pokemon_users` — Array of registered user objects (auth.js)
+- `pokemon_current_user` — ID of the currently logged-in user (auth.js)
 
 **Dark mode:**
 - Toggle button in header (`#themeToggle`) next to language toggle
@@ -272,7 +333,8 @@ Loaded in order via `<script>` tags: `translations.js` → `parser.js` → `pdf.
 
 - Bilingual via `data-es` / `data-en` attributes on elements
 - Language toggle updates all matching elements
-- Header contains hamburger button (`#menuToggle`) for navigation drawer, `.header-brand` (pokeball + title, centered), and `.header-actions` div with language toggle (`#langToggle`) and dark mode toggle (`#themeToggle`)
+- Header contains hamburger button (`#menuToggle`) for navigation drawer, `.header-brand` (pokeball + title, centered), and `.header-actions` div with auth container (`#authContainer`), language toggle (`#langToggle`) and dark mode toggle (`#themeToggle`)
+- Player section has `#loadProfileBtn` button (hidden by default, shown when logged in with profile data) to fill player fields from user profile
 - Navigation drawer (`#drawer` + `#drawerOverlay`) contains links to Hojas, Builder, Calc. Slides in from left on hamburger click, closes on overlay click or re-click
 - External dependency: `pdf-lib@1.17.1` from unpkg CDN
 - Form fields use specific IDs that must match `app.js` els object
@@ -325,7 +387,8 @@ User creates team in Builder UI
   → On export:
     → PDF: TeamSheetPDF.generate() (same as main page, SP→EV conversion)
     → Showdown: exportToShowdownText() (SP→EV conversion for compatibility)
-  → On save: localStorage[pokemon_champion_teams] stores full team data
+  → On save: localStorage[pokemon_champion_teams] stores full team data (with userId if logged in)
+  → On load: if logged in, auto-fills player data from profile if draft is empty
 ```
 
 ### Regulation M-B Validation Rules
@@ -409,7 +472,7 @@ User creates team in Builder UI
 ```
 
 **localStorage keys:**
-- `pokemon_champion_teams` — Saved teams array: `{ name, date, team, playerData }`
+- `pokemon_champion_teams` — Saved teams array: `{ name, date, team, playerData, userId? }` (userId added when auth is active)
 - `pokemon_champion_teams_draft` — Auto-saved current working state
 
 **Key functions:**
@@ -425,9 +488,9 @@ User creates team in Builder UI
 4. **Stat Preview** — Live stat bars below SP sliders showing base stats, final stats (with SP + nature), nature indicators (▲/▼), and SP values. Updates in real-time as sliders change
 5. **Detail Row** — Nature dropdown, gender buttons, Tera Type selector
 6. **Validation Panel** — Real-time error/success messages
-7. **Player Data** — Same fields as main page
+7. **Player Data** — Same fields as main page, with "Cargar perfil" button (visible when logged in)
 8. **PDF Export** — Reuses `TeamSheetPDF.generate()` from pdf.js
-9. **Saved Teams** — List with load/delete actions
+9. **Saved Teams** — List with load/delete actions (user-scoped when logged in)
 
 ### Autocomplete System
 
@@ -734,9 +797,10 @@ All translatable UI elements use dual attributes:
 - **PDF generation** uses template-based approach: load official PDF → copy pages → overlay text
 - **Template coordinates** were extracted via `pdfjs-dist` (dev dependency) and raw PDF content stream parsing (for shapes like checkboxes) and hardcoded in `pdf.js`
 - **Form IDs** in HTML must match `els` object keys in `app.js` (main page) or `getElementById` calls in `builder.js` (builder page)
-- **localStorage keys** prefixed with `ts` for main page (e.g., `tsLang`, `tsDraft`, `tsTheme`), `pokemon_champion_teams` for builder
-- **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `[data-theme="light"]` attribute selector. All three CSS files define the same shared design system variables (`--bg-deep`, `--accent`, `--text-primary`, etc.) plus page-specific variables (type colors, stat colors, builder slot colors)
-- **Shared header structure** — All three pages use `app-header` > `header-content` > `hamburger-btn` (menu toggle) + `header-brand` (pokeball icon + title, centered) + `header-actions` (lang toggle + theme toggle). Navigation links are in a slide-in drawer (`drawer-overlay` + `drawer`) instead of inline nav. Each CSS file defines these shared classes
+- **localStorage keys** prefixed with `ts` for main page (e.g., `tsLang`, `tsDraft`, `tsTheme`), `pokemon_champion_teams` for builder, `pokemon_users` / `pokemon_current_user` for auth
+- **CSS variables** for all colors — shared between main page, builder, and calculator via `:root` + `[data-theme="light"]` attribute selector. All three CSS files define the same shared design system variables (`--bg-deep`, `--accent`, `--text-primary`, etc.) plus page-specific variables (type colors, stat colors, builder slot colors). `auth.css` uses the same design system variables for modals, forms, and buttons
+- **Shared header structure** — All three pages use `app-header` > `header-content` > `hamburger-btn` (menu toggle) + `header-brand` (pokeball icon + title, centered) + `header-actions` (auth container + lang toggle + theme toggle). Navigation links are in a slide-in drawer (`drawer-overlay` + `drawer`) instead of inline nav. Each CSS file defines these shared classes
+- **SEO sections** — `index.html` has `.seo-content` with 6 cards describing the tool. `calc.html` has `.seo-content` with 4 cards focused on "calculadora de daños" keywords. Both use `.seo-content-grid` > `.seo-card` layout with responsive CSS
 - **Builder dark mode** uses same pattern as main page: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page preference
 - **Calculator dark mode** uses same pattern: reads `localStorage('tsTheme')`, sets `data-theme` attribute, persists choice. Syncs with main page and builder preference
 - **Runtime has zero npm dependencies** — `pdf-lib` is loaded via CDN, `pdfjs-dist` and `pdf-lib` are dev-only
@@ -776,7 +840,8 @@ All translatable UI elements use dual attributes:
 18. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
 19. **Test calc light mode:** Toggle to light theme → verify calculator renders correctly (no white-on-white)
 20. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
-14. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
+21. **Auth system:** `auth.js` exposes `PokeAuth` global. All auth logic (register, login, profile, session) goes through this module. CSS in `auth.css`. Auth container `#authContainer` in both page headers.
+22. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only
 15. **Parser changes:** Only modify `parser.js` if the Showdown export format changes
 16. **PDF value positions:** Modify `_fillStaffPage()`, `_fillOpenPage()`, `_fillStaffCell()`, `_fillOpenCell()` in `pdf.js`. Coordinates are hardcoded from extracted reference.
 17. **New form fields:** Add HTML in `index.html` or `builder.html`, add to `els` object and `getPlayerData()` in respective JS files, add `_val()` call in `pdf.js`
@@ -795,44 +860,46 @@ When making UI changes across pages, follow these rules:
 
 1. **Theme attribute**: Always use `data-theme="dark"` / `data-theme="light"` on `<html>`. Never use `.dark` class
 2. **CSS variables**: Use the shared design system variable names (`--bg-deep`, `--bg-surface`, `--accent`, `--text-primary`, etc.). Do not introduce new color variables without adding them to all three `:root` blocks
-3. **Shared header**: All pages must use `app-header` > `header-content` > `hamburger-btn` + `header-brand` (centered) + `header-actions`. Navigation is in a slide-in drawer from the left (`drawer-overlay` + `drawer` with `drawer-link` items). The active page link is highlighted with `.active` class
+3. **Shared header**: All pages must use `app-header` > `header-content` > `hamburger-btn` + `header-brand` (centered) + `header-actions`. The `header-actions` contains `#authContainer` (login button or user menu), language toggle, and theme toggle. Navigation is in a slide-in drawer from the left (`drawer-overlay` + `drawer` with `drawer-link` items). The active page link is highlighted with `.active` class
 4. **Font smoothing**: All pages must have `-webkit-font-smoothing: antialiased` on `body`
 5. **Focus glow**: Inputs must have `box-shadow: 0 0 0 3px var(--accent-glow)` on focus
 6. **Cards/panels**: Use `var(--bg-surface)` background, `var(--radius-lg)` border-radius, `var(--shadow-sm)` shadow, `border: 1px solid var(--border)`
 7. **Buttons**: Primary buttons use `var(--accent)` background with `var(--shadow-glow)`. All buttons use `font-family: var(--font-display)`
 8. **Light theme**: Test all changes in both dark and light themes. Verify no white-on-white or invisible text
+9. **SEO sections**: Use `.seo-content` > `.seo-content-grid` > `.seo-card` pattern for SEO content blocks. Cards use same surface/border/radius as other cards. Defined in `styles.css` and `calc.css`
 
 ---
 
 ## SEO Status
 
 ### Completed ✓
-- `<meta name="description">` — Descripción de la herramienta
-- `<meta name="robots">` — Index, follow
-- `<link rel="canonical">` — Placeholder `kmmata.github.io/TheVGCPoke`
-- **Open Graph** — `og:title`, `og:description`, `og:type`, `og:url`, `og:image`, `og:locale`
-- **Twitter Card** — `summary_large_image` con título, descripción, imagen
+- `<meta name="description">` — Descripción de la herramienta (3 páginas)
+- `<meta name="robots">` — Index, follow (3 páginas)
+- `<link rel="canonical">` — `kmmata.github.io/TheVGCPoke/` (3 páginas)
+- **Open Graph** — `og:title`, `og:description`, `og:type`, `og:url`, `og:image`, `og:locale` (3 páginas)
+- **Twitter Card** — `summary_large_image` con título, descripción, imagen (3 páginas)
 - **Favicon SVG** — Pokeball en `favicon.svg`
 - **Apple touch icon** — Referenciado (pendiente crear PNG 180x180)
 - **`theme-color`** — `#0b1120` (dark theme primary background)
-- **JSON-LD** — Schema `WebApplication` con features y pricing
-- **`robots.txt`** — Allow all, sitemap reference
-- **`sitemap.xml`** — Placeholder `kmmata.github.io/TheVGCPoke`
+- **JSON-LD** — Schema `SoftwareApplication` con features, pricing, browserRequirements
+- **`robots.txt`** — Allow all, sitemap reference a `kmmata.github.io/TheVGCPoke/sitemap.xml`
+- **`sitemap.xml`** — 3 URLs (index, builder, calc) con `kmmata.github.io/TheVGCPoke`
 - **server.js** — MIME types para `.ico`, `.xml`, `.txt`
 - **Builder page** — `builder.html` accessible at `/builder` route
 - **Calculator page** — `calc.html` accessible at `/calc` route
+- **Preconnect** — `fonts.googleapis.com`, `fonts.gstatic.com`, `unpkg.com` (3 páginas)
+- **SEO content sections** — Contenido estático indexable en `index.html` (6 tarjetas) y `calc.html` (4 tarjetas)
+- **README.md** — Documentación completa del proyecto en GitHub (indexable por Google)
+- **Títulos optimizados** — Keywords en titles y h1 de cada página
+- **Google Search Console** — Propiedad verificada, página principal indexada
+- **Accessibility** — `aria-label` en botones, `role="dialog"` + `aria-modal` en modales, `alt` en sprites
 
-### Pendiente — Cuando tengas dominio
-Cuando el usuario tenga dominio, preguntar y actualizar:
-1. **Reemplazar `kmmata.github.io/TheVGCPoke`** en:
-   - `index.html`: canonical URL, og:url, og:image, twitter:image
-   - `robots.txt`: Sitemap URL
-   - `sitemap.xml`: `<loc>` URL
-2. **Crear `og-image.png`** (1200x630px) — Imagen para redes sociales con logo/nombre de la app
-3. **Crear `apple-touch-icon.png`** (180x180px) — Icono para dispositivos Apple
-4. **Verificar Google Search Console** — Registrar dominio y enviar sitemap
+### Pendiente
+1. **Crear `og-image.png`** (1200x630px) — Imagen para redes sociales con logo/nombre de la app
+2. **Crear `apple-touch-icon.png`** (180x180px) — Icono para dispositivos Apple
+3. **Bing Webmaster Tools** — Registrar sitio y enviar sitemap
+4. **Backlinks** — Compartir en comunidades Pokémon para mejorar autoridad de dominio
 5. **Considerar bilingual SEO real** — Si se quiere posicionar en ES y EN, crear rutas `/es/` y `/en/` con hreflang tags (actualmente solo JS language switching, no indexable por buscadores)
-6. **Añadir sitemap para builder y calculator** — Incluir `/builder` y `/calc` en `sitemap.xml`
 
 ---
 
