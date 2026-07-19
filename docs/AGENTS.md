@@ -205,11 +205,14 @@ User authentication and profile management using `localStorage`. No server-side 
 
 ### `js/translations.js` — PokeTranslations
 
-**Exports:** `{ translateSpecies, translateMove, translateItem, translateAbility, translateNature, translateType, translatePokemon, translateTeam, fetchPokemonSprite, fetchPokemonTypes, fetchMoveType, fetchMoveDescription, getTypeColor }`
+**Exports:** `{ translateSpecies, translateMove, translateItem, translateAbility, translateNature, translateType, translatePokemon, translateTeam, fetchPokemonSprite, fetchPokemonTypes, fetchMoveType, fetchMoveDescription, getTypeColor, preloadCategories, translateQueryToEnglish, searchSpanish }`
 
 - Fetches translated names from PokéAPI (`/api/v2/{category}/{name}` → `names[]`)
-- **Cache:** In-memory by category (`species`, `move`, `item`, `ability`, `type`), keyed by normalized slug
+- **Cache:** In-memory by category (`species`, `move`, `item`, `ability`, `type`), keyed by normalized slug. **Persisted to `localStorage.tsTranslationsCache_v2`** so translations survive reloads (loaded via `_loadPersisted()` at module init). `STORAGE_KEY` was bumped to `_v2` to invalidate old caches whose `esToEnIndex` keys had word separators stripped (broke per-word ES search).
+- **Precache:** `preloadCategories(lists, onProgress)` eagerly loads species/items/moves/abilities from `RegulationMB.LEGAL_*` (and unique Pokémon abilities from `LEGAL_POKEMON`) into the cache **on page init, always** (not gated by language). This makes autocomplete proposals instant and available offline. Both `builder.js` and `calc.js` call `ensureTranslationsLoaded()` at init.
 - **Languages:** Supports `'es'` (Spanish) and `'en'` (English)
+- **English formatting:** `translateAbility`/`translateMove`/`translateItem`/`translateSpecies` in `'en'` return the **pretty / Title-Case name** (e.g. `"Solar Power"`, `"Fire Blast"`), NOT the raw PokéAPI slug (`"solar-power"`). `_fetchTranslatedName` calls `_prettyName()` for `lang === 'en'`; if the entry is already cached (from precache) it returns the stored pretty `en` value. This keeps calc and builder consistent (both show Bonito names in English).
+- **Bidirectional index:** `esToEnIndex[category][normalizedEsName] = englishName` built from cached entries. Keys preserve word separators (`_normWords`), so compound names like `rayo confuso` can be matched word-by-word. `translateQueryToEnglish(category, query)` maps a full Spanish query back to its canonical English name (returns `query` unchanged if not found). `searchSpanish(category, query, limit)` returns matching English names when the query is a prefix of the full name OR of any individual word — used by move autocomplete so ES behaves like EN (e.g. `confuso` → `Rayo Confuso`).
 - **Natures:** Local mapping (25 natures, ES↔EN), no API call needed
 - **Types:** Local mapping (18 types + Stellar, ES↔EN), no API call needed
 - `translateTeam(team, lang)` → Returns new array with translated Pokémon objects
@@ -224,10 +227,11 @@ User authentication and profile management using `localStorage`. No server-side 
 - `TYPE_COLORS` — Map of 18 types + Stellar to hex colors for move type badges
 
 **Translation functions:**
-- `translateSpecies(name, lang)` → Translated species name (async, PokéAPI)
-- `translateMove(name, lang)` → Translated move name (async, PokéAPI)
-- `translateItem(name, lang)` → Translated item name (async, PokéAPI)
-- `translateAbility(name, lang)` → Translated ability name (async, PokéAPI)
+- `translateSpecies(name, lang)` → Translated species name (async, PokéAPI). In `'en'` returns the pretty name.
+- `translateMove(name, lang)` → Translated move name (async, PokéAPI). In `'en'` returns the pretty name (Title Case, e.g. `"Fire Blast"`).
+- `translateItem(name, lang)` → Translated item name (async, PokéAPI). In `'en'` returns the pretty/English name.
+- `translateAbility(name, lang)` → Translated ability name (async, PokéAPI). In `'en'` returns the pretty name (e.g. `"Solar Power"`), never the raw slug.
+- `translateQueryToEnglish(category, query)` → Maps a Spanish query to its canonical English name via `esToEnIndex` (returns `query` unchanged if not found).
 - `translateNature(name, lang)` → Translated nature name (sync, local dict)
 - `translateType(name, lang)` → Translated type name (sync, local dict)
 
@@ -518,7 +522,7 @@ User creates team in Builder UI
 - **Pokemon:** `RegulationMB.searchPokemon(q)` — all 226 legal Pokémon on focus, filtered by name as you type
 - **Item:** `RegulationMB.searchItems(q)` — all 148 legal items on focus, filtered as you type
 - **Ability:** Filters against Pokémon's `_apiData.legalAbilities` (or `_apiData.abilities` fallback). Empty query shows all abilities for the selected Pokémon. Requires species to be selected first
-- **Moves:** `RegulationMB.searchMoves(q)` filtered by legal moves ∩ Pokémon learnset. Empty query shows all learnable moves
+- **Moves:** In ES mode, `PokeTranslations.searchSpanish('move', q, 30)` proposes matching moves (prefix of full name OR any word); falls back to `RegulationMB.searchMoves(q)` if the index is still precaching. In EN mode, `RegulationMB.searchMoves(q)`. Always filtered by legal moves ∩ Pokémon learnset. Empty query shows all learnable moves.
 - Search functions in `regulation.js` return full lists when query is empty (no limit parameter required)
 
 ---
@@ -615,7 +619,10 @@ User selects Pokémon on either panel
   - `state.selectedMove` — Currently selected move for detailed view
   - `state.lang` — Language preference (ES/EN)
 - **Features:**
-  - Autocomplete inputs for species, item, ability, moves (uses RegulationMB search functions)
+  - Autocomplete inputs for species, item, ability, moves (uses `setupCalcAutocomplete`, the same Showdown-style helper used by the builder: focus shows all valid options, typing filters, `mousedown` select, Arrow/Enter/Escape keyboard nav)
+  - **Species / Item / Moves:** proposals come from `RegulationMB.search*` (all legal options on focus, filtered as you type). In ES mode moves use `PokeTranslations.searchSpanish('move', q, 30)` (prefix of full name OR any word) with fallback to `RegulationMB.searchMoves(q)`. Moves are filtered by legal moves ∩ the selected Pokémon's learnset (`_apiData.legalMoves`).
+  - **Ability:** proposals come ONLY from the selected Pokémon's legal abilities (`_apiData.legalAbilities` or `_apiData.abilities` fallback) — never the whole game list. Hidden abilities are flagged with a `"Hidden"` (EN) / `"Oculta"` (ES) sub-label. On focus (empty query) all of that Pokémon's abilities are offered (matching builder behavior — no auto-fill of the 4 moves on species select).
+  - **Mega evolution:** Activating a mega reloads `_apiData` from the mega forme (`ChampionsAPI.fetchPokemonFull("<species>-mega[-x/y]")`) so the ability autocomplete proposes the **mega's** abilities. The base `_apiData` is preserved in `origApiData` and restored on deactivate. `syncUIToState()` is async and always renders the ability via `translateAbility(..., lang)` (pretty name in EN, translated in ES).
   - Stat display with SP sliders and nature selection
   - Field condition toggles (weather, terrain, screens, format)
   - Real-time damage calculation on any input change
@@ -800,6 +807,36 @@ Where modifiers are applied in this order:
 - **Builder page**: Fixed age-division chip active state (`.gender-btn` → `.chip-btn`), added `--transition-slow` variable
 - **Calc page**: Fixed theme persistence bug (light theme not restored from localStorage)
 
+### 29. Calc Autocomplete Inconsistent With Builder (FIXED)
+**Problem:** The damage calculator (`calc.js`) had its own autocomplete logic that differed from the builder: it mixed ALL game abilities into the ability autocomplete (not just the selected Pokémon's), didn't mark hidden abilities, didn't show pretty/translated labels on focus, and used raw PokéAPI slugs in English (`solar-power`) instead of Bonito names (`Solar Power`).
+**Fix:**
+- Replaced the per-field calc autocomplete bindings (`bindSpeciesInputs/bindAbilityInputs/bindItemInputs/bindMoveInputs`) with `setupCalcAutocomplete` — the same Showdown-style helper the builder uses (focus shows all valid options, typing filters, `mousedown` select, Arrow/Enter/Escape nav).
+- **Ability autocomplete** now proposes ONLY the selected Pokémon's legal abilities (`_apiData.legalAbilities`), with hidden abilities flagged (`"Hidden"`/`"Oculta"`), matching builder exactly. Removed the old `commonAbilities` "all game abilities" list.
+- Labels render via `PokeTranslations.translateAbility/translateMove/translateItem(..., lang)` so EN shows Bonito names and ES shows translations. `syncUIToState()` made async and always translates the ability.
+
+### 30. Calc Mega Evolution Ability Proposals (FIXED)
+**Problem:** When a mega evolution was activated in the calculator, the ability autocomplete still proposed the BASE forme's abilities (because `_apiData` was the base forme), and the ability field showed the raw English slug instead of the translated/Bonito name.
+**Fix:**
+- `toggleMega()` now reloads `_apiData` from the mega forme (`ChampionsAPI.fetchPokemonFull("<species>-mega[-x/-y]")`) when activated, so the ability autocomplete proposes the mega's abilities. The base `_apiData` is saved to `origApiData` and restored on deactivate (and cleared in `updateMegaUI` on species change).
+- `syncUIToState()` (now async) renders the mega ability via `translateAbility(..., lang)` (Bonito in EN, translated in ES).
+
+### 31. Calc Imported Abilities Showed Raw Slugs (FIXED)
+**Problem:** Loading a team into the calculator (`loadParsedPokemon`) set the ability field directly to the imported raw value (e.g. Showdown `solar-power`) without formatting or translation, so non-Bonito / Spanish-untranslated names appeared.
+**Fix:**
+- Import now normalizes the ability via `normalizeAbilityToEnglish(p.ability, s)` (matches against the Pokémon's `_apiData.legalAbilities` for the canonical Bonito name, falls back to `translateQueryToEnglish`, then Title-Cases) and renders it through `translateAbility(..., lang)`.
+
+### 32. English Names Rendered as Raw PokéAPI Slugs (FIXED)
+**Problem:** `translateAbility`/`translateMove`/`translateItem`/`translateSpecies` returned the raw PokéAPI slug in English (e.g. `solar-power`, `fire-blast`), so the calculator and any EN context showed unformatted names, inconsistent with the builder which showed Bonito names.
+**Fix:**
+- In `translations.js`, `_fetchTranslatedName()` now returns `_prettyName(englishName)` for `lang === 'en'` (Title-Case, hyphens→spaces). `_prettyName()` added. Because precache stores the Bonito `en` value, cached entries still return the stored pretty name. This makes `translateAbility("solar-power", "en")` → `"Solar Power"` everywhere (calc + builder), guaranteeing consistency.
+
+### 33. Spanish Move Autocomplete Only Matched First Word (FIXED)
+**Problem:** In ES mode, move autocomplete (builder + calc) proposed moves correctly when typing the *first* word of a compound Spanish name (e.g. `rayo` → `Rayo Confuso`), but typing a *later* word found nothing (`confuso` → no results). English worked for any word because `RegulationMB.searchMoves()` does `.includes(q)` on the full English name. The original ES path used `translateQueryToEnglish('move', q)` which only maps the *full* term and then searches in English — partial/word queries never matched.
+**Fix:**
+- Added `searchSpanish(category, query, limit)` in `translations.js` that iterates `esToEnIndex` and returns the matching English names when the normalized query is either a **prefix of the full name** OR a **prefix of any individual word** (so `confuso` finds `Rayo Confuso`, matching EN behavior). Uses `_normWords()` (lowercases + keeps word separators) so compound names can be split; the `esToEnIndex` keys are now built with `_normWords` (spaces preserved) instead of `_normStr` (spaces stripped) at every insert point (`_loadPersisted`, `preloadCategories`, `_fetchTranslatedName`).
+- `builder.js` (`setupAutocomplete` moves) and `calc.js` (`setupCalcAutocomplete` moves) now call `PokeTranslations.searchSpanish('move', q, 30)` when in ES; if it returns nothing (index still precaching) they fall back to `RegulationMB.searchMoves(q)` so English queries / not-yet-translated names still work.
+- **Bumped `STORAGE_KEY` from `tsTranslationsCache` → `tsTranslationsCache_v2`** to invalidate old caches that stored index keys without word separators (those made `confuso` impossible to match). The precache rebuilds automatically on next load.
+
 ---
 
 ## Bilingual System
@@ -841,6 +878,8 @@ All translatable UI elements use dual attributes:
 - `STR` dictionary (16 keys) with `t(key)` helper function
 - `applyLang()` swaps `data-es`/`data-en` content + placeholders + titles
 - All 4 autocomlates translated (species, moves, abilities, items) via `async` + `Promise.all` + `PokeTranslations`
+- **Pretty names in English:** Autocomplete labels, `syncUIToState()`, and `selectPokemon()` all render abilities/moves/items via `PokeTranslations.translateAbility/translateMove/translateItem(..., lang)` — so in `'en'` they show the Bonito form (`"Solar Power"`, `"Fire Blast"`) consistent with the builder, never raw PokéAPI slugs.
+- `ensureTranslationsLoaded()` runs at init to precache all categories (see Bilingual System above).
 - `populateTypeSelects()` uses `PokeTranslations.translateType()`
 - `populateNatureSelects()` uses `PokeTranslations.translateNature()`
 - Mega form select uses `t('megaSelectForm')`
@@ -900,12 +939,13 @@ All translatable UI elements use dual attributes:
 12. **Test gendered species:** Import or type "Basculegion (M)" in builder → verify species recognized, gender set to Male
 13. **Test F5 reload:** Build a team → press F5 → verify sprites, types, and stat preview all load correctly after page reload
 14. **Test damage calculator:** Go to /calc → select Pokémon on both panels → verify damage ranges match NCP reference calculator
-15. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB
+15. **Test calc autocomplete:** Type species/item/ability/moves → verify autocomplete shows legal options from RegulationMB. Ability list must show ONLY the selected Pokémon's abilities (hidden ones flagged), not all game abilities
 16. **Test calc stat display:** Select a Pokémon → verify HP, Atk, Def, Spa, Spd, Spe match expected values (SP + nature)
 17. **Test calc field conditions:** Toggle weather/terrain/screens → verify damage ranges update correctly
-18. **Test calc bilingual:** Toggle ES/EN → verify all UI labels translate correctly
+18. **Test calc bilingual:** Toggle ES/EN → verify all UI labels AND game data (species/items/abilities/moves) translate; in EN verify Bonito names (e.g. "Solar Power"), never raw slugs
 19. **Test calc dark mode:** Toggle dark mode → verify calculator renders correctly (synced with main page preference)
 20. **Test calc light mode:** Toggle to light theme → verify calculator renders correctly (no white-on-white)
+21. **Test calc mega abilities:** Select a Pokémon with a mega (e.g. Charizard) → activate mega → verify ability autocomplete proposes the MEGA's ability (e.g. "Drought" for Y, "Tough Claws" for X), and the field shows the Bonito/translated name
 21. **Template PDF:** `play-pokemon-vg-team-list.pdf` is the source of truth for layout. It's loaded at runtime and used as a background. **Do not modify this file.**
 22. **Auth system:** `auth.js` exposes `PokeAuth` global. All auth logic (register, login, profile, session) goes through this module. CSS in `auth.css`. Auth container `#authContainer` in both page headers.
 23. **Reference images:** `docs/STAFF.png`, `docs/JUGADOR.png` are visual references only

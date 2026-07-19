@@ -90,9 +90,25 @@ const CalcApp = (() => {
 
   // ─── Initialize ─────────────────────────────────────────────────────
 
+  let _preloadStarted = false;
+
+  function ensureTranslationsLoaded() {
+    if (_preloadStarted) return;
+    _preloadStarted = true;
+    const abilities = [...new Set(RegulationMB.LEGAL_POKEMON.flatMap(p => p.abilities || []))];
+    const lists = {
+      species: RegulationMB.LEGAL_POKEMON.map(p => p.name),
+      item: RegulationMB.LEGAL_ITEMS,
+      move: RegulationMB.LEGAL_MOVES,
+      ability: abilities,
+    };
+    PokeTranslations.preloadCategories(lists).catch(() => {});
+  }
+
   function init() {
     initTheme();
     initLang();
+    ensureTranslationsLoaded();
     initDrawer();
     populateTypeSelects();
     populateNatureSelects();
@@ -194,6 +210,42 @@ const CalcApp = (() => {
     ['left','right'].forEach(side => updateMegaUI(side));
     // Re-render results with translated descriptions
     recalcAll();
+    retranslateInputs();
+  }
+
+  async function retranslateInputs() {
+    const lang = state.lang;
+    for (const side of ['left', 'right']) {
+      const cap = capitalize(side);
+      const s = state[side];
+      // Species
+      const speciesInput = $(`#species${cap}`);
+      if (speciesInput && s.species) {
+        speciesInput.value = lang === 'es' ? await PokeTranslations.translateSpecies(s.species, lang) : s.species;
+      }
+      // Ability
+      const abilityInput = $(`#ability${cap}`);
+      if (abilityInput && s.ability) {
+        abilityInput.value = lang === 'es' ? await PokeTranslations.translateAbility(s.ability, lang) : s.ability;
+      }
+      // Item
+      const itemInput = $(`#item${cap}`);
+      if (itemInput && s.item) {
+        itemInput.value = lang === 'es' ? await PokeTranslations.translateItem(s.item, lang) : s.item;
+      }
+      // Moves
+      const panel = $(`#panel${cap}`);
+      if (panel) {
+        const moveInputs = panel.querySelectorAll('.calc-move-input');
+        for (const input of moveInputs) {
+          const idx = parseInt(input.dataset.moveidx);
+          const m = s.moves[idx];
+          if (m) {
+            input.value = lang === 'es' ? await PokeTranslations.translateMove(m, lang) : m;
+          }
+        }
+      }
+    }
   }
 
   // ─── Populate type selects ─────────────────────────────────────────
@@ -326,55 +378,108 @@ const CalcApp = (() => {
     });
   }
 
+  // ─── Autocomplete System (mismo comportamiento que builder) ───
+
+  function setupCalcAutocomplete(inputId, listId, fetchFn, onSelect) {
+    const $input = typeof inputId === 'string' ? $(inputId) : inputId;
+    const $list = typeof listId === 'string' ? $(listId) : listId;
+    if (!$input || !$list) return;
+
+    let selectedIdx = -1;
+    let items = [];
+    let seq = 0;
+
+    async function showList(query) {
+      const mySeq = ++seq;
+      const fetched = await fetchFn(query);
+      if (mySeq !== seq) return;
+      items = fetched;
+      if (items.length === 0) { $list.classList.remove('visible'); return; }
+      selectedIdx = -1;
+      $list.innerHTML = items.map((it, i) => `
+        <div class="calc-ac-item" data-index="${i}">
+          ${it.sprite ? `<img class="ac-sprite" src="${it.sprite}" alt="${it.name || ''}">` : ''}
+          <span class="ac-name">${it.label}</span>
+          ${it.sub ? `<span class="ac-types"><span class="calc-ac-type-badge" style="background:#334155;">${it.sub}</span></span>` : ''}
+        </div>`).join('');
+      $list.classList.add('visible');
+
+      $list.querySelectorAll('.calc-ac-item').forEach(el => {
+        el.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const idx = parseInt(el.dataset.index);
+          onSelect(items[idx]);
+          $list.classList.remove('visible');
+          $input.value = items[idx].label;
+        });
+      });
+    }
+
+    $input.addEventListener('focus', () => {
+      showList($input.value.trim());
+    });
+
+    $input.addEventListener('input', () => {
+      showList($input.value.trim());
+    });
+
+    $input.addEventListener('keydown', (e) => {
+      if (!$list.classList.contains('visible')) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
+        updateSelection($list, selectedIdx);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIdx = Math.max(selectedIdx - 1, 0);
+        updateSelection($list, selectedIdx);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedIdx >= 0 && items[selectedIdx]) {
+          onSelect(items[selectedIdx]);
+          $list.classList.remove('visible');
+          $input.value = items[selectedIdx].label;
+        }
+      } else if (e.key === 'Escape') {
+        $list.classList.remove('visible');
+      }
+    });
+
+    $input.addEventListener('blur', () => {
+      setTimeout(() => $list.classList.remove('visible'), 150);
+    });
+  }
+
+  function updateSelection($list, idx) {
+    $list.querySelectorAll('.calc-ac-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+  }
+
   // ─── Species autocomplete ──────────────────────────────────────────
 
   function bindSpeciesInputs() {
     ['Left','Right'].forEach(side => {
-      const input = $(`#species${side}`);
-      const ac = $(`#autocomplete${side}`);
       const s = side.toLowerCase();
-
-      input.addEventListener('input', async () => {
-        const q = input.value.trim();
-        if (q.length < 1) { ac.classList.remove('visible'); return; }
-        const results = RegulationMB.searchPokemon(q, 8);
-        if (results.length === 0) { ac.classList.remove('visible'); return; }
-        ac.innerHTML = '';
-        const lang = state.lang;
-        const names = lang === 'en' ? results.map(r => r.name) :
-          await Promise.all(results.map(r => PokeTranslations.translateSpecies(r.name, lang)));
-        results.forEach((p, i) => {
-          const div = document.createElement('div');
-          div.className = 'calc-ac-item';
-          const typeBadges = p.types.map(t =>
-            `<span class="calc-ac-type-badge" style="background:var(--type-${t.toLowerCase()})">${PokeTranslations.translateType(t, lang)}</span>`
-          ).join(' ');
-          div.innerHTML = `<span>${names[i]}</span> ${typeBadges}`;
-          div.addEventListener('click', () => {
-            input.value = names[i];
-            ac.classList.remove('visible');
-            selectPokemon(s, p.name);
-          });
-          ac.appendChild(div);
-        });
-        ac.classList.add('visible');
-      });
-
-      input.addEventListener('focus', () => {
-        if (input.value.trim().length >= 1) {
-          input.dispatchEvent(new Event('input'));
-        }
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!ac.contains(e.target) && e.target !== input) {
-          ac.classList.remove('visible');
-        }
+      setupCalcAutocomplete(`#species${side}`, `#autocomplete${side}`, async (q) => {
+        const enQ = state.lang === 'es' ? PokeTranslations.translateQueryToEnglish('species', q) : q;
+        const results = RegulationMB.searchPokemon(enQ);
+        const items = await Promise.all(results.map(async p => ({
+          label: state.lang === 'es' ? await PokeTranslations.translateSpecies(p.name, state.lang) : p.name,
+          _enLabel: p.name,
+          sub: p.types.join(' / '),
+          data: p,
+        })));
+        return items;
+      }, async (selected) => {
+        const input = $(`#species${side}`);
+        input.value = selected.label;
+        selectPokemon(s, selected._enLabel);
       });
     });
   }
 
-  function selectPokemon(side, name) {
+  async function selectPokemon(side, name) {
     const data = RegulationMB.getPokemonData(name);
     if (!data) return;
     const s = state[side];
@@ -383,6 +488,12 @@ const CalcApp = (() => {
     s.types = [...data.types];
     s.baseStats = { ...data.baseStats };
     s.ability = data.abilities[0] || '';
+
+    // Load full legal data from API (abilities + moves)
+    try {
+      const apiData = await ChampionsAPI.fetchPokemonFull(name);
+      if (apiData) s._apiData = apiData;
+    } catch {}
 
     // Update mega UI
     updateMegaUI(side);
@@ -402,16 +513,16 @@ const CalcApp = (() => {
     $(`#baseSpe${capitalize(side)}`).value = s.baseStats.spe;
 
     // Ability
-    $(`#ability${capitalize(side)}`).value = s.ability;
+    const abilityInput = $(`#ability${capitalize(side)}`);
+    if (abilityInput) {
+      abilityInput.value = state.lang === 'es' ? await PokeTranslations.translateAbility(s.ability, state.lang) : s.ability;
+    }
 
     // Load sprite
     loadSprite(side, name);
 
     // Load weight for variable-power moves
     loadWeight(side, name);
-
-    // Auto-fill moves if empty
-    autoFillMoves(side, name);
 
     recalcStats(side);
     recalcAll();
@@ -435,12 +546,6 @@ const CalcApp = (() => {
     if (weight) state[side].weight = weight;
   }
 
-  function autoFillMoves(side, name) {
-    const s = state[side];
-    if (s.moves.some(m => m !== '')) return; // don't overwrite if already has moves
-    // Suggest 4 common moves (empty for now — user fills manually)
-  }
-
   // ─── Move autocomplete ─────────────────────────────────────────────
 
   function bindMoveInputs() {
@@ -449,53 +554,45 @@ const CalcApp = (() => {
       const side = input.closest('.calc-pokemon-panel').id === 'panelLeft' ? 'left' : 'right';
       const ac = input.parentElement.querySelector('.calc-autocomplete');
 
-      input.addEventListener('input', async () => {
-        const q = input.value.trim();
-        if (q.length < 1) { ac.classList.remove('visible'); return; }
-        const results = RegulationMB.searchMoves(q, 8);
-        if (results.length === 0) { ac.classList.remove('visible'); return; }
-        ac.innerHTML = '';
-        const lang = state.lang;
-        const names = lang === 'en' ? results.map(r => r) :
-          await Promise.all(results.map(m => PokeTranslations.translateMove(m, lang)));
-        results.forEach((m, i) => {
-          const div = document.createElement('div');
-          div.className = 'calc-ac-item';
+      setupCalcAutocomplete(input, ac, async (q) => {
+        let results;
+        if (state.lang === 'es') {
+          const esMatches = PokeTranslations.searchSpanish('move', q, 30);
+          results = esMatches.length ? esMatches : RegulationMB.searchMoves(q);
+        } else {
+          results = RegulationMB.searchMoves(q);
+        }
+        const apiData = state[side]._apiData;
+        if (apiData && apiData.legalMoves && apiData.legalMoves.length > 0) {
+          const legalSet = new Set(apiData.legalMoves.map(m => m.toLowerCase().replace(/[^a-z0-9]/g, '')));
+          results = results.filter(m => legalSet.has(m.toLowerCase().replace(/[^a-z0-9]/g, '')));
+        }
+        const items = await Promise.all(results.map(async m => {
           const moveData = CalcMoveData.getMoveData(m);
-          const typeBadge = moveData ? `<span class="calc-ac-type-badge" style="background:var(--type-${moveData.type.toLowerCase()})">${PokeTranslations.translateType(moveData.type, lang)}</span>` : '';
-          div.innerHTML = `<span>${names[i]}</span> ${typeBadge}`;
-          div.addEventListener('click', () => {
-            input.value = names[i];
-            ac.classList.remove('visible');
-            state[side].moves[idx] = m;
-            state[side].moveData[idx] = moveData;
-            // Update move type and category in UI
-            if (moveData) {
-              const row = input.closest('.calc-move-row');
-              row.querySelector('.calc-bp-input').value = moveData.bp;
-              row.querySelector('.calc-move-type-select').value = moveData.type;
-              row.querySelector('.calc-cat-select').value = moveData.category;
-            }
-            recalcAll();
-          });
-          ac.appendChild(div);
-        });
-        ac.classList.add('visible');
-      });
-
-      input.addEventListener('focus', () => {
-        if (input.value.trim().length >= 1) {
-          input.dispatchEvent(new Event('input'));
+          return {
+            label: state.lang === 'es' ? await PokeTranslations.translateMove(m, state.lang) : m,
+            _enLabel: m,
+            sub: moveData ? PokeTranslations.translateType(moveData.type, state.lang) : '',
+            data: moveData,
+          };
+        }));
+        return items;
+      }, (selected) => {
+        const m = selected._enLabel;
+        const moveData = selected.data;
+        input.value = selected.label;
+        state[side].moves[idx] = m;
+        state[side].moveData[idx] = moveData;
+        if (moveData) {
+          const row = input.closest('.calc-move-row');
+          row.querySelector('.calc-bp-input').value = moveData.bp;
+          row.querySelector('.calc-move-type-select').value = moveData.type;
+          row.querySelector('.calc-cat-select').value = moveData.category;
         }
+        recalcAll();
       });
 
-      document.addEventListener('click', (e) => {
-        if (!ac.contains(e.target) && e.target !== input) {
-          ac.classList.remove('visible');
-        }
-      });
-
-      // Also handle manual BP/type/category changes
+      // Handle manual BP/type/category changes
       const row = input.closest('.calc-move-row');
       row.querySelector('.calc-bp-input').addEventListener('change', () => {
         const base = CalcMoveData.getMoveData(state[side].moves[idx]);
@@ -623,76 +720,38 @@ const CalcApp = (() => {
 
   function bindAbilityInputs() {
     ['Left','Right'].forEach(side => {
-      const input = $(`#ability${side}`);
-      const ac = $(`#abilityAutocomplete${side}`);
       const s = side.toLowerCase();
 
-      const commonAbilities = [
-        'Intimidate', 'Levitate', 'Flash Fire', 'Water Absorb', 'Volt Absorb',
-        'Magic Guard', 'Trace', 'Natural Cure', 'Regenerator', 'Prankster',
-        'Technician', 'Sheer Force', 'Reckless', 'Iron Fist', 'Tough Claws',
-        'Multiscale', 'Rough Skin', 'Sand Veil', 'Snow Cloak', 'Ice Body',
-        'Chlorophyll', 'Drought', 'Drizzle', 'Sand Stream', 'Snow Warning',
-        'Speed Boost', 'Moxie', 'Defiant', 'Competitive', 'Inner Focus',
-        'Sturdy', 'Shell Armor', 'Battle Armor', 'Filter', 'Solid Rock',
-        'Pure Power', 'Huge Power', 'Fur Coat', 'Marvel Scale', 'Unaware',
-        'Protean', 'Libero', 'Adaptability', 'Hustle', 'Guts',
-        'Thick Fat', 'Poison Heal', 'Magic Bounce', 'Infiltrator',
-        'Sap Sipper', 'Dry Skin', 'Rain Dish', 'Ice Body',
-        'Anticipation', 'Volt Absorb', 'Motor Drive', 'Lightning Rod',
-        'Sand Rush', 'Slush Rush', 'Swift Swim', 'Chlorophyll',
-        'Parental Bond', 'Huge Power', 'Pure Power',
-        'Good as Gold', 'Purifying Salt', 'Earth Eater',
-        'Zero to Hero', 'Disguise', 'Wandering Spirit',
-        'Shadow Tag', 'Arena Trap', 'Magnet Pull',
-        'Prankster', 'Triage', 'Psychic Surge',
-        'Grassy Surge', 'Electric Surge', 'Misty Surge',
-        'Protosynthesis', 'Quark Drive',
-        'Supreme Overlord', 'Sharpness',
-        'Costar', 'Embody Aspect',
-      ];
+      setupCalcAutocomplete(`#ability${side}`, `#abilityAutocomplete${side}`, async (q) => {
+        const enQ = (state.lang === 'es' ? PokeTranslations.translateQueryToEnglish('ability', q) : q).toLowerCase();
 
-      input.addEventListener('input', async () => {
-        const q = input.value.trim().toLowerCase();
-        if (q.length < 1) { ac.classList.remove('visible'); return; }
-
-        // Filter from common abilities + species abilities
-        const data = RegulationMB.getPokemonData(state[s].species);
-        let pool = [...commonAbilities];
-        if (data && data.abilities) {
-          pool = [...new Set([...data.abilities, ...pool])];
+        const apiData = state[s]._apiData;
+        let pool = [];
+        if (apiData && (apiData.legalAbilities.length > 0 || apiData.abilities.length > 0)) {
+          pool = (apiData.legalAbilities.length > 0 ? apiData.legalAbilities : apiData.abilities);
+        } else {
+          const data = RegulationMB.getPokemonData(state[s].species);
+          if (data && data.abilities) pool = data.abilities.map(a => ({ name: a, isHidden: false }));
         }
 
-        const results = pool.filter(a => a.toLowerCase().includes(q)).slice(0, 8);
-        if (results.length === 0) { ac.classList.remove('visible'); return; }
-        ac.innerHTML = '';
-        const lang = state.lang;
-        const names = lang === 'en' ? results.map(r => r) :
-          await Promise.all(results.map(a => PokeTranslations.translateAbility(a, lang)));
-        results.forEach((a, i) => {
-          const div = document.createElement('div');
-          div.className = 'calc-ac-item';
-          div.textContent = names[i];
-          div.addEventListener('click', () => {
-            input.value = names[i];
-            ac.classList.remove('visible');
-            state[s].ability = a;
-            recalcAll();
-          });
-          ac.appendChild(div);
-        });
-        ac.classList.add('visible');
-      });
-
-      input.addEventListener('change', () => {
-        state[s].ability = input.value.trim();
+        const results = pool.filter(a => a.name.toLowerCase().includes(enQ)).slice(0, 8);
+        const items = await Promise.all(results.map(async a => ({
+          label: await PokeTranslations.translateAbility(a.name, state.lang),
+          _enLabel: a.name,
+          sub: a.isHidden ? (state.lang === 'es' ? 'Oculta' : 'Hidden') : '',
+        })));
+        return items;
+      }, (selected) => {
+        const input = $(`#ability${side}`);
+        input.value = selected.label;
+        state[s].ability = selected._enLabel;
         recalcAll();
       });
 
-      document.addEventListener('click', (e) => {
-        if (!ac.contains(e.target) && e.target !== input) {
-          ac.classList.remove('visible');
-        }
+      const input = $(`#ability${side}`);
+      input.addEventListener('change', () => {
+        state[s].ability = input.value.trim();
+        recalcAll();
       });
     });
   }
@@ -701,43 +760,28 @@ const CalcApp = (() => {
 
   function bindItemInputs() {
     ['Left','Right'].forEach(side => {
-      const input = $(`#item${side}`);
-      const ac = $(`#itemAutocomplete${side}`);
       const s = side.toLowerCase();
 
-      input.addEventListener('input', async () => {
-        const q = input.value.trim();
-        if (q.length < 1) { ac.classList.remove('visible'); return; }
-        const results = RegulationMB.searchItems(q, 8);
-        if (results.length === 0) { ac.classList.remove('visible'); return; }
-        ac.innerHTML = '';
-        const lang = state.lang;
-        const names = lang === 'en' ? results.map(r => r) :
-          await Promise.all(results.map(item => PokeTranslations.translateItem(item, lang)));
-        results.forEach((item, i) => {
-          const div = document.createElement('div');
-          div.className = 'calc-ac-item';
-          div.textContent = names[i];
-          div.addEventListener('click', () => {
-            input.value = names[i];
-            ac.classList.remove('visible');
-            state[s].item = item;
-            recalcAll();
-          });
-          ac.appendChild(div);
-        });
-        ac.classList.add('visible');
-      });
-
-      input.addEventListener('change', () => {
-        state[s].item = input.value.trim();
+      setupCalcAutocomplete(`#item${side}`, `#itemAutocomplete${side}`, async (q) => {
+        const enQ = state.lang === 'es' ? PokeTranslations.translateQueryToEnglish('item', q) : q;
+        const results = RegulationMB.searchItems(enQ);
+        const items = await Promise.all(results.map(async item => ({
+          label: state.lang === 'es' ? await PokeTranslations.translateItem(item, state.lang) : item,
+          _enLabel: item,
+          sub: '',
+        })));
+        return items;
+      }, (selected) => {
+        const input = $(`#item${side}`);
+        input.value = selected.label;
+        state[s].item = selected._enLabel;
         recalcAll();
       });
 
-      document.addEventListener('click', (e) => {
-        if (!ac.contains(e.target) && e.target !== input) {
-          ac.classList.remove('visible');
-        }
+      const input = $(`#item${side}`);
+      input.addEventListener('change', () => {
+        state[s].item = input.value.trim();
+        recalcAll();
       });
     });
   }
@@ -817,13 +861,20 @@ const CalcApp = (() => {
       s.origTypes = [...s.types];
       s.origAbility = s.ability;
       s.origWeight = s.weight;
+      s.origApiData = s._apiData;
       s.baseStats = { ...megaData.baseStats };
       s.types = [...megaData.types];
       s.ability = megaData.ability;
       s.mega = true;
-      // Fetch mega weight asynchronously
+      // Fetch mega weight and legal abilities (mega form) asynchronously
       const megaName = s.species + '-mega' + (s.megaForm ? '-' + s.megaForm.toLowerCase() : '');
       ChampionsAPI.fetchWeight(megaName).then(w => { if (w) s.weight = w; });
+      ChampionsAPI.fetchPokemonFull(megaName).then(apiData => {
+        if (apiData && s.mega) {
+          s._apiData = apiData;
+          syncUIToState(side);
+        }
+      });
     } else {
       if (s.origBaseStats) {
         s.baseStats = { ...s.origBaseStats };
@@ -836,6 +887,10 @@ const CalcApp = (() => {
       s.origTypes = null;
       s.origAbility = null;
       s.origWeight = 0;
+      if (s.origApiData) {
+        s._apiData = s.origApiData;
+        s.origApiData = null;
+      }
     }
 
     syncUIToState(side);
@@ -860,6 +915,7 @@ const CalcApp = (() => {
     s.origBaseStats = null;
     s.origTypes = null;
     s.origAbility = null;
+    s.origApiData = null;
     checkbox.checked = false;
 
     const canMega = RegulationMB.canMegaEvolve(s.species);
@@ -879,7 +935,7 @@ const CalcApp = (() => {
     }
   }
 
-  function syncUIToState(side) {
+  async function syncUIToState(side) {
     const s = state[side];
     const cap = capitalize(side);
 
@@ -905,7 +961,10 @@ const CalcApp = (() => {
       $(`#megaForm${cap}`).value = s.megaForm;
     }
     $(`#nature${cap}`).value = s.nature;
-    $(`#ability${cap}`).value = s.ability;
+    const abilityInput = $(`#ability${cap}`);
+    if (abilityInput) {
+      abilityInput.value = s.ability ? await PokeTranslations.translateAbility(s.ability, state.lang) : '';
+    }
     $(`#item${cap}`).value = s.item;
     $(`#status${cap}`).value = s.status;
 
@@ -1323,12 +1382,12 @@ const CalcApp = (() => {
     };
   }
 
-  function loadParsedPokemon(side, p) {
+  async function loadParsedPokemon(side, p) {
     const s = state[side];
     const cap = capitalize(side);
 
     // Set species and base data
-    selectPokemon(side, p.species);
+    await selectPokemon(side, p.species);
 
     // Nature
     if (p.nature && RegulationMB.NATURES[p.nature]) {
@@ -1342,8 +1401,9 @@ const CalcApp = (() => {
 
     // Ability
     if (p.ability) {
-      s.ability = p.ability;
-      $(`#ability${cap}`).value = p.ability;
+      const enAbility = normalizeAbilityToEnglish(p.ability, s);
+      s.ability = enAbility;
+      $(`#ability${cap}`).value = lang === 'es' ? await PokeTranslations.translateAbility(enAbility, lang) : enAbility;
     }
 
     // Item
@@ -1400,6 +1460,19 @@ const CalcApp = (() => {
 
   function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function normalizeAbilityToEnglish(raw, s) {
+    if (!raw) return raw;
+    const q = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const pool = (s && s._apiData)
+      ? (s._apiData.legalAbilities.length > 0 ? s._apiData.legalAbilities : s._apiData.abilities)
+      : [];
+    const match = pool.find(a => a.name.toLowerCase().replace(/[^a-z0-9]/g, '') === q);
+    if (match) return match.name;
+    const esEn = PokeTranslations.translateQueryToEnglish('ability', raw);
+    if (esEn && esEn.toLowerCase().replace(/[^a-z0-9]/g, '') === q) return esEn;
+    return raw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   // ─── Boot ──────────────────────────────────────────────────────────

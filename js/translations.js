@@ -8,6 +8,44 @@ const PokeTranslations = (() => {
 
   const cache = { species: {}, move: {}, item: {}, ability: {}, type: {} };
 
+  const CATEGORY_API = {
+    species: 'pokemon',
+    move: 'move',
+    item: 'item',
+    ability: 'ability',
+  };
+
+  const STORAGE_KEY = 'tsTranslationsCache_v2';
+  const esToEnIndex = { species: {}, move: {}, item: {}, ability: {} };
+
+  function _loadPersisted() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      for (const cat of Object.keys(cache)) {
+        if (data[cat]) {
+          Object.assign(cache[cat], data[cat]);
+          for (const [key, entry] of Object.entries(data[cat])) {
+            if (entry && entry.es && entry._done && entry.en) esToEnIndex[cat][_normWords(entry.es)] = entry.en;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  function _persist() {
+    try {
+      const out = {};
+      for (const cat of Object.keys(cache)) out[cat] = cache[cat];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
+    } catch {}
+  }
+
+  function _normStr(s) {
+    return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
   const NATURES_ES = {
     'Hardy': 'Fuerte', 'Lonely': 'Huraña', 'Brave': 'Audaz', 'Adamant': 'Firme',
     'Naughty': 'Pícara', 'Bold': 'Osada', 'Docile': 'Dócil', 'Relaxed': 'Plácida',
@@ -37,7 +75,6 @@ const PokeTranslations = (() => {
   }
 
   async function _fetchTranslatedName(category, englishName, lang) {
-    if (lang === 'en') return englishName;
     const lc = _langCode(lang);
     const key = englishName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
@@ -47,18 +84,22 @@ const PokeTranslations = (() => {
       if (entry._done) return englishName;
     }
 
+    if (lang === 'en') return _prettyName(englishName);
+
     const slug = _normalizeForApi(category, englishName);
     try {
       const res = await fetch(`https://pokeapi.co/api/v2/${category}/${slug}`);
       if (!res.ok) { _markDone(category, key); return englishName; }
       const data = await res.json();
       const names = data.names || [];
-      const entry = {};
+      const entry = { en: englishName, key };
       for (const n of names) {
         if (n.language && n.language.name) entry[n.language.name] = n.name;
       }
       entry._done = true;
       cache[category][key] = entry;
+      if (entry.es) esToEnIndex[category][_normWords(entry.es)] = englishName;
+      _persist();
       return entry[lc] || englishName;
     } catch {
       _markDone(category, key);
@@ -69,6 +110,14 @@ const PokeTranslations = (() => {
   function _markDone(category, key) {
     if (!cache[category][key]) cache[category][key] = {};
     cache[category][key]._done = true;
+  }
+
+  function _prettyName(name) {
+    if (!name) return name;
+    return name
+      .toLowerCase()
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
   }
 
   function _normalizeForApi(category, name) {
@@ -116,22 +165,22 @@ const PokeTranslations = (() => {
   }
 
   async function translateSpecies(name, lang) {
-    if (!name || lang === 'en') return name;
+    if (!name) return name;
     return _fetchTranslatedName('species', name, lang);
   }
 
   async function translateMove(name, lang) {
-    if (!name || lang === 'en') return name;
+    if (!name) return name;
     return _fetchTranslatedName('move', name, lang);
   }
 
   async function translateItem(name, lang) {
-    if (!name || lang === 'en') return name;
+    if (!name) return name;
     return _fetchTranslatedName('item', name, lang);
   }
 
   async function translateAbility(name, lang) {
-    if (!name || lang === 'en') return name;
+    if (!name) return name;
     return _fetchTranslatedName('ability', name, lang);
   }
 
@@ -155,7 +204,6 @@ const PokeTranslations = (() => {
   }
 
   async function translateTeam(team, lang) {
-    if (lang === 'en') return team;
     return Promise.all(team.map(p => p ? translatePokemon(p, lang) : null));
   }
 
@@ -261,6 +309,84 @@ const PokeTranslations = (() => {
     return TYPE_COLORS[typeName] || '#68A090';
   }
 
+  function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function preloadCategories(lists, onProgress) {
+    const cats = ['species', 'item', 'ability', 'move'];
+    let total = 0;
+    let done = 0;
+    for (const cat of cats) {
+      const list = lists[cat] || [];
+      total += list.length;
+    }
+    for (const cat of cats) {
+      const list = lists[cat] || [];
+      const apiCat = CATEGORY_API[cat];
+      for (const englishName of list) {
+        const key = englishName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        if (cache[cat][key] && cache[cat][key]._done) {
+          done++;
+          continue;
+        }
+        try {
+          const res = await fetch(`https://pokeapi.co/api/v2/${apiCat}/${_normalizeForApi(cat, englishName)}`);
+          if (res.ok) {
+            const data = await res.json();
+            const entry = { en: englishName, key };
+            for (const n of (data.names || [])) {
+              if (n.language && n.language.name) entry[n.language.name] = n.name;
+            }
+            entry._done = true;
+            cache[cat][key] = entry;
+            if (entry.es) esToEnIndex[cat][_normWords(entry.es)] = englishName;
+          } else {
+            cache[cat][key] = { en: englishName, key, _done: true };
+          }
+        } catch {
+          cache[cat][key] = { en: englishName, key, _done: true };
+        }
+        done++;
+        if (onProgress) onProgress(done, total);
+        await _sleep(40);
+      }
+    }
+    _persist();
+  }
+
+  function translateQueryToEnglish(category, query) {
+    const q = _normStr(query);
+    if (!q) return query;
+    const en = esToEnIndex[category] && esToEnIndex[category][q];
+    return en || query;
+  }
+
+  // Normalize keeping word separators so we can match individual words.
+  function _normWords(s) {
+    return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  // Search by Spanish term. Returns matching English names so the caller
+  // can keep using the English-based data (searchMoves, etc.) while typing
+  // partial Spanish terms. Matches either a prefix of the full name OR any
+  // individual word (so "confuso" finds "Rayo Confuso" like "ace" finds
+  // "Aerial Ace").
+  function searchSpanish(category, query, limit) {
+    const q = _normStr(query);
+    if (!q) return [];
+    const full = _normWords(query).replace(/ /g, '');
+    const matches = [];
+    const seen = new Set();
+    for (const [esKey, en] of Object.entries(esToEnIndex[category] || {})) {
+      const words = esKey.split(' ');
+      const hit = esKey.replace(/ /g, '').startsWith(full) || words.some(w => w.startsWith(q));
+      if (hit) {
+        if (!seen.has(en)) { seen.add(en); matches.push(en); }
+        if (limit && matches.length >= limit) break;
+      }
+    }
+    return matches;
+  }
+
   const moveDescCache = {};
 
   async function fetchMoveDescription(moveName, lang) {
@@ -296,10 +422,12 @@ const PokeTranslations = (() => {
     }
   }
 
+  _loadPersisted();
+
   return {
     translateSpecies, translateMove, translateItem, translateAbility,
     translateNature, translateType, translatePokemon, translateTeam,
     fetchPokemonSprite, fetchPokemonTypes, fetchMoveType, fetchMoveDescription,
-    getTypeColor,
+    getTypeColor, preloadCategories, translateQueryToEnglish, searchSpanish,
   };
 })();

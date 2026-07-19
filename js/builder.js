@@ -92,7 +92,7 @@ const TeamBuilder = (() => {
   const $saveModal = document.getElementById('saveModal');
 
   // ─── Init ───
-  function init() {
+  async function init() {
     setupDrawer();
     renderTeamSlots();
     setupAgeDivision();
@@ -102,11 +102,27 @@ const TeamBuilder = (() => {
     setupTheme();
     setupClearAll();
     setupLanguage();
-    loadDraft();
+    ensureTranslationsLoaded();
+    await loadDraft();
     setupAuth();
   }
 
   // ─── Language Toggle ───
+  let _preloadStarted = false;
+
+  function ensureTranslationsLoaded() {
+    if (_preloadStarted) return;
+    _preloadStarted = true;
+    const abilities = [...new Set(RegulationMB.LEGAL_POKEMON.flatMap(p => p.abilities || []))];
+    const lists = {
+      species: RegulationMB.LEGAL_POKEMON.map(p => p.name),
+      item: RegulationMB.LEGAL_ITEMS,
+      move: RegulationMB.LEGAL_MOVES,
+      ability: abilities,
+    };
+    PokeTranslations.preloadCategories(lists).catch(() => {});
+  }
+
   function setupLanguage() {
     const btn = document.getElementById('builderLangToggle');
     if (!btn) return;
@@ -135,6 +151,7 @@ const TeamBuilder = (() => {
     if (drawerTitle) {
       drawerTitle.textContent = lang === 'es' ? 'Menú' : 'Menu';
     }
+    ensureTranslationsLoaded();
     translateAndRender();
   }
 
@@ -145,16 +162,12 @@ const TeamBuilder = (() => {
   }
 
   async function translateAndRender() {
-    if (currentLang === 'en') {
-      translatedTeam = new Array(TEAM_SIZE).fill(null);
-    } else {
-      translatedTeam = await Promise.all(
-        team.map(p => p && p.species ? PokeTranslations.translatePokemon(p, currentLang) : null)
-      );
-    }
+    translatedTeam = await Promise.all(
+      team.map(p => p && p.species ? PokeTranslations.translatePokemon(p, currentLang) : null)
+    );
     renderTeamSlots();
     if (activeSlot >= 0 && team[activeSlot]) {
-      renderEditor(team[activeSlot], activeSlot);
+      await renderEditor(team[activeSlot], activeSlot);
     } else {
       renderEditorEmpty();
     }
@@ -256,14 +269,14 @@ const TeamBuilder = (() => {
     }
   }
 
-  function selectSlot(index) {
+  async function selectSlot(index) {
     activeSlot = index;
     renderTeamSlots();
     if (team[index]) {
-      renderEditor(team[index], index);
+      await renderEditor(team[index], index);
     } else {
       team[index] = createEmptyPokemon();
-      renderEditor(team[index], index);
+      await renderEditor(team[index], index);
     }
   }
 
@@ -295,8 +308,12 @@ const TeamBuilder = (() => {
       </div>`;
   }
 
-  function renderEditor(pokemon, slotIndex) {
-    const dp = getDisplayPokemon(slotIndex) || pokemon;
+  async function renderEditor(pokemon, slotIndex) {
+    let dp = pokemon;
+    if (currentLang !== 'en' && pokemon && pokemon.species) {
+      dp = await PokeTranslations.translatePokemon(pokemon, currentLang);
+    }
+    dp = dp || pokemon;
     const typeArr = dp._types || pokemon._types || [];
     $editorTitle.textContent = `${t('validationSlot')} ${slotIndex + 1} — ${dp.species || t('newPokemon')}`;
     const html = `
@@ -461,28 +478,31 @@ const TeamBuilder = (() => {
   function setupEditorEvents(pokemon, slotIndex) {
     // Pokemon autocomplete
     setupAutocomplete('acPokemon', 'acPokemonList', async (q) => {
-      let results = RegulationMB.searchPokemon(q);
-      const { base } = RegulationMB.normalizeMegaName(q);
-      if (base !== q) {
+      const enQuery = currentLang === 'es' ? PokeTranslations.translateQueryToEnglish('species', q) : q;
+      let results = RegulationMB.searchPokemon(enQuery);
+      const { base } = RegulationMB.normalizeMegaName(enQuery);
+      if (base !== enQuery) {
         const baseResults = RegulationMB.searchPokemon(base);
         const existingNames = new Set(results.map(r => r.name));
         for (const r of baseResults) {
           if (!existingNames.has(r.name)) results.push(r);
         }
       }
-      return results.map(p => ({
-        label: p.name,
+      const items = await Promise.all(results.map(async p => ({
+        label: currentLang === 'es' ? await PokeTranslations.translateSpecies(p.name, currentLang) : p.name,
+        _enLabel: p.name,
         sub: p.types.join(' / '),
         sprite: '',
         data: p,
-      }));
+      })));
+      return items;
     }, async (selected) => {
       const rawQuery = document.getElementById('acPokemon').value.trim();
       const genderMatch = rawQuery.match(/\((M|F|N)\)/i);
       if (genderMatch) {
         pokemon.gender = genderMatch[1].toUpperCase() === 'N' ? 'NA' : genderMatch[1].toUpperCase() === 'F' ? 'Female' : 'Male';
       }
-      pokemon.species = selected.label;
+      pokemon.species = selected._enLabel || selected.label;
       pokemon._types = selected.data.types;
       pokemon._baseStats = selected.data.baseStats;
       const { megaStone } = RegulationMB.normalizeMegaName(rawQuery);
@@ -500,29 +520,42 @@ const TeamBuilder = (() => {
     });
 
     // Item autocomplete
-    setupAutocomplete('acItem', 'acItemList', (q) => {
-      return RegulationMB.searchItems(q).map(i => ({
-        label: i,
+    setupAutocomplete('acItem', 'acItemList', async (q) => {
+      const enQuery = currentLang === 'es' ? PokeTranslations.translateQueryToEnglish('item', q) : q;
+      const items = await Promise.all(RegulationMB.searchItems(enQuery).map(async i => ({
+        label: currentLang === 'es'
+          ? await PokeTranslations.translateItem(i, currentLang)
+          : await PokeTranslations.translateItem(i, 'en'),
+        _enLabel: i,
         sub: '',
-      }));
+      })));
+      return items;
     }, (selected) => {
-      pokemon.item = selected.label;
+      pokemon.item = selected._enLabel || selected.label;
       saveDraft();
       translateAndRender();
     });
 
     // Ability autocomplete
-    setupAutocomplete('acAbility', 'acAbilityList', (q) => {
+    setupAutocomplete('acAbility', 'acAbilityList', async (q) => {
       if (!pokemon.species || !pokemon._apiData) return [];
+      const enQuery = currentLang === 'es' ? PokeTranslations.translateQueryToEnglish('ability', q) : q;
       const apiAbilities = pokemon._apiData.legalAbilities.length > 0
         ? pokemon._apiData.legalAbilities
         : pokemon._apiData.abilities;
-      const nq = q.toLowerCase().replace(/[^a-z0-9]/g,'');
-      return apiAbilities
-        .filter(a => !nq || a.name.toLowerCase().replace(/[^a-z0-9]/g,'').includes(nq))
-        .map(a => ({ label: a.name, sub: a.isHidden ? 'Hidden' : '' }));
+      const nq = enQuery.toLowerCase().replace(/[^a-z0-9]/g,'');
+      const filtered = apiAbilities
+        .filter(a => !nq || a.name.toLowerCase().replace(/[^a-z0-9]/g,'').includes(nq));
+      const items = await Promise.all(filtered.map(async a => ({
+        label: currentLang === 'es'
+          ? await PokeTranslations.translateAbility(a.name, currentLang)
+          : await PokeTranslations.translateAbility(a.name, 'en'),
+        _enLabel: a.name,
+        sub: a.isHidden ? (currentLang === 'es' ? 'Oculta' : 'Hidden') : '',
+      })));
+      return items;
     }, (selected) => {
-      pokemon.ability = selected.label;
+      pokemon.ability = selected._enLabel || selected.label;
       saveDraft();
       translateAndRender();
     });
@@ -577,15 +610,28 @@ const TeamBuilder = (() => {
 
     // Moves autocomplete
     for (let mi = 0; mi < 4; mi++) {
-      setupAutocomplete(`move_${mi}`, `acMoveList_${mi}`, (q) => {
-        let moves = RegulationMB.searchMoves(q);
+      setupAutocomplete(`move_${mi}`, `acMoveList_${mi}`, async (q) => {
+        let moves;
+        if (currentLang === 'es') {
+          const esMatches = PokeTranslations.searchSpanish('move', q, 30);
+          moves = esMatches.length ? esMatches : RegulationMB.searchMoves(q);
+        } else {
+          moves = RegulationMB.searchMoves(q);
+        }
         if (pokemon._apiData && pokemon._apiData.legalMoves) {
           const legalSet = new Set(pokemon._apiData.legalMoves.map(m => m.toLowerCase().replace(/[^a-z0-9]/g,'')));
           moves = moves.filter(m => legalSet.has(m.toLowerCase().replace(/[^a-z0-9]/g,'')));
         }
-        return moves.map(m => ({ label: m, sub: '' }));
+        const items = await Promise.all(moves.map(async m => ({
+          label: currentLang === 'es'
+            ? await PokeTranslations.translateMove(m, currentLang)
+            : await PokeTranslations.translateMove(m, 'en'),
+          _enLabel: m,
+          sub: '',
+        })));
+        return items;
       }, (selected) => {
-        pokemon.moves[mi] = selected.label;
+        pokemon.moves[mi] = selected._enLabel || selected.label;
         saveDraft();
         translateAndRender();
       });
@@ -619,9 +665,13 @@ const TeamBuilder = (() => {
 
     let selectedIdx = -1;
     let items = [];
+    let seq = 0;
 
     async function showList(query) {
-      items = await fetchFn(query);
+      const mySeq = ++seq;
+      const fetched = await fetchFn(query);
+      if (mySeq !== seq) return;
+      items = fetched;
       if (items.length === 0) { $list.classList.remove('visible'); return; }
       selectedIdx = -1;
       $list.innerHTML = items.map((it, i) => `
@@ -786,7 +836,7 @@ const TeamBuilder = (() => {
     localStorage.setItem(STORAGE_KEY + '_draft', JSON.stringify(draft));
   }
 
-  function loadDraft() {
+  async function loadDraft() {
     try {
       const draft = JSON.parse(localStorage.getItem(STORAGE_KEY + '_draft'));
       if (draft && draft.team) {
@@ -807,7 +857,7 @@ const TeamBuilder = (() => {
         }
         renderTeamSlots();
         if (activeSlot >= 0 && team[activeSlot]) {
-          renderEditor(team[activeSlot], activeSlot);
+          await renderEditor(team[activeSlot], activeSlot);
         }
         validateTeam();
         translateAndRender();
