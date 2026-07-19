@@ -515,5 +515,37 @@ const CalcMoveData = (() => {
     return { ...data, name };
   }
 
-  return { MOVES, getMoveData };
+  // Live fallback: if a move isn't in the hardcoded DB, fetch it from PokéAPI
+  // (via ChampionsAPI) so the calculator supports every legal Champions move.
+  async function getMoveDataAsync(name) {
+    if (!name) return null;
+    const local = getMoveData(name);
+    if (local) return local;
+    if (typeof ChampionsAPI === 'undefined' || !ChampionsAPI.fetchMove) return null;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const api = await ChampionsAPI.fetchMove(slug);
+    if (!api) return null;
+    const type = api.type.charAt(0).toUpperCase() + api.type.slice(1);
+    const category = api.category.charAt(0).toUpperCase() + api.category.slice(1);
+    const data = {
+      type,
+      category,
+      bp: api.power || 0,
+      priority: 0,
+      isSpread: false,
+      makesContact: false,
+      isPunch: false,
+      isBite: false,
+      isSound: false,
+      isPulse: false,
+      isSlice: false,
+      hasRecoil: false,
+      hasSecondaryEffect: false,
+      hitRange: null,
+    };
+    MOVES[name.toLowerCase().replace(/[^a-z0-9]/g, '')] = data;
+    return { ...data, name };
+  }
+
+  return { MOVES, getMoveData, getMoveDataAsync };
 })();

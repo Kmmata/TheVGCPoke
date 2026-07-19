@@ -245,36 +245,12 @@ const RegulationMB = (() => {
   ];
 
   const LEGAL_ITEMS = [
-    'Abomasite','Absolite','Aerodactylite','Aggronite','Alakazite','Altarianite',
-    'Ampharosite','Aspear Berry','Audinite','Babiri Berry','Banettite',
-    'Barbaracleite','Beedrillite','Big Root','Black Belt','Black Glasses',
-    'Blastoisinite','Blazikenite','BrightPowder','Cameruptite','Chandelurite',
-    'Charcoal','Charizardite X','Charizardite Y','Charti Berry','Cheri Berry',
-    'Chesnaughtite','Chesto Berry','Chilan Berry','Chimechite','Choice Scarf',
-    'Chople Berry','Clefablite','Coba Berry','Colbur Berry','Crabominite',
-    'Damp Rock','Delphoxite','Dragalgeite','Dragon Fang','Dragoniteite',
-    'Drampanite','Eelektrossite','Emboarite','Excadrite','Expert Belt',
-    'Fairy Feather','Falinksite','Feraligite','Floettite','Focus Band',
-    'Focus Sash','Froslassite','Galladite','Garchompite','Gardevoirite',
-    'Gengarite','Glalitite','Glimmoranite','Golurkite','Greninjite',
-    'Gyaradosite','Haban Berry','Hard Stone','Hawluchanite','Heat Rock',
-    'Heracronite','Houndoominite','Icy Rock','Iron Ball','Kangaskhanite',
-    'Kasib Berry','Kebia Berry',"King's Rock",'Leftovers','Leppa Berry',
-    'Life Orb','Light Ball','Light Clay','Lopunnite','Lucarionite',
-    'Lum Berry','Magnet','Malamarite','Manectite','Mawileite',
-    'Medichamite','Meganiumite','Mental Herb','Meowsticite','Metagrossite',
-    'Metal Coat','Metronome','Miracle Seed','Muscle Band','Mystic Water',
-    'Never-Melt Ice','Occa Berry','Oran Berry','Passho Berry','Payapa Berry',
-    'Pecha Berry','Persim Berry','Pidgeotite','Pinsirite','Poison Barb',
-    'Pyroarite','Quick Claw','Raichunite X','Raichunite Y','Rawst Berry',
-    'Rindo Berry','Roseli Berry','Sablenite','Sceptileite','Scizorite',
-    'Scolipedeite','Scope Lens','Scovillainite','Scraftyite','Sharp Beak',
-    'Sharpedonite','Shed Shell','Shell Bell','Shuca Berry','Silk Scarf',
-    'SilverPowder','Sitrus Berry','Skarmorite','Slowbronite','Smooth Rock',
-    'Soft Sand','Spell Tag','Staraptorite','Starminite','Steelixite',
-    'Swampertite','Tanga Berry','TwistedSpoon','Tyranitarite','Venusaurite',
-    'Victreebelite','Wacan Berry','White Herb','Wide Lens','Wise Glasses',
-    'Yache Berry','Zoom Lens',
+    // Hold Items
+    'Big Root','Black Belt','Black Glasses','Bright Powder','Charcoal','Choice Scarf','Damp Rock','Dragon Fang','Expert Belt','Fairy Feather','Focus Band','Focus Sash','Hard Stone','Heat Rock','Icy Rock','Iron Ball',"King's Rock",'Leftovers','Life Orb','Light Ball','Light Clay','Magnet','Mental Herb','Metal Coat','Metronome','Miracle Seed','Muscle Band','Mystic Water','Never-Melt Ice','Poison Barb','Quick Claw','Scope Lens','Sharp Beak','Shed Shell','Shell Bell','Silk Scarf','Silver Powder','Smooth Rock','Soft Sand','Spell Tag','Twisted Spoon','White Herb','Wide Lens','Wise Glasses','Zoom Lens',
+    // Mega Stones
+    'Abomasite','Absolite','Aerodactylite','Aggronite','Alakazite','Altarianite','Ampharosite','Audinite','Banettite','Barbaracite','Beedrillite','Blastoisinite','Blazikenite','Cameruptite','Chandelurite','Charizardite X','Charizardite Y','Chesnaughtite','Chimechite','Clefablite','Crabominite','Decidueye-Mega Stone','Delphoxite','Dragalgite','Dragoninite','Drampanite','Eelektrossite','Emboarite','Excadrite','Falinksite','Feraligite','Floettite','Froslassite','Galladite','Garchompite','Gardevoirite','Gengarite','Glalitite','Glimmoranite','Golurkite','Greninjite','Gyaradosite','Hawluchanite','Heracronite','Houndoominite','Kangaskhanite','Lopunnite','Lucarionite','Malamarite','Manectite','Mawilite','Medichamite','Meganiumite','Meowsticite','Metagrossite','Pidgeotite','Pinsirite','Pyroarite','Raichunite X','Raichunite Y','Sablenite','Sceptilite','Scizorite','Scolipite','Scovillainite','Scraftinite','Sharpedonite','Skarmorite','Slowbronite','Staraptite','Starminite','Steelixite','Swampertite','Tyranitarite','Venusaurite','Victreebelite',
+    // Berries
+    'Aspear Berry','Babiri Berry','Charti Berry','Cheri Berry','Chesto Berry','Chilan Berry','Chople Berry','Coba Berry','Colbur Berry','Haban Berry','Kasib Berry','Kebia Berry','Leppa Berry','Lum Berry','Occa Berry','Oran Berry','Passho Berry','Payapa Berry','Pecha Berry','Persim Berry','Rawst Berry','Rindo Berry','Roseli Berry','Shuca Berry','Sitrus Berry','Tanga Berry','Wacan Berry','Yache Berry',
   ];
 
   const LEGAL_MOVES = [

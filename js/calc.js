@@ -568,7 +568,7 @@ const CalcApp = (() => {
           results = results.filter(m => legalSet.has(m.toLowerCase().replace(/[^a-z0-9]/g, '')));
         }
         const items = await Promise.all(results.map(async m => {
-          const moveData = CalcMoveData.getMoveData(m);
+          const moveData = await CalcMoveData.getMoveDataAsync(m);
           return {
             label: state.lang === 'es' ? await PokeTranslations.translateMove(m, state.lang) : m,
             _enLabel: m,
@@ -993,16 +993,18 @@ const CalcApp = (() => {
 
     // Moves
     const panel = $(`#panel${cap}`);
-    panel.querySelectorAll('.calc-move-input').forEach((input, i) => {
+    const moveInputs = panel.querySelectorAll('.calc-move-input');
+    for (let i = 0; i < moveInputs.length; i++) {
+      const input = moveInputs[i];
       input.value = s.moves[i] || '';
-      const moveData = CalcMoveData.getMoveData(s.moves[i]);
+      const moveData = await CalcMoveData.getMoveDataAsync(s.moves[i]);
       if (moveData) {
         const row = input.closest('.calc-move-row');
         row.querySelector('.calc-bp-input').value = moveData.bp;
         row.querySelector('.calc-move-type-select').value = moveData.type;
         row.querySelector('.calc-cat-select').value = moveData.category;
       }
-    });
+    }
 
     // Sprite
     if (s.species) loadSprite(side, s.species);
@@ -1170,7 +1172,7 @@ const CalcApp = (() => {
     });
   }
 
-  function updateMainResult() {
+  async function updateMainResult() {
     const { side, index } = state.selectedMove;
     const s = state[side];
 
@@ -1184,7 +1186,7 @@ const CalcApp = (() => {
       return;
     }
 
-    const moveData = CalcMoveData.getMoveData(moveName);
+    const moveData = await CalcMoveData.getMoveDataAsync(moveName);
     if (!moveData || moveData.category === 'Status') {
       $('#mainResultText').textContent = t('status');
       $('#mainResultDesc').textContent = moveData ? `${moveData.type} — ${t('status')}` : moveName;

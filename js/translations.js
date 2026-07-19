@@ -70,6 +70,22 @@ const PokeTranslations = (() => {
   const TYPE_EN = {};
   for (const [en, es] of Object.entries(TYPE_ES)) TYPE_EN[es] = en;
 
+  // Local ES names for items not yet localized in PokéAPI (mostly new Champions Mega Stones).
+  const ITEM_ES = {
+    'Barbaracite': 'Barbaracita', 'Chandelurite': 'Chandelurita', 'Chesnaughtite': 'Chesnaughtita',
+    'Chimechite': 'Chimechita', 'Clefablite': 'Clefablita', 'Crabominite': 'Crabominita',
+    'Delphoxite': 'Delphoxita', 'Dragalgite': 'Dragalgita', 'Dragoninite': 'Dragonita',
+    'Drampanite': 'Drampanita', 'Eelektrossite': 'Eelektrossita', 'Emboarite': 'Emboarita',
+    'Excadrite': 'Excadrita', 'Falinksite': 'Falinksita', 'Feraligite': 'Feraligita',
+    'Floettite': 'Floettita', 'Froslassite': 'Froslassita', 'Glimmoranite': 'Glimmoranita',
+    'Golurkite': 'Golurkita', 'Greninjite': 'Greninjita', 'Hawluchanite': 'Hawluchanita',
+    'Malamarite': 'Malamarita', 'Meganiumite': 'Meganiumita', 'Meowsticite': 'Meowsticita',
+    'Pyroarite': 'Pyroarita', 'Raichunite X': 'Raichunita X', 'Raichunite Y': 'Raichunita Y',
+    'Scolipite': 'Scolipita', 'Scovillainite': 'Scovillainita', 'Scraftinite': 'Scraftinita',
+    'Skarmorite': 'Skarmorita', 'Staraptite': 'Staraptita', 'Starminite': 'Starminita',
+    'Victreebelite': 'Victreebelita', 'Decidueye-Mega Stone': 'Decidueyeita',
+  };
+
   function _langCode(lang) {
     return lang === 'es' ? 'es' : 'en';
   }
@@ -95,6 +111,9 @@ const PokeTranslations = (() => {
       const entry = { en: englishName, key };
       for (const n of names) {
         if (n.language && n.language.name) entry[n.language.name] = n.name;
+      }
+      if (category === 'item' && !entry.es && ITEM_ES[englishName]) {
+        entry.es = ITEM_ES[englishName];
       }
       entry._done = true;
       cache[category][key] = entry;

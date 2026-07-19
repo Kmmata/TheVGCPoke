@@ -618,10 +618,6 @@ const TeamBuilder = (() => {
         } else {
           moves = RegulationMB.searchMoves(q);
         }
-        if (pokemon._apiData && pokemon._apiData.legalMoves) {
-          const legalSet = new Set(pokemon._apiData.legalMoves.map(m => m.toLowerCase().replace(/[^a-z0-9]/g,'')));
-          moves = moves.filter(m => legalSet.has(m.toLowerCase().replace(/[^a-z0-9]/g,'')));
-        }
         const items = await Promise.all(moves.map(async m => ({
           label: currentLang === 'es'
             ? await PokeTranslations.translateMove(m, currentLang)
